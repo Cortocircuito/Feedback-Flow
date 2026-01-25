@@ -18,8 +18,8 @@ public class StudentService : IStudentService
         
         // Determine CSV path
         string docRoot = Path.GetDirectoryName(_dailyFolderPath)!;
-        _csvPath = Path.Combine(docRoot, "alumnos.csv");
-        
+        _csvPath = Path.Combine(docRoot, "students.csv");
+
         // Fallback or Initial Creation handled in Load/Save
     }
 
@@ -30,7 +30,7 @@ public class StudentService : IStudentService
         if (!File.Exists(_csvPath)) 
         {
             // Check App Directory fallback
-            string appCsv = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "alumnos.csv");
+            string appCsv = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "students.csv");
             if (File.Exists(appCsv))
             {
                 _csvPath = appCsv; // Use app directory one if doc one doesn't create yet

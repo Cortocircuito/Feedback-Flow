@@ -8,7 +8,7 @@ if (!(Test-Path $appFolder)) {
 }
 
 # 2. Create Dummy CSV
-$csvPath = Join-Path $appFolder "alumnos.csv"
+$csvPath = Join-Path $appFolder "students.csv"
 $csvContent = @"
 Full Name,Email
 Jane Doe,jane.doe@example.com

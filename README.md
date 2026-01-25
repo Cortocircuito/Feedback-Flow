@@ -7,7 +7,7 @@
 - **Student Management (CRUD)**: Add, edit, and remove students directly from the application with a dedicated dialog form
 - **Direct Note Editing**: Instant access to student feedback files with a built-in "Smart" editor launcher
 - **Automated Organization**: Organizes feedback in daily folders (`YYYYMMDD`) within `My Documents/Feedback-Flow`
-- **Data Loading**: Imports student list from an `alumnos.csv` file with automatic persistence
+- **Data Loading**: Imports student list from an `students.csv` file with automatic persistence
 - **PDF Generation**: Converts individual text notes (`.txt`) into professional PDF documents using iText 9
 - **Email Integration**: Generates email drafts (`.eml`) with class content and personalized feedback attached, ready to be reviewed and sent from Outlook or another email client
 - **Modern Architecture**: Uses Dependency Injection and service-oriented design for clean, maintainable code
@@ -45,14 +45,14 @@ Feedback Flow/
 │   └── NoteService.cs         # Note file management & editor launching
 ├── MainDashboard.cs           # Main application form
 ├── StudentForm.cs             # Student add/edit dialog
-├── alumnos.csv                # Student data file (example)
+├── students.csv               # Student data file (example)
 └── Program.cs                 # Entry point and DI configuration
 ```
 
 ## 📖 How to Use
 
 ### 1. Initial Setup
-- Ensure you have an `alumnos.csv` file in the project root or application folder with the format: `Full Name,Email`
+- Ensure you have an `students.csv` file in the project root or application folder with the format: `Full Name,Email`
 - The file will be automatically created in `Documents/Feedback-Flow/` if it doesn't exist
 
 ### 2. Student Management
