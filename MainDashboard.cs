@@ -175,9 +175,9 @@ public partial class MainDashboard : Form
         }
     }
 
-    private void lstStudents_SelectedIndexChanged(object sender, EventArgs e)
+    private void lstStudents_DoubleClick(object sender, EventArgs e)
     {
-        btnEditFeedback.Enabled = lstStudents.SelectedIndex != -1;
+        btnEditFeedback_Click(sender, e);
     }
 
     private async void btnEditFeedback_Click(object sender, EventArgs e)

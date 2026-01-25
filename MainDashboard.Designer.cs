@@ -50,6 +50,7 @@ partial class MainDashboard
         lstStudents.Name = "lstStudents";
         lstStudents.Size = new Size(300, 244);
         lstStudents.TabIndex = 0;
+        lstStudents.DoubleClick += lstStudents_DoubleClick;
         // 
         // btnSelectFile
         // 
