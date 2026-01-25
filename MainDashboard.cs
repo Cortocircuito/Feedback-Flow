@@ -51,6 +51,9 @@ public partial class MainDashboard : Form
             // or just say Ready.
             _dailyFolderPath = _fileService.InitializeDailyFolder();
             lblStatus.Text = $"Ready. Loaded {_students.Count} students.";
+            
+            // Display current day of week in English
+            lblDayOfWeek.Text = DateTime.Now.ToString("dddd", System.Globalization.CultureInfo.InvariantCulture);
         }
         catch (Exception ex)
         {

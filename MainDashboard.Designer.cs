@@ -38,6 +38,7 @@ partial class MainDashboard
         btnAdd = new Button();
         btnUpdate = new Button();
         btnRemove = new Button();
+        lblDayOfWeek = new Label();
         statusStrip1.SuspendLayout();
         SuspendLayout();
         // 
@@ -67,6 +68,17 @@ partial class MainDashboard
         lblSelectedFile.Size = new Size(88, 15);
         lblSelectedFile.TabIndex = 2;
         lblSelectedFile.Text = "No file selected";
+        // 
+        // lblDayOfWeek
+        // 
+        lblDayOfWeek.AutoSize = true;
+        lblDayOfWeek.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblDayOfWeek.ForeColor = SystemColors.HotTrack;
+        lblDayOfWeek.Location = new Point(328, 16);
+        lblDayOfWeek.Name = "lblDayOfWeek";
+        lblDayOfWeek.Size = new Size(0, 15);
+        lblDayOfWeek.TabIndex = 8;
+        lblDayOfWeek.Text = "";
         // 
         // btnGenerate
         // 
@@ -136,6 +148,7 @@ partial class MainDashboard
         Controls.Add(btnUpdate);
         Controls.Add(btnAdd);
         Controls.Add(lstStudents);
+        Controls.Add(lblDayOfWeek);
         Icon = (Icon)resources.GetObject("$this.Icon");
         Name = "MainDashboard";
         Text = "Feedback Flow - Teacher Assistant";
@@ -160,6 +173,7 @@ partial class MainDashboard
     private System.Windows.Forms.Button btnAdd;
     private System.Windows.Forms.Button btnUpdate;
     private System.Windows.Forms.Button btnRemove;
+    private System.Windows.Forms.Label lblDayOfWeek;
 
     #endregion
 }
