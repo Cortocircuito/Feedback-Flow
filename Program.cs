@@ -34,6 +34,7 @@ internal static class Program
         services.AddSingleton<IPdfService, PdfGenerationService>();
         services.AddSingleton<IEmailService, OutlookEmailService>();
         services.AddSingleton<IStudentService, StudentService>();
+        services.AddSingleton<INoteService, NoteService>();
 
         // Register Forms
         services.AddTransient<MainDashboard>();

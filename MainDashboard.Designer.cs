@@ -39,6 +39,7 @@ partial class MainDashboard
         btnUpdate = new Button();
         btnRemove = new Button();
         lblDayOfWeek = new Label();
+        btnEditFeedback = new Button();
         statusStrip1.SuspendLayout();
         SuspendLayout();
         // 
@@ -68,17 +69,6 @@ partial class MainDashboard
         lblSelectedFile.Size = new Size(88, 15);
         lblSelectedFile.TabIndex = 2;
         lblSelectedFile.Text = "No file selected";
-        // 
-        // lblDayOfWeek
-        // 
-        lblDayOfWeek.AutoSize = true;
-        lblDayOfWeek.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        lblDayOfWeek.ForeColor = SystemColors.HotTrack;
-        lblDayOfWeek.Location = new Point(328, 16);
-        lblDayOfWeek.Name = "lblDayOfWeek";
-        lblDayOfWeek.Size = new Size(0, 15);
-        lblDayOfWeek.TabIndex = 8;
-        lblDayOfWeek.Text = "";
         // 
         // btnGenerate
         // 
@@ -135,6 +125,26 @@ partial class MainDashboard
         btnRemove.UseVisualStyleBackColor = true;
         btnRemove.Click += btnRemove_Click;
         // 
+        // lblDayOfWeek
+        // 
+        lblDayOfWeek.AutoSize = true;
+        lblDayOfWeek.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblDayOfWeek.ForeColor = SystemColors.HotTrack;
+        lblDayOfWeek.Location = new Point(328, 16);
+        lblDayOfWeek.Name = "lblDayOfWeek";
+        lblDayOfWeek.Size = new Size(0, 15);
+        lblDayOfWeek.TabIndex = 8;
+        // 
+        // btnEditFeedback
+        // 
+        btnEditFeedback.Location = new Point(328, 200);
+        btnEditFeedback.Name = "btnEditFeedback";
+        btnEditFeedback.Size = new Size(120, 40);
+        btnEditFeedback.TabIndex = 9;
+        btnEditFeedback.Text = "Edit Feedback";
+        btnEditFeedback.UseVisualStyleBackColor = true;
+        btnEditFeedback.Click += btnEditFeedback_Click;
+        // 
         // MainDashboard
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
@@ -144,6 +154,7 @@ partial class MainDashboard
         Controls.Add(btnGenerate);
         Controls.Add(lblSelectedFile);
         Controls.Add(btnSelectFile);
+        Controls.Add(btnEditFeedback);
         Controls.Add(btnRemove);
         Controls.Add(btnUpdate);
         Controls.Add(btnAdd);
@@ -174,6 +185,7 @@ partial class MainDashboard
     private System.Windows.Forms.Button btnUpdate;
     private System.Windows.Forms.Button btnRemove;
     private System.Windows.Forms.Label lblDayOfWeek;
+    private System.Windows.Forms.Button btnEditFeedback;
 
     #endregion
 }

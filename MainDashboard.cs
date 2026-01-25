@@ -7,6 +7,7 @@ namespace Feedback_Flow;
 public partial class MainDashboard : Form
 {
     private readonly IStudentService _studentService;
+    private readonly INoteService _noteService;
 
     // We still need these for Generation
     private readonly IFileSystemService _fileService;
@@ -26,12 +27,14 @@ public partial class MainDashboard : Form
     public MainDashboard(IStudentService studentService,
         IFileSystemService fileService,
         IPdfService pdfService,
-        IEmailService emailService)
+        IEmailService emailService,
+        INoteService noteService)
     {
         _studentService = studentService;
         _fileService = fileService;
         _pdfService = pdfService;
         _emailService = emailService;
+        _noteService = noteService;
 
         InitializeComponent();
 
@@ -51,7 +54,7 @@ public partial class MainDashboard : Form
             // or just say Ready.
             _dailyFolderPath = _fileService.InitializeDailyFolder();
             lblStatus.Text = $"Ready. Loaded {_students.Count} students.";
-            
+
             // Display current day of week in English
             lblDayOfWeek.Text = DateTime.Now.ToString("dddd", System.Globalization.CultureInfo.InvariantCulture);
         }
@@ -174,6 +177,40 @@ public partial class MainDashboard : Form
 
     private void lstStudents_SelectedIndexChanged(object sender, EventArgs e)
     {
+        btnEditFeedback.Enabled = lstStudents.SelectedIndex != -1;
+    }
+
+    private async void btnEditFeedback_Click(object sender, EventArgs e)
+    {
+        if (lstStudents.SelectedItem is not Student selectedStudent) return;
+
+        try
+        {
+            // Resolve Path logic -> Documented requirement: Documents/Feedback-Flow/[YYYYMMDD]/[Student-Name]/
+            // We can get the daily folder from _fileService (cached or re-init)
+            // But _dailyFolderPath is already cached in field.
+
+            // IMPORTANT: If user just started app, selected student, click edit... 
+            // folder might not exist if they never clicked "Add" or "Generate". 
+            // BUT StudentService creates folder on Add.
+            // Requirement says: "Search for existing... If no .txt... create one"
+
+            // We need the student folder path. _fileService.CreateStudentFolder is idempotent and returns the path.
+            // Using CreateStudentFolder ensures we have the path even if we don't strictly "create" it redundantly.
+            string studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, selectedStudent);
+
+            await _noteService.OpenOrCreateNotesAsync(studentFolder);
+        }
+        catch (DirectoryNotFoundException)
+        {
+            MessageBox.Show(
+                "The student's folder has not been created properly. Please ensure the daily workspace is initialized.",
+                "Folder Missing", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error opening notes: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
     private async void btnGenerate_Click(object sender, EventArgs e)
