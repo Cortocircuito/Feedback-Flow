@@ -5,6 +5,7 @@
 ## 🚀 Features
 
 - **Student Management (CRUD)**: Add, edit, and remove students directly from the application with a dedicated dialog form
+- **Direct Note Editing**: Instant access to student feedback files with a built-in "Smart" editor launcher
 - **Automated Organization**: Organizes feedback in daily folders (`YYYYMMDD`) within `My Documents/Feedback-Flow`
 - **Data Loading**: Imports student list from an `alumnos.csv` file with automatic persistence
 - **PDF Generation**: Converts individual text notes (`.txt`) into professional PDF documents using iText 9
@@ -34,12 +35,14 @@ Feedback Flow/
 │   │   ├── IFileSystemService.cs
 │   │   ├── IDataService.cs
 │   │   ├── IPdfService.cs
-│   │   └── IEmailService.cs
+│   │   ├── IEmailService.cs
+│   │   └── INoteService.cs
 │   ├── StudentService.cs      # Student CRUD and CSV management
 │   ├── CsvDataService.cs      # CSV file operations
 │   ├── FileSystemService.cs   # Folder management
 │   ├── OutlookEmailService.cs # Email draft generation
-│   └── PdfGenerationService.cs # PDF creation
+│   ├── PdfGenerationService.cs # PDF creation
+│   └── NoteService.cs         # Note file management & editor launching
 ├── MainDashboard.cs           # Main application form
 ├── StudentForm.cs             # Student add/edit dialog
 ├── alumnos.csv                # Student data file (example)
@@ -58,13 +61,19 @@ Feedback Flow/
 - **Remove Student**: Select a student, click "Remove", confirm deletion (folders are preserved)
 - All changes are automatically saved to the CSV file
 
-### 3. Feedback Generation
+### 3. Editing Feedback Notes
+- **Access**: Select a student and click **"Edit Feedback"** OR simply **Double-Click** the student in the list.
+- **Smart Creation**: The app checks for an existing note file. If none exists, it automatically creates one named `feedback-[student-name]-[yyyyMMdd].txt`.
+- **Content**: New files are pre-filled with the header: `[Student Name] Feedback Notes:`.
+- **Editor**: Opens immediately in your system's default text editor (e.g., Notepad).
+
+### 4. Feedback Generation
 - **Select PDF**: Click "Select Master PDF" and choose the class content PDF file
-- **Prepare Notes**: Place `.txt` files with individual student notes in their corresponding folders (automatically created in `Documents/Feedback-Flow/YYYYMMDD/Student-Name/`)
+- **Prepare Notes**: (If you haven't used the "Edit Feedback" feature) Place `.txt` files with individual student notes in their corresponding folders.
 - **Generate**: Click "Generate Feedback Emails" to create PDFs and email drafts
 - **Send**: Review the drafts opened in your email client and send them
 
-### 4. Daily Workflow
+### 5. Daily Workflow
 - The application displays the current day of the week at the top
 - Each day gets its own folder (e.g., `20260125`)
 - Student folders are created automatically when you add students or generate feedback
@@ -83,7 +92,9 @@ dotnet run
 
 - **SOLID Principles**: Separation of concerns with dedicated services
 - **Dependency Injection**: All services are registered and injected via DI container
-- **Service Layer**: `StudentService` handles all student-related operations (CRUD + file sync)
+- **Service Layer**: 
+  - `StudentService` handles all student-related operations (CRUD + file sync)
+  - `NoteService` encapsulates file creation and system process execution
 - **Validation**: `ErrorProvider` for real-time input validation in forms
 - **Async Operations**: File I/O operations are asynchronous to keep UI responsive
 - **Data Binding**: `BindingList<Student>` for automatic UI updates
@@ -94,6 +105,7 @@ dotnet run
 - Email validation ensures proper format before saving
 - Duplicate email addresses are prevented
 - Folder names use hyphenated format (e.g., "John Doe" → "John-Doe")
+- Note files follow the convention: `feedback-john-doe-20260125.txt`
 
 ---
 
