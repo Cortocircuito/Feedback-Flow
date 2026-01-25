@@ -199,7 +199,7 @@ public partial class MainDashboard : Form
             // Using CreateStudentFolder ensures we have the path even if we don't strictly "create" it redundantly.
             string studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, selectedStudent);
 
-            await _noteService.OpenOrCreateNotesAsync(studentFolder);
+            await _noteService.OpenOrCreateNotesAsync(studentFolder, selectedStudent.FullName);
         }
         catch (DirectoryNotFoundException)
         {

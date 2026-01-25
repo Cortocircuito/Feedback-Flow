@@ -5,9 +5,7 @@ namespace Feedback_Flow.Services;
 
 public class NoteService : INoteService
 {
-    private const string DefaultNoteFileName = "Notes.txt";
-
-    public async Task OpenOrCreateNotesAsync(string studentFolderPath)
+    public async Task OpenOrCreateNotesAsync(string studentFolderPath, string studentName)
     {
         if (string.IsNullOrWhiteSpace(studentFolderPath))
             throw new ArgumentException("Folder path cannot be empty.", nameof(studentFolderPath));
@@ -17,20 +15,28 @@ public class NoteService : INoteService
             throw new DirectoryNotFoundException($"The folder for this student does not exist yet at: {studentFolderPath}");
         }
 
-        string notePath = Path.Combine(studentFolderPath, DefaultNoteFileName);
+        string notePath;
 
-        if (!File.Exists(notePath))
+        var existingTxt = Directory.GetFiles(studentFolderPath, "*.txt")
+            .OrderByDescending(File.GetLastWriteTime)
+            .FirstOrDefault();
+
+        if (existingTxt != null)
         {
-            var existingTxt = Directory.GetFiles(studentFolderPath, "*.txt").FirstOrDefault();
-            
-            if (existingTxt != null)
-            {
-                notePath = existingTxt;
-            }
-            else
-            {
-                await File.WriteAllTextAsync(notePath, "Student Feedback Notes:\n");
-            }
+            notePath = existingTxt;
+        }
+        else
+        {
+            // Format: feedback-alumn-name-yyyyMMdd.txt
+            // Sanitize name for filename
+            var sanitizedName = studentName.Trim().Replace(" ", "-").ToLower();
+            var date = DateTime.Now.ToString("yyyyMMdd");
+            var fileName = $"feedback-{sanitizedName}-{date}.txt";
+
+            notePath = Path.Combine(studentFolderPath, fileName);
+
+            var content = $"{studentName} Feedback Notes:\n";
+            await File.WriteAllTextAsync(notePath, content);
         }
 
         try
