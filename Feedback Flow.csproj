@@ -7,7 +7,12 @@
     <Nullable>disable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>chalkboard-teacher.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="chalkboard-teacher.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="itext" Version="9.5.0" />
