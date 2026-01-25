@@ -30,7 +30,7 @@ partial class MainDashboard
     {
         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainDashboard));
         lstStudents = new ListBox();
-        btnSelectFile = new Button();
+        btnAssignMaterial = new Button();
         lblSelectedFile = new Label();
         btnGenerate = new Button();
         statusStrip1 = new StatusStrip();
@@ -52,15 +52,15 @@ partial class MainDashboard
         lstStudents.TabIndex = 0;
         lstStudents.DoubleClick += lstStudents_DoubleClick;
         // 
-        // btnSelectFile
+        // btnAssignMaterial
         // 
-        btnSelectFile.Location = new Point(12, 12);
-        btnSelectFile.Name = "btnSelectFile";
-        btnSelectFile.Size = new Size(120, 23);
-        btnSelectFile.TabIndex = 1;
-        btnSelectFile.Text = "Select Master PDF";
-        btnSelectFile.UseVisualStyleBackColor = true;
-        btnSelectFile.Click += btnSelectFile_Click;
+        btnAssignMaterial.Location = new Point(12, 12);
+        btnAssignMaterial.Name = "btnAssignMaterial";
+        btnAssignMaterial.Size = new Size(120, 23);
+        btnAssignMaterial.TabIndex = 1;
+        btnAssignMaterial.Text = "Assign Material";
+        btnAssignMaterial.UseVisualStyleBackColor = true;
+        btnAssignMaterial.Click += btnAssignMaterial_Click;
         // 
         // lblSelectedFile
         // 
@@ -131,7 +131,7 @@ partial class MainDashboard
         lblDayOfWeek.AutoSize = true;
         lblDayOfWeek.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
         lblDayOfWeek.ForeColor = SystemColors.HotTrack;
-        lblDayOfWeek.Location = new Point(328, 16);
+        lblDayOfWeek.Location = new Point(328, 250);
         lblDayOfWeek.Name = "lblDayOfWeek";
         lblDayOfWeek.Size = new Size(0, 15);
         lblDayOfWeek.TabIndex = 8;
@@ -154,7 +154,7 @@ partial class MainDashboard
         Controls.Add(statusStrip1);
         Controls.Add(btnGenerate);
         Controls.Add(lblSelectedFile);
-        Controls.Add(btnSelectFile);
+        Controls.Add(btnAssignMaterial);
         Controls.Add(btnEditFeedback);
         Controls.Add(btnRemove);
         Controls.Add(btnUpdate);
@@ -177,7 +177,7 @@ partial class MainDashboard
     #region Controls
 
     private System.Windows.Forms.ListBox lstStudents;
-    private System.Windows.Forms.Button btnSelectFile;
+    private System.Windows.Forms.Button btnAssignMaterial;
     private System.Windows.Forms.Label lblSelectedFile;
     private System.Windows.Forms.Button btnGenerate;
     private System.Windows.Forms.StatusStrip statusStrip1;

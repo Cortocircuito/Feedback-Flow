@@ -49,5 +49,5 @@ public interface IEmailService
     /// <summary>
     /// Opens a new Outlook email window with recipients and attachments pre-filled.
     /// </summary>
-    void DraftEmail(Student student, string masterPdfPath, string studentPdfPath);
+    void DraftEmail(Student student, string studentPdfPath);
 }

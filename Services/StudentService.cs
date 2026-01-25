@@ -13,14 +13,58 @@ public class StudentService : IStudentService
     {
         _fileService = fileService;
         
-        // Initialize folders immediately to ensure paths exist
+        // 1. Check if today's folder exists BEFORE initializing it
+        // We replicate the path logic to check existence: Documents/Feedback-Flow/yyyyMMdd
+        string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        string dateFolder = DateTime.Now.ToString("yyyyMMdd");
+        string expectedDailyPath = Path.Combine(documents, "Feedback-Flow", dateFolder);
+        
+        bool isRankNewDay = !Directory.Exists(expectedDailyPath);
+
+        // 2. Initialize folders (creates them if missing)
         _dailyFolderPath = _fileService.InitializeDailyFolder();
         
         // Determine CSV path
         string docRoot = Path.GetDirectoryName(_dailyFolderPath)!;
         _csvPath = Path.Combine(docRoot, "students.csv");
+        
+        // 3. If it was a new day, we must reset assignments in the CSV
+        if (isRankNewDay)
+        {
+            // We run this synchronously to ensure state is clean before app allows interaction
+            // Since calls are async, we block or fire-and-forget. Constructor async avoidance...
+            // We'll call a private helper that blocks or use Task.Run().Wait() just for this init.
+            Task.Run(async () => await PerformDailyResetAsync()).Wait();
+        }
+    }
 
-        // Fallback or Initial Creation handled in Load/Save
+    private async Task PerformDailyResetAsync()
+    {
+        try 
+        {
+            var students = await LoadStudentsAsync();
+            if (students.Any())
+            {
+                bool changed = false;
+                foreach (var s in students)
+                {
+                    if (!string.IsNullOrEmpty(s.LearningMaterialPath))
+                    {
+                        s.LearningMaterialPath = string.Empty;
+                        changed = true;
+                    }
+                }
+
+                if (changed)
+                {
+                    await SaveStudentsInternalAsync(students);
+                }
+            }
+        }
+        catch 
+        {
+            // Ignore init errors or log
+        }
     }
 
     public async Task<List<Student>> LoadStudentsAsync()
@@ -52,10 +96,17 @@ public class StudentService : IStudentService
 
                 var name = parts[0].Trim();
                 var email = parts[1].Trim();
+                var materialPath = parts.Length > 2 ? parts[2].Trim() : string.Empty;
 
                 if (name.Equals("Full Name", StringComparison.OrdinalIgnoreCase)) continue;
+                
+                // Validate material path existence (KISS: If file no longer exists, treat as empty)
+                if (!string.IsNullOrEmpty(materialPath) && !File.Exists(materialPath))
+                {
+                    materialPath = string.Empty;
+                }
 
-                students.Add(new Student { FullName = name, Email = email });
+                students.Add(new Student { FullName = name, Email = email, LearningMaterialPath = materialPath });
             }
         }
         catch (IOException) 
@@ -135,8 +186,8 @@ public class StudentService : IStudentService
 
     private async Task SaveStudentsInternalAsync(List<Student> students)
     {
-        var lines = new List<string> { "Full Name,Email" };
-        lines.AddRange(students.Select(s => $"{s.FullName},{s.Email}"));
+        var lines = new List<string> { "Full Name,Email,LearningMaterialPath" };
+        lines.AddRange(students.Select(s => $"{s.FullName},{s.Email},{s.LearningMaterialPath}"));
         await File.WriteAllLinesAsync(_csvPath, lines);
     }
 }

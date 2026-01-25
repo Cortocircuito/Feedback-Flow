@@ -8,15 +8,18 @@ namespace Feedback_Flow.Services;
 
 public class OutlookEmailService : IEmailService
 {
-    public void DraftEmail(Student student, string masterPdfPath, string studentPdfPath)
+    public void DraftEmail(Student student, string studentPdfPath)
     {
         if (student == null) throw new ArgumentNullException(nameof(student));
-        if (string.IsNullOrWhiteSpace(masterPdfPath))
-            throw new ArgumentNullException(nameof(masterPdfPath));
+        // Master path is now per student
+        string learningMaterialPath = student.LearningMaterialPath;
+
+        if (string.IsNullOrWhiteSpace(learningMaterialPath))
+            throw new InvalidOperationException($"No learning material assigned for student {student.FullName}");
         if (string.IsNullOrWhiteSpace(studentPdfPath))
             throw new ArgumentNullException(nameof(studentPdfPath));
 
-        if (!File.Exists(masterPdfPath)) throw new FileNotFoundException("Master PDF not found", masterPdfPath);
+        if (!File.Exists(learningMaterialPath)) throw new FileNotFoundException("Learning Material PDF not found", learningMaterialPath);
         if (!File.Exists(studentPdfPath)) throw new FileNotFoundException("Student PDF not found", studentPdfPath);
 
         try
@@ -42,7 +45,7 @@ public class OutlookEmailService : IEmailService
             };
 
             // Add Attachments
-            builder.Attachments.Add(masterPdfPath);
+            builder.Attachments.Add(learningMaterialPath);
             builder.Attachments.Add(studentPdfPath);
 
             message.Body = builder.ToMessageBody();

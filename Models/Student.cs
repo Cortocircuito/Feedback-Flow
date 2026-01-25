@@ -4,6 +4,7 @@ public class Student
 {
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public string LearningMaterialPath { get; set; } = string.Empty;
 
     // Helper to get sanitize name for folders (e.g. "Jane Doe" -> "Jane-Doe")
     // Implementation rule: Replace spaces with hyphens.

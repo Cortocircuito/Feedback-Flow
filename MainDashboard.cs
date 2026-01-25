@@ -15,7 +15,7 @@ public partial class MainDashboard : Form
     private readonly IEmailService _emailService;
 
     private BindingList<Student> _students = new();
-    private string _masterPdfPath = string.Empty;
+    // Removed global masterPdfPath
 
     private string
         _dailyFolderPath = string.Empty; // Still needed for context in Generation? Or maybe PDF service handles it? 
@@ -64,16 +64,33 @@ public partial class MainDashboard : Form
         }
     }
 
-    private void btnSelectFile_Click(object sender, EventArgs e)
+    private async void btnAssignMaterial_Click(object sender, EventArgs e)
     {
+        if (lstStudents.SelectedItem is not Student selectedStudent)
+        {
+            MessageBox.Show("Please select a student first.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
         using var openFileDialog = new OpenFileDialog();
         openFileDialog.Filter = "PDF Files (*.pdf)|*.pdf";
-        openFileDialog.Title = "Select Class Content PDF";
+        openFileDialog.Title = $"Select Material for {selectedStudent.FullName}";
 
         if (openFileDialog.ShowDialog() == DialogResult.OK)
         {
-            _masterPdfPath = openFileDialog.FileName;
-            lblSelectedFile.Text = Path.GetFileName(_masterPdfPath);
+            selectedStudent.LearningMaterialPath = openFileDialog.FileName;
+            
+            // Persist change
+            try 
+            {
+                await _studentService.UpdateStudentAsync(selectedStudent, selectedStudent);
+                lblStatus.Text = $"Assigned material to {selectedStudent.FullName}";
+                lblSelectedFile.Text = Path.GetFileName(openFileDialog.FileName); // Quick feedback
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error assigning material: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 
@@ -123,7 +140,9 @@ public partial class MainDashboard : Form
                 var updatedStudent = new Student
                 {
                     FullName = form.StudentFullName,
-                    Email = form.StudentEmail
+                    Email = form.StudentEmail,
+                    // Preserve existing material path
+                    LearningMaterialPath = selectedStudent.LearningMaterialPath
                 };
 
                 // Check duplicate if email changed
@@ -215,12 +234,8 @@ public partial class MainDashboard : Form
 
     private async void btnGenerate_Click(object sender, EventArgs e)
     {
-        if (string.IsNullOrEmpty(_masterPdfPath) || !File.Exists(_masterPdfPath))
-        {
-            MessageBox.Show("Please select a Class Content PDF first.", "Warning", MessageBoxButtons.OK,
-                MessageBoxIcon.Warning);
-            return;
-        }
+        // Removed global PDF check logic
+        // logic moved to per-student loop
 
         if (_students.Count == 0)
         {
@@ -231,21 +246,28 @@ public partial class MainDashboard : Form
         btnGenerate.Enabled = false;
         lblStatus.Text = "Processing...";
 
-        int successCount = 0;
-        int errorCount = 0;
+        var skippedStudents = new List<string>();
+        int successCount = 0; // <-- Declare and initialize successCount
+        int errorCount = 0; // <-- Declare and initialize errorCount
 
         foreach (var student in _students)
         {
             try
             {
                 lblStatus.Text = $"Processing: {student.FullName}";
-                Application.DoEvents(); // Keep UI responsive-ish without full async thread offloading complexity if strictly KISS, but async is better.
-                // Since I used `async void`, I should ideally use Task.Run for heavy work, but iText is fast enough for small batches.
+                Application.DoEvents(); 
+
+                // Guard: Check if material assigned
+                if (string.IsNullOrEmpty(student.LearningMaterialPath) || !File.Exists(student.LearningMaterialPath))
+                {
+                    skippedStudents.Add(student.FullName);
+                    // Update status briefly
+                    lblStatus.Text = $"Skipping {student.FullName} (No Material)";
+                    Application.DoEvents();
+                    continue;
+                }
 
                 // 1. Ensure/Find Student Folder
-                // The folders should have been created manually or by app?
-                // User said: "Inside [YYYYMMDD], create subfolders for each student listed in the CSV."
-                // So we must create them now if they don't exist.
                 string studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, student);
 
                 // 2. Get Note Content
@@ -256,7 +278,7 @@ public partial class MainDashboard : Form
                 string studentPdfPath = _pdfService.GenerateStudentPdf(student, content, studentFolder);
 
                 // 4. Open Outlook
-                _emailService.DraftEmail(student, _masterPdfPath, studentPdfPath);
+                _emailService.DraftEmail(student, studentPdfPath);
 
                 successCount++;
             }
@@ -266,9 +288,15 @@ public partial class MainDashboard : Form
             }
         }
 
-        lblStatus.Text = $"Done. Success: {successCount}, Errors: {errorCount}";
+        lblStatus.Text = $"Done. Success: {successCount}, Skipped: {skippedStudents.Count}, Errors: {errorCount}";
         btnGenerate.Enabled = true;
-        MessageBox.Show($"Process Completed.\nSuccess: {successCount}\nErrors: {errorCount}", "Finished",
-            MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+        string msg = $"Process Completed.\nSuccess: {successCount}\nErrors: {errorCount}";
+        if (skippedStudents.Any())
+        {
+            msg += $"\n\nSkipped ({skippedStudents.Count}) - No Material:\n- " + string.Join("\n- ", skippedStudents);
+        }
+
+        MessageBox.Show(msg, "Finished", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 }
