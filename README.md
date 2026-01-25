@@ -9,7 +9,7 @@
 - **Automated Organization**: Organizes feedback in daily folders (`YYYYMMDD`) within `My Documents/Feedback-Flow`
 - **Data Loading**: Imports student list from an `students.csv` file with automatic persistence
 - **PDF Generation**: Converts individual text notes (`.txt`) into professional PDF documents using iText 9
-- **Email Integration**: Generates email drafts (`.eml`) with class content and personalized feedback attached, ready to be reviewed and sent from Outlook or another email client
+- **Email Integration**: Generates personalized email drafts (`.eml`) with student-specific subject lines, class content and feedback attached, ready to be reviewed and sent from Outlook or another email client
 - **Modern Architecture**: Uses Dependency Injection and service-oriented design for clean, maintainable code
 - **Folder Synchronization**: Automatically creates and renames student folders when managing student data
 - **Day Display**: Shows the current day of the week in English on the main dashboard
@@ -71,6 +71,10 @@ Feedback Flow/
 - **Select PDF**: Click "Select Master PDF" and choose the class content PDF file
 - **Prepare Notes**: (If you haven't used the "Edit Feedback" feature) Place `.txt` files with individual student notes in their corresponding folders.
 - **Generate**: Click "Generate Feedback Emails" to create PDFs and email drafts
+- **Email Format**: Each draft is personalized with:
+  - **Subject**: `Feedback for [Student Name] - YYYY-MM-DD`
+  - **Body**: Personalized greeting with student's name
+  - **Attachments**: Class content PDF and student-specific feedback PDF
 - **Send**: Review the drafts opened in your email client and send them
 
 ### 5. Daily Workflow
@@ -106,6 +110,7 @@ dotnet run
 - Duplicate email addresses are prevented
 - Folder names use hyphenated format (e.g., "John Doe" → "John-Doe")
 - Note files follow the convention: `feedback-john-doe-20260125.txt`
+- Email drafts are saved temporarily in `Documents/Feedback-Flow/TempEmails`
 
 ---
 
