@@ -64,4 +64,22 @@ public class FileSystemService : IFileSystemService
 
         return File.ReadAllText(mostRecentFile.FullName);
     }
+
+    public void RenameStudentFolder(string dailyFolderPath, string oldName, string newName)
+    {
+        if (string.IsNullOrWhiteSpace(oldName) || string.IsNullOrWhiteSpace(newName)) return;
+        if (oldName == newName) return;
+
+        // "Jane Doe" -> "Jane-Doe"
+        string oldFolderName = oldName.Trim().Replace(" ", "-");
+        string newFolderName = newName.Trim().Replace(" ", "-");
+
+        string oldPath = Path.Combine(dailyFolderPath, oldFolderName);
+        string newPath = Path.Combine(dailyFolderPath, newFolderName);
+
+        if (Directory.Exists(oldPath) && !Directory.Exists(newPath))
+        {
+            Directory.Move(oldPath, newPath);
+        }
+    }
 }

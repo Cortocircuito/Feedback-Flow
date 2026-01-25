@@ -35,6 +35,9 @@ partial class Form1
         btnGenerate = new Button();
         statusStrip1 = new StatusStrip();
         lblStatus = new ToolStripStatusLabel();
+        btnAdd = new Button();
+        btnUpdate = new Button();
+        btnRemove = new Button();
         statusStrip1.SuspendLayout();
         SuspendLayout();
         // 
@@ -43,7 +46,7 @@ partial class Form1
         lstStudents.FormattingEnabled = true;
         lstStudents.Location = new Point(12, 50);
         lstStudents.Name = "lstStudents";
-        lstStudents.Size = new Size(460, 244);
+        lstStudents.Size = new Size(300, 244);
         lstStudents.TabIndex = 0;
         // 
         // btnSelectFile
@@ -69,7 +72,7 @@ partial class Form1
         // 
         btnGenerate.Location = new Point(12, 305);
         btnGenerate.Name = "btnGenerate";
-        btnGenerate.Size = new Size(460, 35);
+        btnGenerate.Size = new Size(436, 35);
         btnGenerate.TabIndex = 3;
         btnGenerate.Text = "Generate Feedback Emails";
         btnGenerate.UseVisualStyleBackColor = true;
@@ -80,7 +83,7 @@ partial class Form1
         statusStrip1.Items.AddRange(new ToolStripItem[] { lblStatus });
         statusStrip1.Location = new Point(0, 350);
         statusStrip1.Name = "statusStrip1";
-        statusStrip1.Size = new Size(484, 22);
+        statusStrip1.Size = new Size(458, 22);
         statusStrip1.TabIndex = 4;
         statusStrip1.Text = "statusStrip1";
         // 
@@ -90,15 +93,48 @@ partial class Form1
         lblStatus.Size = new Size(39, 17);
         lblStatus.Text = "Ready";
         // 
+        // btnAdd
+        // 
+        btnAdd.Location = new Point(328, 50);
+        btnAdd.Name = "btnAdd";
+        btnAdd.Size = new Size(120, 40);
+        btnAdd.TabIndex = 5;
+        btnAdd.Text = "Add New";
+        btnAdd.UseVisualStyleBackColor = true;
+        btnAdd.Click += btnAdd_Click;
+        // 
+        // btnUpdate
+        // 
+        btnUpdate.Location = new Point(328, 100);
+        btnUpdate.Name = "btnUpdate";
+        btnUpdate.Size = new Size(120, 40);
+        btnUpdate.TabIndex = 6;
+        btnUpdate.Text = "Edit Selected";
+        btnUpdate.UseVisualStyleBackColor = true;
+        btnUpdate.Click += btnUpdate_Click;
+        // 
+        // btnRemove
+        // 
+        btnRemove.Location = new Point(328, 150);
+        btnRemove.Name = "btnRemove";
+        btnRemove.Size = new Size(120, 40);
+        btnRemove.TabIndex = 7;
+        btnRemove.Text = "Remove";
+        btnRemove.UseVisualStyleBackColor = true;
+        btnRemove.Click += btnRemove_Click;
+        // 
         // Form1
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(484, 372);
+        ClientSize = new Size(458, 372);
         Controls.Add(statusStrip1);
         Controls.Add(btnGenerate);
         Controls.Add(lblSelectedFile);
         Controls.Add(btnSelectFile);
+        Controls.Add(btnRemove);
+        Controls.Add(btnUpdate);
+        Controls.Add(btnAdd);
         Controls.Add(lstStudents);
         Icon = (Icon)resources.GetObject("$this.Icon");
         Name = "Form1";
@@ -121,6 +157,9 @@ partial class Form1
     private System.Windows.Forms.Button btnGenerate;
     private System.Windows.Forms.StatusStrip statusStrip1;
     private System.Windows.Forms.ToolStripStatusLabel lblStatus;
+    private System.Windows.Forms.Button btnAdd;
+    private System.Windows.Forms.Button btnUpdate;
+    private System.Windows.Forms.Button btnRemove;
 
     #endregion
 }

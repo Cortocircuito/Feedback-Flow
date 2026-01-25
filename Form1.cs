@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Feedback_Flow.Models;
 using Feedback_Flow.Services.Interfaces;
 
@@ -5,69 +6,51 @@ namespace Feedback_Flow;
 
 public partial class Form1 : Form
 {
+    private readonly IStudentService _studentService;
+
+    // We still need these for Generation
     private readonly IFileSystemService _fileService;
-    private readonly IDataService _dataService;
     private readonly IPdfService _pdfService;
     private readonly IEmailService _emailService;
 
-    private List<Student> _students = new List<Student>();
+    private BindingList<Student> _students = new();
     private string _masterPdfPath = string.Empty;
-    private string _dailyFolderPath = string.Empty;
 
-    // Constructor for DI
-    public Form1(IFileSystemService fileService,
-        IDataService dataService,
+    private string
+        _dailyFolderPath = string.Empty; // Still needed for context in Generation? Or maybe PDF service handles it? 
+    // Wait, Generation logic uses fileService.CreateStudentFolder... 
+    // StudentService handles Creation on Add. 
+    // Generation assumes folders exist or ensures them? 
+    // Standard FileService CreateStudentFolder ensures existence. So we can keep using it for Generation.
+
+    public Form1(IStudentService studentService,
+        IFileSystemService fileService,
         IPdfService pdfService,
         IEmailService emailService)
     {
+        _studentService = studentService;
         _fileService = fileService;
-        _dataService = dataService;
         _pdfService = pdfService;
         _emailService = emailService;
 
         InitializeComponent();
+
+        lstStudents.DataSource = _students;
+        lstStudents.DisplayMember = "FullName";
     }
 
-    // Default constructor for Designer support (if needed, though DI prefers the above)
-    // WinForms designer sometimes complains if no parameterless constructor exists, 
-    // but runtime needs the one with params.
-
-    private void Form1_Load(object sender, EventArgs e)
+    private async void Form1_Load(object sender, EventArgs e)
     {
         try
         {
-            // 1. Initialize Folders
+            // Initialize view by loading from service
+            var loaded = await _studentService.LoadStudentsAsync();
+            foreach (var s in loaded) _students.Add(s);
+
+            // Just for status display - we can ask fileService for today's folder path if needed
+            // or just say Ready.
             _dailyFolderPath = _fileService.InitializeDailyFolder();
-            lblStatus.Text = $"Ready. Folder: {_dailyFolderPath}";
-
-            // 2. Load Students
-            // Assuming alumnos.csv is in the AppDirectory or Root Folder?
-            // Plan: "Locate alumnos.csv in the root [of Documents/Feedback-Flow? or App?]"
-            // User said: "Locate alumnos.csv in the root." usually means App Root or Documents Root.
-            // Let's check Documents/Feedback-Flow/alumnos.csv first, then App Root.
-
-            string docRoot = Path.GetDirectoryName(_dailyFolderPath); // ..
-            string csvPath = Path.Combine(docRoot, "alumnos.csv");
-
-            if (!File.Exists(csvPath))
-            {
-                // Fallback to app directory
-                csvPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "alumnos.csv");
-            }
-
-            if (File.Exists(csvPath))
-            {
-                _students = _dataService.LoadStudents(csvPath).ToList();
-                lstStudents.DataSource = _students;
-                lstStudents.DisplayMember = "FullName";
-                lblStatus.Text = $"Loaded {_students.Count} students.";
-            }
-            else
-            {
-                MessageBox.Show("alumnos.csv not found in Documents/Feedback-Flow or App Directory.", "Missing CSV",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                lblStatus.Text = "Missing alumnos.csv";
-            }
+            lblStatus.Text = $"Ready. Loaded {_students.Count} students.";
         }
         catch (Exception ex)
         {
@@ -77,17 +60,117 @@ public partial class Form1 : Form
 
     private void btnSelectFile_Click(object sender, EventArgs e)
     {
-        using (var openFileDialog = new OpenFileDialog())
-        {
-            openFileDialog.Filter = "PDF Files (*.pdf)|*.pdf";
-            openFileDialog.Title = "Select Class Content PDF";
+        using var openFileDialog = new OpenFileDialog();
+        openFileDialog.Filter = "PDF Files (*.pdf)|*.pdf";
+        openFileDialog.Title = "Select Class Content PDF";
 
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
+        if (openFileDialog.ShowDialog() == DialogResult.OK)
+        {
+            _masterPdfPath = openFileDialog.FileName;
+            lblSelectedFile.Text = Path.GetFileName(_masterPdfPath);
+        }
+    }
+
+    private async void btnAdd_Click(object sender, EventArgs e)
+    {
+        using var form = new StudentForm();
+        if (form.ShowDialog() == DialogResult.OK)
+        {
+            try
             {
-                _masterPdfPath = openFileDialog.FileName;
-                lblSelectedFile.Text = Path.GetFileName(_masterPdfPath);
+                var newStudent = new Student
+                {
+                    FullName = form.StudentFullName,
+                    Email = form.StudentEmail
+                };
+
+                // Check duplicate email in UI list first for quick feedback? 
+                // Service could also handle it, but UI check prevents service call.
+                if (_students.Any(s => s.Email.Equals(newStudent.Email, StringComparison.OrdinalIgnoreCase)))
+                {
+                    MessageBox.Show("Student with this email already exists.", "Validation", MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
+
+                await _studentService.AddStudentAsync(newStudent);
+                _students.Add(newStudent);
+                lblStatus.Text = $"Added {newStudent.FullName}";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error adding student: {ex.Message}", "Error", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
+    }
+
+    private async void btnUpdate_Click(object sender, EventArgs e)
+    {
+        if (lstStudents.SelectedItem is not Student selectedStudent) return;
+
+        using var form = new StudentForm(selectedStudent);
+        if (form.ShowDialog() == DialogResult.OK)
+        {
+            try
+            {
+                var updatedStudent = new Student
+                {
+                    FullName = form.StudentFullName,
+                    Email = form.StudentEmail
+                };
+
+                // Check duplicate if email changed
+                if (!selectedStudent.Email.Equals(updatedStudent.Email, StringComparison.OrdinalIgnoreCase) &&
+                    _students.Any(s => s.Email.Equals(updatedStudent.Email, StringComparison.OrdinalIgnoreCase)))
+                {
+                    MessageBox.Show("Another student with this email already exists.", "Validation",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                await _studentService.UpdateStudentAsync(selectedStudent, updatedStudent);
+
+                // Update UI object directly to reflect changes in BindingList
+                // (Or reload all, but updating object is efficient)
+                // Note: UpdateStudentAsync uses original property to find, so we must update AFTER service call success
+                selectedStudent.FullName = updatedStudent.FullName;
+                selectedStudent.Email = updatedStudent.Email;
+
+                _students.ResetBindings();
+                lblStatus.Text = $"Updated {selectedStudent.FullName}";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error updating student: {ex.Message}", "Error", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+    }
+
+    private async void btnRemove_Click(object sender, EventArgs e)
+    {
+        if (lstStudents.SelectedItem is not Student selectedStudent) return;
+
+        if (MessageBox.Show($"Remove {selectedStudent.FullName}?", "Confirm", MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question) == DialogResult.Yes)
+        {
+            try
+            {
+                await _studentService.DeleteStudentAsync(selectedStudent);
+                _students.Remove(selectedStudent);
+                lblStatus.Text = $"Removed {selectedStudent.FullName}";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error removing student: {ex.Message}", "Error", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+    }
+
+    private void lstStudents_SelectedIndexChanged(object sender, EventArgs e)
+    {
     }
 
     private async void btnGenerate_Click(object sender, EventArgs e)
@@ -115,7 +198,6 @@ public partial class Form1 : Form
         {
             try
             {
-                // Update Status
                 lblStatus.Text = $"Processing: {student.FullName}";
                 Application.DoEvents(); // Keep UI responsive-ish without full async thread offloading complexity if strictly KISS, but async is better.
                 // Since I used `async void`, I should ideally use Task.Run for heavy work, but iText is fast enough for small batches.
@@ -127,18 +209,8 @@ public partial class Form1 : Form
                 string studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, student);
 
                 // 2. Get Note Content
-                string content = _fileService.GetStudentNoteContent(studentFolder);
-                if (content == null)
-                {
-                    // User said: "Handle missing .txt notes".
-                    // Logic: Maybe Create a default "No specific notes" PDF?
-                    // Or Skip?
-                    // Plan said: "Ensure the PDF conversion doesn't lock files."
-                    // Let's assume we proceed with "generic" content or skip.
-                    // "The app must find the .txt file... convert... into PDF"
-                    // I'll proceed with empty content warning or default text.
-                    content = "No specific notes found for this student.";
-                }
+                string? content = _fileService.GetStudentNoteContent(studentFolder);
+                content ??= "No specific notes found for this student.";
 
                 // 3. Generate PDF
                 string studentPdfPath = _pdfService.GenerateStudentPdf(student, content, studentFolder);

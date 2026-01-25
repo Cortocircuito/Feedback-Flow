@@ -33,6 +33,7 @@ internal static class Program
         services.AddSingleton<IDataService, CsvDataService>();
         services.AddSingleton<IPdfService, PdfGenerationService>();
         services.AddSingleton<IEmailService, OutlookEmailService>();
+        services.AddSingleton<IStudentService, StudentService>();
 
         // Register Forms
         services.AddTransient<Form1>();

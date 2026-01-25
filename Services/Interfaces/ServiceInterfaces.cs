@@ -18,10 +18,13 @@ public interface IFileSystemService
 
     /// <summary>
     /// Reads the content of the student's specific note file (.txt).
-    /// Expected file location: {StudentDateFolder}/{StudentName}.txt or similar convention?
-    /// Plan said: "find the .txt file inside the student's specific subfolder"
     /// </summary>
     string? GetStudentNoteContent(string studentFolderPath);
+
+    /// <summary>
+    /// Renames a student folder when their name changes.
+    /// </summary>
+    void RenameStudentFolder(string dailyFolderPath, string oldName, string newName);
 }
 
 public interface IDataService
