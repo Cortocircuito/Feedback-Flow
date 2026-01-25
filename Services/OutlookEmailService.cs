@@ -19,14 +19,15 @@ public class OutlookEmailService : IEmailService
         if (string.IsNullOrWhiteSpace(studentPdfPath))
             throw new ArgumentNullException(nameof(studentPdfPath));
 
-        if (!File.Exists(learningMaterialPath)) throw new FileNotFoundException("Learning Material PDF not found", learningMaterialPath);
+        if (!File.Exists(learningMaterialPath))
+            throw new FileNotFoundException("Learning Material PDF not found", learningMaterialPath);
         if (!File.Exists(studentPdfPath)) throw new FileNotFoundException("Student PDF not found", studentPdfPath);
 
         try
         {
             // 1. Create MimeMessage
             var message = new MimeMessage();
-            message.Subject = $"Feedback - {DateTime.Now:yyyy-MM-dd}";
+            message.Subject = $"Feedback for {student.FullName} - {DateTime.Now:yyyy-MM-dd}";
 
             // Add Recipient
             if (!string.IsNullOrWhiteSpace(student.Email))
