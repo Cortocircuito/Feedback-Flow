@@ -21,8 +21,8 @@ internal static class Program
         ConfigureServices(services);
         ServiceProvider = services.BuildServiceProvider();
 
-        // Resolve Form1
-        var mainForm = ServiceProvider.GetRequiredService<Form1>();
+        // Resolve MainDashboard
+        var mainForm = ServiceProvider.GetRequiredService<MainDashboard>();
         Application.Run(mainForm);
     }
 
@@ -36,6 +36,6 @@ internal static class Program
         services.AddSingleton<IStudentService, StudentService>();
 
         // Register Forms
-        services.AddTransient<Form1>();
+        services.AddTransient<MainDashboard>();
     }
 }

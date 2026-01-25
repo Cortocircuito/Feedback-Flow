@@ -4,7 +4,7 @@ using Feedback_Flow.Services.Interfaces;
 
 namespace Feedback_Flow;
 
-public partial class Form1 : Form
+public partial class MainDashboard : Form
 {
     private readonly IStudentService _studentService;
 
@@ -23,7 +23,7 @@ public partial class Form1 : Form
     // Generation assumes folders exist or ensures them? 
     // Standard FileService CreateStudentFolder ensures existence. So we can keep using it for Generation.
 
-    public Form1(IStudentService studentService,
+    public MainDashboard(IStudentService studentService,
         IFileSystemService fileService,
         IPdfService pdfService,
         IEmailService emailService)
@@ -39,7 +39,7 @@ public partial class Form1 : Form
         lstStudents.DisplayMember = "FullName";
     }
 
-    private async void Form1_Load(object sender, EventArgs e)
+    private async void MainDashboard_Load(object sender, EventArgs e)
     {
         try
         {

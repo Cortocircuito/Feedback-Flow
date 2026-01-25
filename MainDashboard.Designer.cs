@@ -1,6 +1,6 @@
 ﻿namespace Feedback_Flow;
 
-partial class Form1
+partial class MainDashboard
 {
     /// <summary>
     ///  Required designer variable.
@@ -28,7 +28,7 @@ partial class Form1
     /// </summary>
     private void InitializeComponent()
     {
-        System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+        System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainDashboard));
         lstStudents = new ListBox();
         btnSelectFile = new Button();
         lblSelectedFile = new Label();
@@ -123,7 +123,7 @@ partial class Form1
         btnRemove.UseVisualStyleBackColor = true;
         btnRemove.Click += btnRemove_Click;
         // 
-        // Form1
+        // MainDashboard
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
@@ -137,9 +137,9 @@ partial class Form1
         Controls.Add(btnAdd);
         Controls.Add(lstStudents);
         Icon = (Icon)resources.GetObject("$this.Icon");
-        Name = "Form1";
+        Name = "MainDashboard";
         Text = "Feedback Flow - Teacher Assistant";
-        Load += Form1_Load;
+        Load += MainDashboard_Load;
         statusStrip1.ResumeLayout(false);
         statusStrip1.PerformLayout();
         ResumeLayout(false);
