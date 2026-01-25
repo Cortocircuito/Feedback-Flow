@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using Feedback_Flow.Models;
 using Feedback_Flow.Services.Interfaces;
 
@@ -56,16 +54,15 @@ namespace Feedback_Flow.Services
         {
             if (!Directory.Exists(studentFolderPath)) return null;
 
-            // Strategy: Look for any .txt file. 
-            // If multiple, take the first one? Or specific named one?
-            // "The app must find the .txt file inside the student's specific subfolder"
-            // We'll assume any .txt file is the note.
-            string[] txtFiles = Directory.GetFiles(studentFolderPath, "*.txt");
+            // Strategy: Look for all .txt files and take the most recent one by Last Write Time.
+            var mostRecentFile = new DirectoryInfo(studentFolderPath)
+                .GetFiles("*.txt")
+                .OrderByDescending(f => f.LastWriteTime)
+                .FirstOrDefault();
 
-            if (txtFiles.Length == 0) return null;
+            if (mostRecentFile == null) return null;
 
-            // Return content of the first found text file
-            return File.ReadAllText(txtFiles[0]);
+            return File.ReadAllText(mostRecentFile.FullName);
         }
     }
 }
