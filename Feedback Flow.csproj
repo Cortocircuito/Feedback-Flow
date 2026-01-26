@@ -27,7 +27,7 @@
 
   <ItemGroup>
     <None Update="Docs\THIRD-PARTY-LICENSES.md">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
