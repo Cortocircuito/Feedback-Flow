@@ -11,7 +11,7 @@ public class CsvDataService : IDataService
 
         if (!File.Exists(csvPath))
         {
-            return students; // Return empty, or throw? Empty allows app to start.
+            return students;
         }
 
         // Simple parsing logic (KISS)
@@ -40,6 +40,6 @@ public class CsvDataService : IDataService
             students.Add(new Student { FullName = name, Email = email });
         }
 
-        return students;
+        return students.OrderBy(s => s.FullName).ToList();
     }
 }
