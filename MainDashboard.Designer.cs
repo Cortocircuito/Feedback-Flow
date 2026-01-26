@@ -37,8 +37,9 @@ partial class MainDashboard
         btnAdd = new Button();
         btnUpdate = new Button();
         btnRemove = new Button();
-        lblDayOfWeek = new Label();
         btnEditFeedback = new Button();
+        lblDayOfWeek = new Label();
+        btnDesassignMaterial = new Button();
         ((System.ComponentModel.ISupportInitialize)dgvStudents).BeginInit();
         statusStrip1.SuspendLayout();
         SuspendLayout();
@@ -55,8 +56,8 @@ partial class MainDashboard
         dgvStudents.ReadOnly = true;
         dgvStudents.RowHeadersVisible = false;
         dgvStudents.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        dgvStudents.Size = new Size(300, 255);
-        dgvStudents.TabIndex = 2;
+        dgvStudents.Size = new Size(410, 255);
+        dgvStudents.TabIndex = 3;
         dgvStudents.CellDoubleClick += dgvStudents_CellDoubleClick;
         dgvStudents.CellFormatting += dgvStudents_CellFormatting;
         // 
@@ -74,8 +75,8 @@ partial class MainDashboard
         // 
         btnGenerate.Location = new Point(12, 321);
         btnGenerate.Name = "btnGenerate";
-        btnGenerate.Size = new Size(426, 35);
-        btnGenerate.TabIndex = 6;
+        btnGenerate.Size = new Size(536, 35);
+        btnGenerate.TabIndex = 7;
         btnGenerate.Text = "Generate Feedback Emails";
         btnGenerate.UseVisualStyleBackColor = true;
         btnGenerate.Click += btnGenerate_Click;
@@ -85,8 +86,8 @@ partial class MainDashboard
         statusStrip1.Items.AddRange(new ToolStripItem[] { lblStatus });
         statusStrip1.Location = new Point(0, 365);
         statusStrip1.Name = "statusStrip1";
-        statusStrip1.Size = new Size(450, 22);
-        statusStrip1.TabIndex = 7;
+        statusStrip1.Size = new Size(560, 22);
+        statusStrip1.TabIndex = 8;
         statusStrip1.Text = "statusStrip1";
         // 
         // lblStatus
@@ -97,59 +98,72 @@ partial class MainDashboard
         // 
         // btnAdd
         // 
-        btnAdd.Location = new Point(318, 60);
+        btnAdd.Location = new Point(428, 60);
         btnAdd.Name = "btnAdd";
         btnAdd.Size = new Size(120, 40);
-        btnAdd.TabIndex = 3;
+        btnAdd.TabIndex = 4;
         btnAdd.Text = "Add New";
         btnAdd.UseVisualStyleBackColor = true;
         btnAdd.Click += btnAdd_Click;
         // 
         // btnUpdate
         // 
-        btnUpdate.Location = new Point(318, 106);
+        btnUpdate.Location = new Point(428, 106);
         btnUpdate.Name = "btnUpdate";
         btnUpdate.Size = new Size(120, 40);
-        btnUpdate.TabIndex = 4;
+        btnUpdate.TabIndex = 5;
         btnUpdate.Text = "Edit Selected";
         btnUpdate.UseVisualStyleBackColor = true;
         btnUpdate.Click += btnUpdate_Click;
         // 
         // btnRemove
         // 
-        btnRemove.Location = new Point(318, 152);
+        btnRemove.Location = new Point(428, 152);
         btnRemove.Name = "btnRemove";
         btnRemove.Size = new Size(120, 40);
-        btnRemove.TabIndex = 5;
+        btnRemove.TabIndex = 6;
         btnRemove.Text = "Remove";
         btnRemove.UseVisualStyleBackColor = true;
         btnRemove.Click += btnRemove_Click;
+        // 
+        // btnEditFeedback
+        // 
+        btnEditFeedback.Location = new Point(263, 12);
+        btnEditFeedback.Name = "btnEditFeedback";
+        btnEditFeedback.Size = new Size(120, 42);
+        btnEditFeedback.TabIndex = 2;
+        btnEditFeedback.Text = "Edit Feedback";
+        btnEditFeedback.UseVisualStyleBackColor = true;
+        btnEditFeedback.Click += btnEditFeedback_Click;
         // 
         // lblDayOfWeek
         // 
         lblDayOfWeek.AutoSize = true;
         lblDayOfWeek.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
         lblDayOfWeek.ForeColor = SystemColors.HotTrack;
-        lblDayOfWeek.Location = new Point(325, 35);
+        lblDayOfWeek.Location = new Point(428, 39);
         lblDayOfWeek.Name = "lblDayOfWeek";
-        lblDayOfWeek.Size = new Size(0, 15);
-        lblDayOfWeek.TabIndex = 8;
+        lblDayOfWeek.Size = new Size(51, 15);
+        lblDayOfWeek.TabIndex = 9;
+        lblDayOfWeek.Text = "Monday";
         // 
-        // btnEditFeedback
+        // btnDesassignMaterial
         // 
-        btnEditFeedback.Location = new Point(138, 12);
-        btnEditFeedback.Name = "btnEditFeedback";
-        btnEditFeedback.Size = new Size(120, 42);
-        btnEditFeedback.TabIndex = 1;
-        btnEditFeedback.Text = "Edit Feedback";
-        btnEditFeedback.UseVisualStyleBackColor = true;
-        btnEditFeedback.Click += btnEditFeedback_Click;
+        btnDesassignMaterial.Location = new Point(137, 12);
+        btnDesassignMaterial.Name = "btnDesassignMaterial";
+        btnDesassignMaterial.Size = new Size(120, 42);
+        btnDesassignMaterial.TabIndex = 1;
+        btnDesassignMaterial.Text = "Desassign Material";
+        btnDesassignMaterial.UseVisualStyleBackColor = true;
+        btnDesassignMaterial.Click += btnDesassignMaterial_Click;
         // 
         // MainDashboard
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(450, 387);
+        ClientSize = new Size(560, 387);
+        Controls.Add(btnDesassignMaterial);
+        Controls.Add(lblDayOfWeek);
         Controls.Add(statusStrip1);
         Controls.Add(btnGenerate);
         Controls.Add(btnAssignMaterial);
@@ -158,7 +172,6 @@ partial class MainDashboard
         Controls.Add(btnUpdate);
         Controls.Add(btnAdd);
         Controls.Add(dgvStudents);
-        Controls.Add(lblDayOfWeek);
         Icon = (Icon)resources.GetObject("$this.Icon");
         Name = "MainDashboard";
         Text = "Feedback Flow - Teacher Assistant";
@@ -183,8 +196,10 @@ partial class MainDashboard
     private System.Windows.Forms.Button btnAdd;
     private System.Windows.Forms.Button btnUpdate;
     private System.Windows.Forms.Button btnRemove;
-    private System.Windows.Forms.Label lblDayOfWeek;
     private System.Windows.Forms.Button btnEditFeedback;
 
     #endregion
+
+    private Label lblDayOfWeek;
+    private Button btnDesassignMaterial;
 }

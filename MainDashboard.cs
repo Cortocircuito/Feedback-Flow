@@ -143,15 +143,20 @@ public partial class MainDashboard : Form
         }
 
         using var openFileDialog = new OpenFileDialog();
-        openFileDialog.Filter = "PDF Files (*.pdf)|*.pdf";
+        openFileDialog.Filter = "All Supported Files|*.pdf;*.docx;*.doc;*.odt;*.pptx;*.ppt;*.odp|" +
+                                "PDF Files (*.pdf)|*.pdf|" +
+                                "Word Documents (*.docx;*.doc)|*.docx;*.doc|" +
+                                "LibreOffice Writer (*.odt)|*.odt|" +
+                                "PowerPoint (*.pptx;*.ppt)|*.pptx;*.ppt|" +
+                                "LibreOffice Impress (*.odp)|*.odp";
         openFileDialog.Title = $"Select Material for {selectedStudent.FullName}";
 
         if (openFileDialog.ShowDialog() == DialogResult.OK)
         {
             selectedStudent.LearningMaterialPath = openFileDialog.FileName;
-            
+
             // Persist change
-            try 
+            try
             {
                 await _studentService.UpdateStudentAsync(selectedStudent, selectedStudent);
 
@@ -166,9 +171,14 @@ public partial class MainDashboard : Form
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error assigning material: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error assigning material: {ex.Message}", "Error", MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
+    }
+
+    private void btnDesassignMaterial_Click(object sender, EventArgs e)
+    {
     }
 
     private async void btnAdd_Click(object sender, EventArgs e)
@@ -340,7 +350,7 @@ public partial class MainDashboard : Form
             try
             {
                 lblStatus.Text = $"Processing: {student.FullName}";
-                Application.DoEvents(); 
+                Application.DoEvents();
 
                 // Guard: Check if material assigned
                 if (string.IsNullOrEmpty(student.LearningMaterialPath) || !File.Exists(student.LearningMaterialPath))

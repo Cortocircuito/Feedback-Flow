@@ -7,11 +7,11 @@
     <Nullable>disable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationIcon>chalkboard-teacher.ico</ApplicationIcon>
+    <ApplicationIcon>fluent-color-person-edit-32.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="chalkboard-teacher.ico" />
+    <Content Include="fluent-color-person-edit-32.ico" />
   </ItemGroup>
 
   <ItemGroup>
