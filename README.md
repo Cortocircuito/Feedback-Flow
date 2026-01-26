@@ -5,11 +5,12 @@
 ## 🚀 Features
 
 - **Student Management (CRUD)**: Add, edit, and remove students directly from the application with a dedicated dialog form
+- **Material Assignment**: Assign learning materials (PDF, Word, PowerPoint, LibreOffice documents) to individual students
 - **Direct Note Editing**: Instant access to student feedback files with a built-in "Smart" editor launcher
 - **Automated Organization**: Organizes feedback in daily folders (`YYYYMMDD`) within `My Documents/Feedback-Flow`
 - **Data Loading**: Imports student list from an `students.csv` file with automatic persistence
 - **PDF Generation**: Converts individual text notes (`.txt`) into professional PDF documents using iText 9
-- **Email Integration**: Generates personalized email drafts (`.eml`) with student-specific subject lines, class content and feedback attached, ready to be reviewed and sent from Outlook or another email client
+- **Email Integration**: Generates personalized email drafts (`.eml`) with student-specific subject lines, assigned materials and feedback attached, ready to be reviewed and sent from Outlook or another email client
 - **Modern Architecture**: Uses Dependency Injection and service-oriented design for clean, maintainable code
 - **Folder Synchronization**: Automatically creates and renames student folders when managing student data
 - **Day Display**: Shows the current day of the week in English on the main dashboard
@@ -67,17 +68,31 @@ Feedback Flow/
 - **Content**: New files are pre-filled with the header: `[Student Name] Feedback Notes:`.
 - **Editor**: Opens immediately in your system's default text editor (e.g., Notepad).
 
-### 4. Feedback Generation
-- **Select PDF**: Click "Select Master PDF" and choose the class content PDF file
-- **Prepare Notes**: (If you haven't used the "Edit Feedback" feature) Place `.txt` files with individual student notes in their corresponding folders.
-- **Generate**: Click "Generate Feedback Emails" to create PDFs and email drafts
-- **Email Format**: Each draft is personalized with:
+### 4. Material Assignment
+- **Assign Material**: Select a student and click **"Assign Material"** to choose their learning material
+- **Supported Formats**: 
+  - PDF documents (`.pdf`)
+  - Word documents (`.docx`, `.doc`)
+  - LibreOffice Writer (`.odt`)
+  - PowerPoint presentations (`.pptx`, `.ppt`)
+  - LibreOffice Impress (`.odp`)
+- **Unassign**: Select a student with assigned material and click **"Unassign Material"** to remove it
+- **View Status**: The "Learning Material" column shows the assigned file name or "Not assigned"
+
+### 5. Feedback Generation
+- **Prepare Notes**: Use the "Edit Feedback" feature to write individual student notes (or manually place `.txt` files in student folders)
+- **Generate**: Click **"Generate Feedback Emails"** to process all students with assigned materials
+- **Automatic Processing**: For each student with assigned material:
+  - Creates a personalized feedback PDF combining their notes
+  - Opens an email draft in your default email client
+- **Email Format**: Each draft includes:
   - **Subject**: `Feedback for [Student Name] - YYYY-MM-DD`
   - **Body**: Personalized greeting with student's name
-  - **Attachments**: Class content PDF and student-specific feedback PDF
-- **Send**: Review the drafts opened in your email client and send them
+  - **Attachments**: Student's assigned learning material and their feedback PDF
+- **Skipped Students**: Students without assigned materials are automatically skipped
+- **Send**: Review the email drafts and send them from your email client
 
-### 5. Daily Workflow
+### 6. Daily Workflow
 - The application displays the current day of the week at the top
 - Each day gets its own folder (e.g., `20260125`)
 - Student folders are created automatically when you add students or generate feedback
