@@ -177,8 +177,59 @@ public partial class MainDashboard : Form
         }
     }
 
-    private void btnDesassignMaterial_Click(object sender, EventArgs e)
+    /// <summary>
+    /// Unassigns the learning material from the selected student.
+    /// Clears the LearningMaterialPath and updates the CSV file.
+    /// </summary>
+    private async void btnUnassignMaterial_Click(object sender, EventArgs e)
     {
+        // Get selected student from DataGridView
+        if (dgvStudents.CurrentRow?.DataBoundItem is not Student selectedStudent)
+        {
+            MessageBox.Show("Please select a student first.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        // Check if student has material assigned
+        if (string.IsNullOrWhiteSpace(selectedStudent.LearningMaterialPath))
+        {
+            MessageBox.Show($"{selectedStudent.FullName} has no material assigned.", "Information", 
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        // Confirm unassignment
+        var result = MessageBox.Show(
+            $"Unassign material from {selectedStudent.FullName}?",
+            "Confirm Unassignment",
+            MessageBoxButtons.YesNo,
+            MessageBoxIcon.Question);
+
+        if (result == DialogResult.Yes)
+        {
+            try
+            {
+                // Clear the material path
+                selectedStudent.LearningMaterialPath = string.Empty;
+
+                // Persist change to CSV
+                await _studentService.UpdateStudentAsync(selectedStudent, selectedStudent);
+
+                // Trigger DataGridView refresh to show "Not assigned"
+                var index = _students.IndexOf(selectedStudent);
+                if (index >= 0)
+                {
+                    _students.ResetItem(index);
+                }
+
+                lblStatus.Text = $"Unassigned material from {selectedStudent.FullName}";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error unassigning material: {ex.Message}", "Error", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
     }
 
     private async void btnAdd_Click(object sender, EventArgs e)

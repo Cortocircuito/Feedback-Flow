@@ -31,6 +31,7 @@ partial class MainDashboard
         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainDashboard));
         dgvStudents = new DataGridView();
         btnAssignMaterial = new Button();
+        btnUnassignMaterial = new Button();
         btnGenerate = new Button();
         statusStrip1 = new StatusStrip();
         lblStatus = new ToolStripStatusLabel();
@@ -39,7 +40,6 @@ partial class MainDashboard
         btnRemove = new Button();
         btnEditFeedback = new Button();
         lblDayOfWeek = new Label();
-        btnDesassignMaterial = new Button();
         ((System.ComponentModel.ISupportInitialize)dgvStudents).BeginInit();
         statusStrip1.SuspendLayout();
         SuspendLayout();
@@ -70,6 +70,16 @@ partial class MainDashboard
         btnAssignMaterial.Text = "Assign Material";
         btnAssignMaterial.UseVisualStyleBackColor = true;
         btnAssignMaterial.Click += btnAssignMaterial_Click;
+        // 
+        // btnUnassignMaterial
+        // 
+        btnUnassignMaterial.Location = new Point(138, 12);
+        btnUnassignMaterial.Name = "btnUnassignMaterial";
+        btnUnassignMaterial.Size = new Size(120, 42);
+        btnUnassignMaterial.TabIndex = 1;
+        btnUnassignMaterial.Text = "Unassign Material";
+        btnUnassignMaterial.UseVisualStyleBackColor = true;
+        btnUnassignMaterial.Click += btnUnassignMaterial_Click;
         // 
         // btnGenerate
         // 
@@ -147,25 +157,15 @@ partial class MainDashboard
         lblDayOfWeek.TabIndex = 9;
         lblDayOfWeek.Text = "Monday";
         // 
-        // btnDesassignMaterial
-        // 
-        btnDesassignMaterial.Location = new Point(137, 12);
-        btnDesassignMaterial.Name = "btnDesassignMaterial";
-        btnDesassignMaterial.Size = new Size(120, 42);
-        btnDesassignMaterial.TabIndex = 1;
-        btnDesassignMaterial.Text = "Desassign Material";
-        btnDesassignMaterial.UseVisualStyleBackColor = true;
-        btnDesassignMaterial.Click += btnDesassignMaterial_Click;
-        // 
         // MainDashboard
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
         ClientSize = new Size(560, 387);
-        Controls.Add(btnDesassignMaterial);
         Controls.Add(lblDayOfWeek);
         Controls.Add(statusStrip1);
         Controls.Add(btnGenerate);
+        Controls.Add(btnUnassignMaterial);
         Controls.Add(btnAssignMaterial);
         Controls.Add(btnEditFeedback);
         Controls.Add(btnRemove);
@@ -190,16 +190,15 @@ partial class MainDashboard
 
     private System.Windows.Forms.DataGridView dgvStudents;
     private System.Windows.Forms.Button btnAssignMaterial;
-    private System.Windows.Forms.Button btnGenerate;
+    private System.Windows.Forms.Button btnUnassignMaterial;
     private System.Windows.Forms.StatusStrip statusStrip1;
     private System.Windows.Forms.ToolStripStatusLabel lblStatus;
     private System.Windows.Forms.Button btnAdd;
     private System.Windows.Forms.Button btnUpdate;
     private System.Windows.Forms.Button btnRemove;
     private System.Windows.Forms.Button btnEditFeedback;
+    private System.Windows.Forms.Label lblDayOfWeek;
+    private System.Windows.Forms.Button btnGenerate;
 
     #endregion
-
-    private Label lblDayOfWeek;
-    private Button btnDesassignMaterial;
 }
