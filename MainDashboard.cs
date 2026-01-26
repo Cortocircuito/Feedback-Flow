@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Feedback_Flow.Helpers;
 using Feedback_Flow.Models;
 using Feedback_Flow.Services.Interfaces;
 
@@ -14,7 +15,7 @@ public partial class MainDashboard : Form
     private readonly IPdfService _pdfService;
     private readonly IEmailService _emailService;
 
-    private BindingList<Student> _students = new();
+    private SortableBindingList<Student> _students;
     // Removed global masterPdfPath
 
     private string
@@ -38,8 +39,33 @@ public partial class MainDashboard : Form
 
         InitializeComponent();
 
-        lstStudents.DataSource = _students;
-        lstStudents.DisplayMember = "FullName";
+        // Initialize sortable binding list with alphabetical sorting by FullName
+        _students = new SortableBindingList<Student>("FullName", ListSortDirection.Ascending);
+
+        // Configure DataGridView columns
+        dgvStudents.AutoGenerateColumns = false;
+
+        var studentNameColumn = new DataGridViewTextBoxColumn
+        {
+            Name = "StudentName",
+            HeaderText = "Student",
+            DataPropertyName = "FullName",
+            ReadOnly = true
+        };
+
+        var learningMaterialColumn = new DataGridViewTextBoxColumn
+        {
+            Name = "LearningMaterial",
+            HeaderText = "Learning Material",
+            DataPropertyName = "LearningMaterialPath",
+            ReadOnly = true
+        };
+
+        dgvStudents.Columns.Add(studentNameColumn);
+        dgvStudents.Columns.Add(learningMaterialColumn);
+
+        // Bind data source
+        dgvStudents.DataSource = _students;
     }
 
     private async void MainDashboard_Load(object sender, EventArgs e)
@@ -64,9 +90,53 @@ public partial class MainDashboard : Form
         }
     }
 
+    /// <summary>
+    /// Formats cells in the DataGridView for better display.
+    /// Extracts file names from full paths and shows "Not assigned" for empty materials.
+    /// </summary>
+    private void dgvStudents_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+    {
+        try
+        {
+            // Only format the Learning Material column
+            if (dgvStudents.Columns[e.ColumnIndex].Name == "LearningMaterial")
+            {
+                if (e.Value == null || string.IsNullOrWhiteSpace(e.Value.ToString()))
+                {
+                    e.Value = "Not assigned";
+                    e.FormattingApplied = true;
+                }
+                else
+                {
+                    string fullPath = e.Value.ToString()!;
+
+                    // Check if the file exists to avoid displaying invalid paths
+                    if (File.Exists(fullPath))
+                    {
+                        e.Value = Path.GetFileName(fullPath);
+                    }
+                    else
+                    {
+                        e.Value = "File not found";
+                    }
+
+                    e.FormattingApplied = true;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log error to status bar instead of crashing
+            lblStatus.Text = $"Formatting error: {ex.Message}";
+            e.Value = "Error";
+            e.FormattingApplied = true;
+        }
+    }
+
     private async void btnAssignMaterial_Click(object sender, EventArgs e)
     {
-        if (lstStudents.SelectedItem is not Student selectedStudent)
+        // Get selected student from DataGridView
+        if (dgvStudents.CurrentRow?.DataBoundItem is not Student selectedStudent)
         {
             MessageBox.Show("Please select a student first.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
@@ -84,8 +154,15 @@ public partial class MainDashboard : Form
             try 
             {
                 await _studentService.UpdateStudentAsync(selectedStudent, selectedStudent);
+
+                // Trigger DataGridView refresh to show updated material
+                var index = _students.IndexOf(selectedStudent);
+                if (index >= 0)
+                {
+                    _students.ResetItem(index);
+                }
+
                 lblStatus.Text = $"Assigned material to {selectedStudent.FullName}";
-                lblSelectedFile.Text = Path.GetFileName(openFileDialog.FileName); // Quick feedback
             }
             catch (Exception ex)
             {
@@ -130,7 +207,7 @@ public partial class MainDashboard : Form
 
     private async void btnUpdate_Click(object sender, EventArgs e)
     {
-        if (lstStudents.SelectedItem is not Student selectedStudent) return;
+        if (dgvStudents.CurrentRow?.DataBoundItem is not Student selectedStudent) return;
 
         using var form = new StudentForm(selectedStudent);
         if (form.ShowDialog() == DialogResult.OK)
@@ -162,7 +239,8 @@ public partial class MainDashboard : Form
                 selectedStudent.FullName = updatedStudent.FullName;
                 selectedStudent.Email = updatedStudent.Email;
 
-                _students.ResetBindings();
+                // Trigger re-sort since name may have changed
+                _students.Sort();
                 lblStatus.Text = $"Updated {selectedStudent.FullName}";
             }
             catch (Exception ex)
@@ -175,7 +253,7 @@ public partial class MainDashboard : Form
 
     private async void btnRemove_Click(object sender, EventArgs e)
     {
-        if (lstStudents.SelectedItem is not Student selectedStudent) return;
+        if (dgvStudents.CurrentRow?.DataBoundItem is not Student selectedStudent) return;
 
         if (MessageBox.Show($"Remove {selectedStudent.FullName}?", "Confirm", MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question) == DialogResult.Yes)
@@ -194,14 +272,21 @@ public partial class MainDashboard : Form
         }
     }
 
-    private void lstStudents_DoubleClick(object sender, EventArgs e)
+    /// <summary>
+    /// Handles double-click on DataGridView rows to open feedback editor.
+    /// </summary>
+    private void dgvStudents_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
     {
-        btnEditFeedback_Click(sender, e);
+        // Ignore header row clicks
+        if (e.RowIndex >= 0)
+        {
+            btnEditFeedback_Click(sender, e);
+        }
     }
 
     private async void btnEditFeedback_Click(object sender, EventArgs e)
     {
-        if (lstStudents.SelectedItem is not Student selectedStudent) return;
+        if (dgvStudents.CurrentRow?.DataBoundItem is not Student selectedStudent) return;
 
         try
         {

@@ -29,9 +29,8 @@ partial class MainDashboard
     private void InitializeComponent()
     {
         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainDashboard));
-        lstStudents = new ListBox();
+        dgvStudents = new DataGridView();
         btnAssignMaterial = new Button();
-        lblSelectedFile = new Label();
         btnGenerate = new Button();
         statusStrip1 = new StatusStrip();
         lblStatus = new ToolStripStatusLabel();
@@ -40,43 +39,43 @@ partial class MainDashboard
         btnRemove = new Button();
         lblDayOfWeek = new Label();
         btnEditFeedback = new Button();
+        ((System.ComponentModel.ISupportInitialize)dgvStudents).BeginInit();
         statusStrip1.SuspendLayout();
         SuspendLayout();
         // 
-        // lstStudents
+        // dgvStudents
         // 
-        lstStudents.FormattingEnabled = true;
-        lstStudents.Location = new Point(12, 50);
-        lstStudents.Name = "lstStudents";
-        lstStudents.Size = new Size(300, 244);
-        lstStudents.TabIndex = 0;
-        lstStudents.DoubleClick += lstStudents_DoubleClick;
+        dgvStudents.AllowUserToAddRows = false;
+        dgvStudents.AllowUserToDeleteRows = false;
+        dgvStudents.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+        dgvStudents.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+        dgvStudents.Location = new Point(12, 60);
+        dgvStudents.MultiSelect = false;
+        dgvStudents.Name = "dgvStudents";
+        dgvStudents.ReadOnly = true;
+        dgvStudents.RowHeadersVisible = false;
+        dgvStudents.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        dgvStudents.Size = new Size(300, 255);
+        dgvStudents.TabIndex = 2;
+        dgvStudents.CellDoubleClick += dgvStudents_CellDoubleClick;
+        dgvStudents.CellFormatting += dgvStudents_CellFormatting;
         // 
         // btnAssignMaterial
         // 
         btnAssignMaterial.Location = new Point(12, 12);
         btnAssignMaterial.Name = "btnAssignMaterial";
-        btnAssignMaterial.Size = new Size(120, 23);
-        btnAssignMaterial.TabIndex = 1;
+        btnAssignMaterial.Size = new Size(120, 42);
+        btnAssignMaterial.TabIndex = 0;
         btnAssignMaterial.Text = "Assign Material";
         btnAssignMaterial.UseVisualStyleBackColor = true;
         btnAssignMaterial.Click += btnAssignMaterial_Click;
         // 
-        // lblSelectedFile
-        // 
-        lblSelectedFile.AutoSize = true;
-        lblSelectedFile.Location = new Point(140, 16);
-        lblSelectedFile.Name = "lblSelectedFile";
-        lblSelectedFile.Size = new Size(88, 15);
-        lblSelectedFile.TabIndex = 2;
-        lblSelectedFile.Text = "No file selected";
-        // 
         // btnGenerate
         // 
-        btnGenerate.Location = new Point(12, 305);
+        btnGenerate.Location = new Point(12, 321);
         btnGenerate.Name = "btnGenerate";
-        btnGenerate.Size = new Size(436, 35);
-        btnGenerate.TabIndex = 3;
+        btnGenerate.Size = new Size(426, 35);
+        btnGenerate.TabIndex = 6;
         btnGenerate.Text = "Generate Feedback Emails";
         btnGenerate.UseVisualStyleBackColor = true;
         btnGenerate.Click += btnGenerate_Click;
@@ -84,10 +83,10 @@ partial class MainDashboard
         // statusStrip1
         // 
         statusStrip1.Items.AddRange(new ToolStripItem[] { lblStatus });
-        statusStrip1.Location = new Point(0, 350);
+        statusStrip1.Location = new Point(0, 365);
         statusStrip1.Name = "statusStrip1";
-        statusStrip1.Size = new Size(458, 22);
-        statusStrip1.TabIndex = 4;
+        statusStrip1.Size = new Size(450, 22);
+        statusStrip1.TabIndex = 7;
         statusStrip1.Text = "statusStrip1";
         // 
         // lblStatus
@@ -98,30 +97,30 @@ partial class MainDashboard
         // 
         // btnAdd
         // 
-        btnAdd.Location = new Point(328, 50);
+        btnAdd.Location = new Point(318, 60);
         btnAdd.Name = "btnAdd";
         btnAdd.Size = new Size(120, 40);
-        btnAdd.TabIndex = 5;
+        btnAdd.TabIndex = 3;
         btnAdd.Text = "Add New";
         btnAdd.UseVisualStyleBackColor = true;
         btnAdd.Click += btnAdd_Click;
         // 
         // btnUpdate
         // 
-        btnUpdate.Location = new Point(328, 100);
+        btnUpdate.Location = new Point(318, 106);
         btnUpdate.Name = "btnUpdate";
         btnUpdate.Size = new Size(120, 40);
-        btnUpdate.TabIndex = 6;
+        btnUpdate.TabIndex = 4;
         btnUpdate.Text = "Edit Selected";
         btnUpdate.UseVisualStyleBackColor = true;
         btnUpdate.Click += btnUpdate_Click;
         // 
         // btnRemove
         // 
-        btnRemove.Location = new Point(328, 150);
+        btnRemove.Location = new Point(318, 152);
         btnRemove.Name = "btnRemove";
         btnRemove.Size = new Size(120, 40);
-        btnRemove.TabIndex = 7;
+        btnRemove.TabIndex = 5;
         btnRemove.Text = "Remove";
         btnRemove.UseVisualStyleBackColor = true;
         btnRemove.Click += btnRemove_Click;
@@ -131,17 +130,17 @@ partial class MainDashboard
         lblDayOfWeek.AutoSize = true;
         lblDayOfWeek.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
         lblDayOfWeek.ForeColor = SystemColors.HotTrack;
-        lblDayOfWeek.Location = new Point(328, 250);
+        lblDayOfWeek.Location = new Point(325, 35);
         lblDayOfWeek.Name = "lblDayOfWeek";
         lblDayOfWeek.Size = new Size(0, 15);
         lblDayOfWeek.TabIndex = 8;
         // 
         // btnEditFeedback
         // 
-        btnEditFeedback.Location = new Point(328, 200);
+        btnEditFeedback.Location = new Point(138, 12);
         btnEditFeedback.Name = "btnEditFeedback";
-        btnEditFeedback.Size = new Size(120, 40);
-        btnEditFeedback.TabIndex = 9;
+        btnEditFeedback.Size = new Size(120, 42);
+        btnEditFeedback.TabIndex = 1;
         btnEditFeedback.Text = "Edit Feedback";
         btnEditFeedback.UseVisualStyleBackColor = true;
         btnEditFeedback.Click += btnEditFeedback_Click;
@@ -150,21 +149,21 @@ partial class MainDashboard
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(458, 372);
+        ClientSize = new Size(450, 387);
         Controls.Add(statusStrip1);
         Controls.Add(btnGenerate);
-        Controls.Add(lblSelectedFile);
         Controls.Add(btnAssignMaterial);
         Controls.Add(btnEditFeedback);
         Controls.Add(btnRemove);
         Controls.Add(btnUpdate);
         Controls.Add(btnAdd);
-        Controls.Add(lstStudents);
+        Controls.Add(dgvStudents);
         Controls.Add(lblDayOfWeek);
         Icon = (Icon)resources.GetObject("$this.Icon");
         Name = "MainDashboard";
         Text = "Feedback Flow - Teacher Assistant";
         Load += MainDashboard_Load;
+        ((System.ComponentModel.ISupportInitialize)dgvStudents).EndInit();
         statusStrip1.ResumeLayout(false);
         statusStrip1.PerformLayout();
         ResumeLayout(false);
@@ -176,9 +175,8 @@ partial class MainDashboard
 
     #region Controls
 
-    private System.Windows.Forms.ListBox lstStudents;
+    private System.Windows.Forms.DataGridView dgvStudents;
     private System.Windows.Forms.Button btnAssignMaterial;
-    private System.Windows.Forms.Label lblSelectedFile;
     private System.Windows.Forms.Button btnGenerate;
     private System.Windows.Forms.StatusStrip statusStrip1;
     private System.Windows.Forms.ToolStripStatusLabel lblStatus;
