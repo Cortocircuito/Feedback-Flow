@@ -9,23 +9,15 @@ public partial class MainDashboard : Form
 {
     private readonly IStudentService _studentService;
     private readonly INoteService _noteService;
-
-    // We still need these for Generation
     private readonly IFileSystemService _fileService;
     private readonly IPdfService _pdfService;
     private readonly IEmailService _emailService;
 
     private SortableBindingList<Student> _students;
-    // Removed global masterPdfPath
+    private string _dailyFolderPath = string.Empty;
 
-    private string
-        _dailyFolderPath = string.Empty; // Still needed for context in Generation? Or maybe PDF service handles it? 
-    // Wait, Generation logic uses fileService.CreateStudentFolder... 
-    // StudentService handles Creation on Add. 
-    // Generation assumes folders exist or ensures them? 
-    // Standard FileService CreateStudentFolder ensures existence. So we can keep using it for Generation.
-
-    public MainDashboard(IStudentService studentService,
+    public MainDashboard(
+        IStudentService studentService,
         IFileSystemService fileService,
         IPdfService pdfService,
         IEmailService emailService,
@@ -38,457 +30,425 @@ public partial class MainDashboard : Form
         _noteService = noteService;
 
         InitializeComponent();
+        InitializeDataGrid();
+    }
 
-        // Initialize sortable binding list with alphabetical sorting by FullName
+    #region Initialization
+
+    private void InitializeDataGrid()
+    {
         _students = new SortableBindingList<Student>("FullName", ListSortDirection.Ascending);
-
-        // Configure DataGridView columns
         dgvStudents.AutoGenerateColumns = false;
 
-        var studentNameColumn = new DataGridViewTextBoxColumn
-        {
-            Name = "StudentName",
-            HeaderText = "Student",
-            DataPropertyName = "FullName",
-            ReadOnly = true,
-            SortMode = DataGridViewColumnSortMode.Automatic
-        };
-
-        var learningMaterialColumn = new DataGridViewTextBoxColumn
-        {
-            Name = "LearningMaterial",
-            HeaderText = "Learning Material",
-            DataPropertyName = "LearningMaterialPath",
-            ReadOnly = true,
-            SortMode = DataGridViewColumnSortMode.Automatic
-        };
-
-        dgvStudents.Columns.Add(studentNameColumn);
-        dgvStudents.Columns.Add(learningMaterialColumn);
-
-        // Bind data source
+        dgvStudents.Columns.Add(CreateColumn("StudentName", "Student", "FullName"));
+        dgvStudents.Columns.Add(CreateColumn("LearningMaterial", "Learning Material", "LearningMaterialPath"));
         dgvStudents.DataSource = _students;
+    }
+
+    private static DataGridViewTextBoxColumn CreateColumn(string name, string headerText, string dataPropertyName)
+    {
+        return new DataGridViewTextBoxColumn
+        {
+            Name = name,
+            HeaderText = headerText,
+            DataPropertyName = dataPropertyName,
+            ReadOnly = true,
+            SortMode = DataGridViewColumnSortMode.Automatic
+        };
     }
 
     private async void MainDashboard_Load(object sender, EventArgs e)
     {
-        try
+        await ExecuteWithErrorHandlingAsync(async () =>
         {
-            // Initialize view by loading from service
             var loaded = await _studentService.LoadStudentsAsync();
-            foreach (var s in loaded) _students.Add(s);
+            foreach (var student in loaded)
+                _students.Add(student);
 
-            // Just for status display - we can ask fileService for today's folder path if needed
-            // or just say Ready.
             _dailyFolderPath = _fileService.InitializeDailyFolder();
-            lblStatus.Text = $"Ready. Loaded {_students.Count} students.";
-
-            // Display current day of week in English
+            UpdateStatus($"Ready. Loaded {_students.Count} students.");
             lblDayOfWeek.Text = DateTime.Now.ToString("dddd", System.Globalization.CultureInfo.InvariantCulture);
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Startup Error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
+        }, "Startup Error");
     }
 
-    /// <summary>
-    /// Formats cells in the DataGridView for better display.
-    /// Extracts file names from full paths and shows "Not assigned" for empty materials.
-    /// </summary>
+    #endregion
+
+    #region Cell Formatting
+
     private void dgvStudents_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
     {
+        if (dgvStudents.Columns[e.ColumnIndex].Name != "LearningMaterial") return;
+
         try
         {
-            // Only format the Learning Material column
-            if (dgvStudents.Columns[e.ColumnIndex].Name == "LearningMaterial")
-            {
-                if (e.Value == null || string.IsNullOrWhiteSpace(e.Value.ToString()))
-                {
-                    e.Value = "Not assigned";
-                    e.FormattingApplied = true;
-                }
-                else
-                {
-                    string fullPath = e.Value.ToString()!;
-
-                    // Check if the file exists to avoid displaying invalid paths
-                    if (File.Exists(fullPath))
-                    {
-                        e.Value = Path.GetFileName(fullPath);
-                    }
-                    else
-                    {
-                        e.Value = "File not found";
-                    }
-
-                    e.FormattingApplied = true;
-                }
-            }
+            e.Value = FormatMaterialCell(e.Value?.ToString());
+            e.FormattingApplied = true;
         }
         catch (Exception ex)
         {
-            // Log error to status bar instead of crashing
-            lblStatus.Text = $"Formatting error: {ex.Message}";
+            UpdateStatus($"Formatting error: {ex.Message}");
             e.Value = "Error";
             e.FormattingApplied = true;
         }
     }
 
+    private static string FormatMaterialCell(string? fullPath)
+    {
+        if (string.IsNullOrWhiteSpace(fullPath))
+            return "Not assigned";
+
+        return File.Exists(fullPath) ? Path.GetFileName(fullPath) : "File not found";
+    }
+
+    #endregion
+
+    #region Material Management
+
     private async void btnAssignMaterial_Click(object sender, EventArgs e)
     {
-        // Get selected student from DataGridView
-        if (dgvStudents.CurrentRow?.DataBoundItem is not Student selectedStudent)
-        {
-            MessageBox.Show("Please select a student first.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
-        }
+        if (!TryGetSelectedStudent(out var student)) return;
 
-        using var openFileDialog = new OpenFileDialog();
-        openFileDialog.Filter = "All Supported Files|*.pdf;*.docx;*.doc;*.odt;*.pptx;*.ppt;*.odp|" +
-                                "PDF Files (*.pdf)|*.pdf|" +
-                                "Word Documents (*.docx;*.doc)|*.docx;*.doc|" +
-                                "LibreOffice Writer (*.odt)|*.odt|" +
-                                "PowerPoint (*.pptx;*.ppt)|*.pptx;*.ppt|" +
-                                "LibreOffice Impress (*.odp)|*.odp";
-        openFileDialog.Title = $"Select Material for {selectedStudent.FullName}";
+        var filePath = ShowMaterialFileDialog(student.FullName);
+        if (string.IsNullOrEmpty(filePath)) return;
 
-        if (openFileDialog.ShowDialog() == DialogResult.OK)
-        {
-            selectedStudent.LearningMaterialPath = openFileDialog.FileName;
-
-            // Persist change
-            try
-            {
-                await _studentService.UpdateStudentAsync(selectedStudent, selectedStudent);
-
-                // Trigger DataGridView refresh to show updated material
-                var index = _students.IndexOf(selectedStudent);
-                if (index >= 0)
-                {
-                    _students.ResetItem(index);
-                }
-
-                lblStatus.Text = $"Assigned material to {selectedStudent.FullName}";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error assigning material: {ex.Message}", "Error", MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
-        }
+        await UpdateStudentMaterialAsync(student, filePath, $"Assigned material to {student.FullName}");
     }
 
-    /// <summary>
-    /// Unassigns the learning material from the selected student.
-    /// Clears the LearningMaterialPath and updates the CSV file.
-    /// </summary>
     private async void btnUnassignMaterial_Click(object sender, EventArgs e)
     {
-        // Get selected student from DataGridView
-        if (dgvStudents.CurrentRow?.DataBoundItem is not Student selectedStudent)
+        if (!TryGetSelectedStudent(out var student)) return;
+
+        if (string.IsNullOrWhiteSpace(student.LearningMaterialPath))
         {
-            MessageBox.Show("Please select a student first.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            ShowInfo($"{student.FullName} has no material assigned.", "Information");
             return;
         }
 
-        // Check if student has material assigned
-        if (string.IsNullOrWhiteSpace(selectedStudent.LearningMaterialPath))
-        {
-            MessageBox.Show($"{selectedStudent.FullName} has no material assigned.", "Information",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        if (!ShowConfirmation($"Unassign material from {student.FullName}?", "Confirm Unassignment"))
             return;
-        }
 
-        // Confirm unassignment
-        var result = MessageBox.Show(
-            $"Unassign material from {selectedStudent.FullName}?",
-            "Confirm Unassignment",
-            MessageBoxButtons.YesNo,
-            MessageBoxIcon.Question);
-
-        if (result == DialogResult.Yes)
-        {
-            try
-            {
-                // Clear the material path
-                selectedStudent.LearningMaterialPath = string.Empty;
-
-                // Persist change to CSV
-                await _studentService.UpdateStudentAsync(selectedStudent, selectedStudent);
-
-                // Trigger DataGridView refresh to show "Not assigned"
-                var index = _students.IndexOf(selectedStudent);
-                if (index >= 0)
-                {
-                    _students.ResetItem(index);
-                }
-
-                lblStatus.Text = $"Unassigned material from {selectedStudent.FullName}";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error unassigning material: {ex.Message}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
+        await UpdateStudentMaterialAsync(student, string.Empty, $"Unassigned material from {student.FullName}");
     }
+
+    private async void btnViewMaterial_Click(object sender, EventArgs e)
+    {
+        if (!TryGetSelectedStudent(out var student)) return;
+
+        if (string.IsNullOrWhiteSpace(student.LearningMaterialPath))
+        {
+            ShowInfo($"{student.FullName} has no material assigned.", "No Material");
+            return;
+        }
+
+        if (!File.Exists(student.LearningMaterialPath))
+        {
+            ShowWarning($"Material file not found:\n{student.LearningMaterialPath}", "File Not Found");
+            return;
+        }
+
+        OpenFile(student.LearningMaterialPath, $"Opened material for {student.FullName}");
+    }
+
+    private async Task UpdateStudentMaterialAsync(Student student, string materialPath, string successMessage)
+    {
+        await ExecuteWithErrorHandlingAsync(async () =>
+        {
+            student.LearningMaterialPath = materialPath;
+            await _studentService.UpdateStudentAsync(student, student);
+            RefreshStudentInGrid(student);
+            UpdateStatus(successMessage);
+        }, "Error updating material");
+    }
+
+    private static string? ShowMaterialFileDialog(string studentName)
+    {
+        using var dialog = new OpenFileDialog
+        {
+            Filter = "All Supported Files|*.pdf;*.docx;*.doc;*.odt;*.pptx;*.ppt;*.odp|" +
+                     "PDF Files (*.pdf)|*.pdf|" +
+                     "Word Documents (*.docx;*.doc)|*.docx;*.doc|" +
+                     "LibreOffice Writer (*.odt)|*.odt|" +
+                     "PowerPoint (*.pptx;*.ppt)|*.pptx;*.ppt|" +
+                     "LibreOffice Impress (*.odp)|*.odp",
+            Title = $"Select Material for {studentName}"
+        };
+
+        return dialog.ShowDialog() == DialogResult.OK ? dialog.FileName : null;
+    }
+
+    #endregion
+
+    #region Student CRUD Operations
 
     private async void btnAdd_Click(object sender, EventArgs e)
     {
         using var form = new StudentForm();
-        if (form.ShowDialog() == DialogResult.OK)
+        if (form.ShowDialog() != DialogResult.OK) return;
+
+        await ExecuteWithErrorHandlingAsync(async () =>
         {
-            try
+            var newStudent = new Student
             {
-                var newStudent = new Student
-                {
-                    FullName = form.StudentFullName,
-                    Email = form.StudentEmail
-                };
+                FullName = form.StudentFullName,
+                Email = form.StudentEmail
+            };
 
-                // Check duplicate email in UI list first for quick feedback? 
-                // Service could also handle it, but UI check prevents service call.
-                if (_students.Any(s => s.Email.Equals(newStudent.Email, StringComparison.OrdinalIgnoreCase)))
-                {
-                    MessageBox.Show("Student with this email already exists.", "Validation", MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning);
-                    return;
-                }
-
-                await _studentService.AddStudentAsync(newStudent);
-                _students.Add(newStudent);
-                lblStatus.Text = $"Added {newStudent.FullName}";
-            }
-            catch (Exception ex)
+            if (IsEmailDuplicate(newStudent.Email))
             {
-                MessageBox.Show($"Error adding student: {ex.Message}", "Error", MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                ShowWarning("Student with this email already exists.", "Validation");
+                return;
             }
-        }
+
+            await _studentService.AddStudentAsync(newStudent);
+            _students.Add(newStudent);
+            UpdateStatus($"Added {newStudent.FullName}");
+        }, "Error adding student");
     }
 
     private async void btnUpdate_Click(object sender, EventArgs e)
     {
-        if (dgvStudents.CurrentRow?.DataBoundItem is not Student selectedStudent) return;
+        if (!TryGetSelectedStudent(out var selectedStudent)) return;
 
         using var form = new StudentForm(selectedStudent);
-        if (form.ShowDialog() == DialogResult.OK)
+        if (form.ShowDialog() != DialogResult.OK) return;
+
+        await ExecuteWithErrorHandlingAsync(async () =>
         {
-            try
+            var updatedStudent = new Student
             {
-                var updatedStudent = new Student
-                {
-                    FullName = form.StudentFullName,
-                    Email = form.StudentEmail,
-                    // Preserve existing material path
-                    LearningMaterialPath = selectedStudent.LearningMaterialPath
-                };
+                FullName = form.StudentFullName,
+                Email = form.StudentEmail,
+                LearningMaterialPath = selectedStudent.LearningMaterialPath
+            };
 
-                // Check duplicate if email changed
-                if (!selectedStudent.Email.Equals(updatedStudent.Email, StringComparison.OrdinalIgnoreCase) &&
-                    _students.Any(s => s.Email.Equals(updatedStudent.Email, StringComparison.OrdinalIgnoreCase)))
-                {
-                    MessageBox.Show("Another student with this email already exists.", "Validation",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                await _studentService.UpdateStudentAsync(selectedStudent, updatedStudent);
-
-                // Update UI object directly to reflect changes in BindingList
-                // (Or reload all, but updating object is efficient)
-                // Note: UpdateStudentAsync uses original property to find, so we must update AFTER service call success
-                selectedStudent.FullName = updatedStudent.FullName;
-                selectedStudent.Email = updatedStudent.Email;
-
-                // Trigger re-sort since name may have changed
-                _students.Sort();
-                lblStatus.Text = $"Updated {selectedStudent.FullName}";
-            }
-            catch (Exception ex)
+            if (IsEmailChanged(selectedStudent, updatedStudent) && IsEmailDuplicate(updatedStudent.Email))
             {
-                MessageBox.Show($"Error updating student: {ex.Message}", "Error", MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                ShowWarning("Another student with this email already exists.", "Validation");
+                return;
             }
-        }
+
+            await _studentService.UpdateStudentAsync(selectedStudent, updatedStudent);
+
+            selectedStudent.FullName = updatedStudent.FullName;
+            selectedStudent.Email = updatedStudent.Email;
+
+            _students.Sort();
+            UpdateStatus($"Updated {selectedStudent.FullName}");
+        }, "Error updating student");
     }
 
     private async void btnRemove_Click(object sender, EventArgs e)
     {
-        if (dgvStudents.CurrentRow?.DataBoundItem is not Student selectedStudent) return;
+        if (!TryGetSelectedStudent(out var selectedStudent)) return;
 
-        if (MessageBox.Show($"Remove {selectedStudent.FullName}?", "Confirm", MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question) == DialogResult.Yes)
+        if (!ShowConfirmation($"Remove {selectedStudent.FullName}?", "Confirm"))
+            return;
+
+        await ExecuteWithErrorHandlingAsync(async () =>
         {
-            try
-            {
-                await _studentService.DeleteStudentAsync(selectedStudent);
-                _students.Remove(selectedStudent);
-                lblStatus.Text = $"Removed {selectedStudent.FullName}";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error removing student: {ex.Message}", "Error", MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
-        }
+            await _studentService.DeleteStudentAsync(selectedStudent);
+            _students.Remove(selectedStudent);
+            UpdateStatus($"Removed {selectedStudent.FullName}");
+        }, "Error removing student");
     }
 
-    /// <summary>
-    /// Handles double-click on DataGridView rows to open feedback editor.
-    /// </summary>
+    #endregion
+
+    #region Feedback Management
+
     private void dgvStudents_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
     {
-        // Ignore header row clicks
         if (e.RowIndex >= 0)
-        {
             btnEditFeedback_Click(sender, e);
-        }
     }
 
     private async void btnEditFeedback_Click(object sender, EventArgs e)
     {
-        if (dgvStudents.CurrentRow?.DataBoundItem is not Student selectedStudent) return;
+        if (!TryGetSelectedStudent(out var selectedStudent)) return;
 
-        try
+        await ExecuteWithErrorHandlingAsync(async () =>
         {
-            // Resolve Path logic -> Documented requirement: Documents/Feedback-Flow/[YYYYMMDD]/[Student-Name]/
-            // We can get the daily folder from _fileService (cached or re-init)
-            // But _dailyFolderPath is already cached in field.
-
-            // IMPORTANT: If user just started app, selected student, click edit... 
-            // folder might not exist if they never clicked "Add" or "Generate". 
-            // BUT StudentService creates folder on Add.
-            // Requirement says: "Search for existing... If no .txt... create one"
-
-            // We need the student folder path. _fileService.CreateStudentFolder is idempotent and returns the path.
-            // Using CreateStudentFolder ensures we have the path even if we don't strictly "create" it redundantly.
             string studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, selectedStudent);
-
             await _noteService.OpenOrCreateNotesAsync(studentFolder, selectedStudent.FullName);
-        }
-        catch (DirectoryNotFoundException)
+        }, "Error opening notes", ex =>
         {
-            MessageBox.Show(
-                "The student's folder has not been created properly. Please ensure the daily workspace is initialized.",
-                "Folder Missing", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Error opening notes: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
+            if (ex is DirectoryNotFoundException)
+            {
+                ShowWarning(
+                    "The student's folder has not been created properly. Please ensure the daily workspace is initialized.",
+                    "Folder Missing");
+            }
+        });
     }
+
+    #endregion
+
+    #region Email Generation
 
     private async void btnGenerate_Click(object sender, EventArgs e)
     {
-        // Removed global PDF check logic
-        // logic moved to per-student loop
-
         if (_students.Count == 0)
         {
-            MessageBox.Show("No students loaded.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            ShowWarning("No students loaded.", "Warning");
             return;
         }
 
         btnGenerate.Enabled = false;
-        lblStatus.Text = "Processing...";
+        UpdateStatus("Processing...");
 
-        var skippedStudents = new List<string>();
-        int successCount = 0; // <-- Declare and initialize successCount
-        int errorCount = 0; // <-- Declare and initialize errorCount
+        var result = await ProcessAllStudentsAsync();
+
+        btnGenerate.Enabled = true;
+        UpdateStatus(
+            $"Done. Success: {result.SuccessCount}, Skipped: {result.SkippedStudents.Count}, Errors: {result.ErrorCount}");
+        ShowCompletionMessage(result);
+    }
+
+    private async Task<GenerationResult> ProcessAllStudentsAsync()
+    {
+        var result = new GenerationResult();
 
         foreach (var student in _students)
         {
+            UpdateStatus($"Processing: {student.FullName}");
+            Application.DoEvents();
+
+            if (!ValidateStudentMaterial(student, result))
+                continue;
+
             try
             {
-                lblStatus.Text = $"Processing: {student.FullName}";
-                Application.DoEvents();
-
-                // Guard: Check if material assigned
-                if (string.IsNullOrEmpty(student.LearningMaterialPath) || !File.Exists(student.LearningMaterialPath))
-                {
-                    skippedStudents.Add(student.FullName);
-                    // Update status briefly
-                    lblStatus.Text = $"Skipping {student.FullName} (No Material)";
-                    Application.DoEvents();
-                    continue;
-                }
-
-                // 1. Ensure/Find Student Folder
-                string studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, student);
-
-                // 2. Get Note Content
-                string? content = _fileService.GetStudentNoteContent(studentFolder);
-                content ??= "No specific notes found for this student.";
-
-                // 3. Generate PDF
-                string studentPdfPath = _pdfService.GenerateStudentPdf(student, content, studentFolder);
-
-                // 4. Open Outlook
-                _emailService.DraftEmail(student, studentPdfPath);
-
-                successCount++;
+                await ProcessStudentAsync(student);
+                result.SuccessCount++;
             }
             catch (Exception)
             {
-                errorCount++;
+                result.ErrorCount++;
             }
         }
 
-        lblStatus.Text = $"Done. Success: {successCount}, Skipped: {skippedStudents.Count}, Errors: {errorCount}";
-        btnGenerate.Enabled = true;
-
-        string msg = $"Process Completed.\nSuccess: {successCount}\nErrors: {errorCount}";
-        if (skippedStudents.Any())
-        {
-            msg += $"\n\nSkipped ({skippedStudents.Count}) - No Material:\n- " + string.Join("\n- ", skippedStudents);
-        }
-
-        MessageBox.Show(msg, "Finished", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        return result;
     }
 
-    private void btnViewMaterial_Click(object sender, EventArgs e)
+    private bool ValidateStudentMaterial(Student student, GenerationResult result)
     {
-        // Get selected student from DataGridView
-        if (dgvStudents.CurrentRow?.DataBoundItem is not Student selectedStudent)
+        if (!string.IsNullOrEmpty(student.LearningMaterialPath) && File.Exists(student.LearningMaterialPath))
+            return true;
+
+        result.SkippedStudents.Add(student.FullName);
+        UpdateStatus($"Skipping {student.FullName} (No Material)");
+        Application.DoEvents();
+        return false;
+    }
+
+    private async Task ProcessStudentAsync(Student student)
+    {
+        string studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, student);
+        string content = _fileService.GetStudentNoteContent(studentFolder) ??
+                         "No specific notes found for this student.";
+        string studentPdfPath = _pdfService.GenerateStudentPdf(student, content, studentFolder);
+
+        _emailService.DraftEmail(student, studentPdfPath);
+    }
+
+    private static void ShowCompletionMessage(GenerationResult result)
+    {
+        var message = $"Process Completed.\nSuccess: {result.SuccessCount}\nErrors: {result.ErrorCount}";
+
+        if (result.SkippedStudents.Any())
         {
-            MessageBox.Show("Please select a student first.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
+            message += $"\n\nSkipped ({result.SkippedStudents.Count}) - No Material:\n- " +
+                       string.Join("\n- ", result.SkippedStudents);
         }
 
-        // Check if student has material assigned
-        if (string.IsNullOrWhiteSpace(selectedStudent.LearningMaterialPath))
-        {
-            MessageBox.Show($"{selectedStudent.FullName} has no material assigned.", "No Material",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return;
-        }
+        MessageBox.Show(message, "Finished", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
 
-        // Check if file exists
-        if (!File.Exists(selectedStudent.LearningMaterialPath))
-        {
-            MessageBox.Show($"Material file not found:\n{selectedStudent.LearningMaterialPath}", "File Not Found",
-                MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
-        }
+    #endregion
 
+    #region Helper Methods
+
+    private bool TryGetSelectedStudent(out Student student)
+    {
+        student = dgvStudents.CurrentRow?.DataBoundItem as Student;
+
+        if (student != null) return true;
+
+        ShowWarning("Please select a student first.", "Warning");
+        return false;
+    }
+
+    private bool IsEmailDuplicate(string email) =>
+        _students.Any(s => s.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+
+    private static bool IsEmailChanged(Student original, Student updated) =>
+        !original.Email.Equals(updated.Email, StringComparison.OrdinalIgnoreCase);
+
+    private void RefreshStudentInGrid(Student student)
+    {
+        var index = _students.IndexOf(student);
+        if (index >= 0)
+            _students.ResetItem(index);
+    }
+
+    private void UpdateStatus(string message) => lblStatus.Text = message;
+
+    private async Task ExecuteWithErrorHandlingAsync(
+        Func<Task> action,
+        string errorTitle,
+        Action<Exception>? customErrorHandler = null)
+    {
         try
         {
-            // Open file with default application
-            var psi = new System.Diagnostics.ProcessStartInfo
-            {
-                FileName = selectedStudent.LearningMaterialPath,
-                UseShellExecute = true
-            };
-            System.Diagnostics.Process.Start(psi);
-
-            lblStatus.Text = $"Opened material for {selectedStudent.FullName}";
+            await action();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Error opening material: {ex.Message}", "Error",
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
+            customErrorHandler?.Invoke(ex);
+            if (customErrorHandler == null)
+                ShowError($"{errorTitle}: {ex.Message}", "Error");
         }
     }
+
+    private static void OpenFile(string filePath, string successMessage)
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = filePath,
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(psi);
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Error opening file: {ex.Message}", "Error");
+        }
+    }
+
+    private static void ShowWarning(string message, string title) =>
+        MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+    private static void ShowInfo(string message, string title) =>
+        MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+    private static void ShowError(string message, string title) =>
+        MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+    private static bool ShowConfirmation(string message, string title) =>
+        MessageBox.Show(message, title, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+
+    #endregion
+
+    #region Result Class
+
+    private class GenerationResult
+    {
+        public int SuccessCount { get; set; }
+        public int ErrorCount { get; set; }
+        public List<string> SkippedStudents { get; } = new();
+    }
+
+    #endregion
 }
