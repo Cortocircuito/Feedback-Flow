@@ -48,6 +48,7 @@ partial class MainDashboard
         // 
         dgvStudents.AllowUserToAddRows = false;
         dgvStudents.AllowUserToDeleteRows = false;
+        dgvStudents.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         dgvStudents.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
         dgvStudents.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
         dgvStudents.Location = new Point(12, 60);
@@ -83,6 +84,7 @@ partial class MainDashboard
         // 
         // btnGenerate
         // 
+        btnGenerate.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         btnGenerate.Location = new Point(12, 321);
         btnGenerate.Name = "btnGenerate";
         btnGenerate.Size = new Size(536, 35);
@@ -108,6 +110,7 @@ partial class MainDashboard
         // 
         // btnAdd
         // 
+        btnAdd.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         btnAdd.Location = new Point(428, 60);
         btnAdd.Name = "btnAdd";
         btnAdd.Size = new Size(120, 40);
@@ -118,6 +121,7 @@ partial class MainDashboard
         // 
         // btnUpdate
         // 
+        btnUpdate.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         btnUpdate.Location = new Point(428, 106);
         btnUpdate.Name = "btnUpdate";
         btnUpdate.Size = new Size(120, 40);
@@ -128,6 +132,7 @@ partial class MainDashboard
         // 
         // btnRemove
         // 
+        btnRemove.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         btnRemove.Location = new Point(428, 152);
         btnRemove.Name = "btnRemove";
         btnRemove.Size = new Size(120, 40);
@@ -148,12 +153,13 @@ partial class MainDashboard
         // 
         // lblDayOfWeek
         // 
+        lblDayOfWeek.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         lblDayOfWeek.AutoSize = true;
-        lblDayOfWeek.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblDayOfWeek.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
         lblDayOfWeek.ForeColor = SystemColors.HotTrack;
-        lblDayOfWeek.Location = new Point(428, 39);
+        lblDayOfWeek.Location = new Point(428, 12);
         lblDayOfWeek.Name = "lblDayOfWeek";
-        lblDayOfWeek.Size = new Size(51, 15);
+        lblDayOfWeek.Size = new Size(86, 25);
         lblDayOfWeek.TabIndex = 9;
         lblDayOfWeek.Text = "Monday";
         // 
