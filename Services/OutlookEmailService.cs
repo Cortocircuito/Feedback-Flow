@@ -53,10 +53,6 @@ public class OutlookEmailService : IEmailService
 
             // 3. Save to Temporary Directory
             // "TempEmails inside the Feedback-Flow root folder"
-            // Assuming Root Folder is where other files are? Or App folder?
-            // Plan said: "Feedback-Flow root folder". I'll use AppDomain Base or Document Folder? 
-            // "TempEmails inside the Feedback-Flow root folder" -> Documents/Feedback-Flow/TempEmails seems safest for user visibility.
-
             string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             string appRoot = Path.Combine(documents, "Feedback-Flow");
             string tempDir = Path.Combine(appRoot, "TempEmails");
@@ -67,12 +63,19 @@ public class OutlookEmailService : IEmailService
             }
 
             string safeName = student.GetFolderName();
-            string emlFileName = $"{safeName}_{DateTime.Now:yyyyMMdd-HHmm}.eml";
+            // Ensure unique filename if multiple generated in same minute
+            string emlFileName =
+                $"{safeName}_{DateTime.Now:yyyyMMdd-HHmm}_{Guid.NewGuid().ToString().Substring(0, 4)}.eml";
             string emlPath = Path.Combine(tempDir, emlFileName);
 
             message.WriteTo(emlPath);
 
             // 4. Open with Default Mail Client (Outlook)
+
+            // Detect if Outlook is currently running
+            // If the process name is different (e.g., Thunderbird), this check simply defaults to adding a safe delay.
+            bool isOutlookRunning = Process.GetProcessesByName("OUTLOOK").Length > 0;
+
             var psi = new ProcessStartInfo
             {
                 FileName = emlPath,
@@ -80,6 +83,20 @@ public class OutlookEmailService : IEmailService
             };
 
             Process.Start(psi);
+
+            if (!isOutlookRunning)
+            {
+                // Outlook was closed and is now starting via the command above.
+                // We must wait for it to initialize; otherwise, subsequent emails in the loop 
+                // will be ignored/lost during the startup phase.
+                Thread.Sleep(5000);
+            }
+            else
+            {
+                // Even if running, a small delay prevents overwhelming the inter-process communication
+                // and ensures the OS processes the file associations in order.
+                Thread.Sleep(500);
+            }
         }
         catch (Win32Exception ex)
         {
