@@ -195,7 +195,7 @@ public partial class MainDashboard : Form
         // Check if student has material assigned
         if (string.IsNullOrWhiteSpace(selectedStudent.LearningMaterialPath))
         {
-            MessageBox.Show($"{selectedStudent.FullName} has no material assigned.", "Information", 
+            MessageBox.Show($"{selectedStudent.FullName} has no material assigned.", "Information",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
@@ -228,7 +228,7 @@ public partial class MainDashboard : Form
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error unassigning material: {ex.Message}", "Error", 
+                MessageBox.Show($"Error unassigning material: {ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -446,5 +446,49 @@ public partial class MainDashboard : Form
         }
 
         MessageBox.Show(msg, "Finished", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    private void btnViewMaterial_Click(object sender, EventArgs e)
+    {
+        // Get selected student from DataGridView
+        if (dgvStudents.CurrentRow?.DataBoundItem is not Student selectedStudent)
+        {
+            MessageBox.Show("Please select a student first.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        // Check if student has material assigned
+        if (string.IsNullOrWhiteSpace(selectedStudent.LearningMaterialPath))
+        {
+            MessageBox.Show($"{selectedStudent.FullName} has no material assigned.", "No Material",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        // Check if file exists
+        if (!File.Exists(selectedStudent.LearningMaterialPath))
+        {
+            MessageBox.Show($"Material file not found:\n{selectedStudent.LearningMaterialPath}", "File Not Found",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
+        try
+        {
+            // Open file with default application
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = selectedStudent.LearningMaterialPath,
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(psi);
+
+            lblStatus.Text = $"Opened material for {selectedStudent.FullName}";
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error opening material: {ex.Message}", "Error",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 }
