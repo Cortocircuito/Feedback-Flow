@@ -50,7 +50,8 @@ public partial class MainDashboard : Form
             Name = "StudentName",
             HeaderText = "Student",
             DataPropertyName = "FullName",
-            ReadOnly = true
+            ReadOnly = true,
+            SortMode = DataGridViewColumnSortMode.Automatic
         };
 
         var learningMaterialColumn = new DataGridViewTextBoxColumn
@@ -58,7 +59,8 @@ public partial class MainDashboard : Form
             Name = "LearningMaterial",
             HeaderText = "Learning Material",
             DataPropertyName = "LearningMaterialPath",
-            ReadOnly = true
+            ReadOnly = true,
+            SortMode = DataGridViewColumnSortMode.Automatic
         };
 
         dgvStudents.Columns.Add(studentNameColumn);

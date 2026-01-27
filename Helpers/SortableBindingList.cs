@@ -9,8 +9,8 @@ namespace Feedback_Flow.Helpers;
 /// <typeparam name="T">The type of elements in the list</typeparam>
 public class SortableBindingList<T> : BindingList<T>
 {
-    private readonly PropertyDescriptor? _sortProperty;
-    private readonly ListSortDirection _sortDirection;
+    private PropertyDescriptor? _sortProperty;
+    private ListSortDirection _sortDirection;
     private bool _isSorted;
 
     /// <summary>
@@ -39,30 +39,29 @@ public class SortableBindingList<T> : BindingList<T>
         // Re-sort when items are added or changed
         if (_isSorted && (e.ListChangedType == ListChangedType.ItemAdded || e.ListChangedType == ListChangedType.ItemChanged))
         {
-            ApplySort();
+            ApplySortCore(_sortProperty!, _sortDirection);
         }
     }
 
     /// <summary>
-    /// Applies the configured sort to all items in the list.
+    /// Core implementation of sorting.
     /// </summary>
-    private void ApplySort()
+    protected override void ApplySortCore(PropertyDescriptor prop, ListSortDirection direction)
     {
-        if (_sortProperty == null) return;
+        _sortProperty = prop;
+        _sortDirection = direction;
 
         var items = this.ToList();
-        
-        // Sort based on direction
-        if (_sortDirection == ListSortDirection.Ascending)
+
+        if (direction == ListSortDirection.Ascending)
         {
-            items = items.OrderBy(x => _sortProperty.GetValue(x)).ToList();
+            items = items.OrderBy(x => prop.GetValue(x)).ToList();
         }
         else
         {
-            items = items.OrderByDescending(x => _sortProperty.GetValue(x)).ToList();
+            items = items.OrderByDescending(x => prop.GetValue(x)).ToList();
         }
 
-        // Clear and re-add in sorted order
         // Temporarily disable notifications to avoid multiple refresh events
         RaiseListChangedEvents = false;
         try
@@ -75,9 +74,16 @@ public class SortableBindingList<T> : BindingList<T>
         }
         finally
         {
+            _isSorted = true;
             RaiseListChangedEvents = true;
             ResetBindings();
         }
+    }
+
+    protected override void RemoveSortCore()
+    {
+        _isSorted = false;
+        _sortProperty = null;
     }
 
     /// <summary>
@@ -86,37 +92,17 @@ public class SortableBindingList<T> : BindingList<T>
     /// </summary>
     public void Sort()
     {
-        if (_isSorted)
+        if (_isSorted && _sortProperty != null)
         {
-            ApplySort();
+            ApplySortCore(_sortProperty, _sortDirection);
         }
     }
 
-    /// <summary>
-    /// Gets whether the list is currently sorted.
-    /// </summary>
     protected override bool SupportsSortingCore => true;
 
-    /// <summary>
-    /// Gets whether the list is sorted.
-    /// </summary>
     protected override bool IsSortedCore => _isSorted;
 
-    /// <summary>
-    /// Gets the current sort direction.
-    /// </summary>
     protected override ListSortDirection SortDirectionCore => _sortDirection;
 
-    /// <summary>
-    /// Gets the property descriptor used for sorting.
-    /// </summary>
     protected override PropertyDescriptor? SortPropertyCore => _sortProperty;
-
-    /// <summary>
-    /// Removes sorting from the list.
-    /// </summary>
-    protected override void RemoveSortCore()
-    {
-        _isSorted = false;
-    }
 }
