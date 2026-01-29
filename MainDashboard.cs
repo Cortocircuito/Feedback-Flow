@@ -142,12 +142,10 @@ public sealed partial class MainDashboard : Form
         // Disable day-specific buttons
         ToggleDaySpecificActions(false);
 
-        // Update grid ReadOnly state for Attended column
-        // dgvStudents.Columns["AttendedClass"].ReadOnly = true; 
-        // Note: Checkbox column ReadOnly property doesn't always visually gray out well in WinForms standard.
-        // But it prevents editing.
+        // Hide day-specific columns
+        SetDaySpecificColumnsVisible(false);
         
-        UpdateStatus($"Viewing all students ({dgvStudents.Rows.Count} total) - Day-specific actions disabled");
+        UpdateStatus($"Viewing all students ({dgvStudents.Rows.Count} total) - Day-specific columns hidden");
     }
 
     private void SetCurrentDayMode()
@@ -159,10 +157,21 @@ public sealed partial class MainDashboard : Form
         // Enable day-specific buttons
         ToggleDaySpecificActions(true);
 
-        // dgvStudents.Columns["AttendedClass"].ReadOnly = false;
+        // Show day-specific columns
+        SetDaySpecificColumnsVisible(true);
 
         string currentDay = _studentService.GetCurrentDayOfWeek();
         UpdateStatus($"Showing {currentDay}'s students ({dgvStudents.Rows.Count} students)");
+    }
+
+    private void SetDaySpecificColumnsVisible(bool visible)
+    {
+        // Null-safe column visibility toggling
+        if (dgvStudents.Columns["AttendedClass"] is { } attendedCol)
+            attendedCol.Visible = visible;
+
+        if (dgvStudents.Columns["LearningMaterial"] is { } materialCol)
+            materialCol.Visible = visible;
     }
 
     private void ToggleDaySpecificActions(bool enabled)
