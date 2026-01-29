@@ -21,6 +21,14 @@ internal static class Program
         ConfigureServices(services);
         ServiceProvider = services.BuildServiceProvider();
 
+        // Run Database Migration
+        var databaseService = ServiceProvider.GetRequiredService<IDatabaseService>();
+        // Ensure DB exists first
+        Task.Run(async () => await databaseService.InitializeDatabaseAsync()).Wait();
+
+        var migrationService = ServiceProvider.GetRequiredService<IMigrationService>();
+        Task.Run(async () => await migrationService.MigrateFromCsvAsync()).Wait();
+
         // Resolve MainDashboard
         var mainForm = ServiceProvider.GetRequiredService<MainDashboard>();
         Application.Run(mainForm);
@@ -29,8 +37,11 @@ internal static class Program
     private static void ConfigureServices(IServiceCollection services)
     {
         // Register Services
+        services.AddSingleton<IDatabaseService, SqliteDatabaseService>();
+        services.AddSingleton<IMigrationService, MigrationService>();
+        
         services.AddSingleton<IFileSystemService, FileSystemService>();
-        services.AddSingleton<IDataService, CsvDataService>();
+        // services.AddSingleton<IDataService, CsvDataService>(); // Removed
         services.AddSingleton<IPdfService, PdfGenerationService>();
         services.AddSingleton<IEmailService, OutlookEmailService>();
         services.AddSingleton<IStudentService, StudentService>();

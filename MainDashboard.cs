@@ -41,7 +41,7 @@ public partial class MainDashboard : Form
         dgvStudents.AutoGenerateColumns = false;
 
         dgvStudents.Columns.Add(CreateColumn("StudentName", "Student", "FullName"));
-        dgvStudents.Columns.Add(CreateColumn("LearningMaterial", "Learning Material", "LearningMaterialPath"));
+        dgvStudents.Columns.Add(CreateColumn("LearningMaterial", "Learning Material", "AssignedMaterial"));
         dgvStudents.DataSource = _students;
     }
 
@@ -118,7 +118,7 @@ public partial class MainDashboard : Form
     {
         if (!TryGetSelectedStudent(out var student)) return;
 
-        if (string.IsNullOrWhiteSpace(student.LearningMaterialPath))
+        if (string.IsNullOrWhiteSpace(student.AssignedMaterial))
         {
             ShowInfo($"{student.FullName} has no material assigned.", "Information");
             return;
@@ -134,26 +134,26 @@ public partial class MainDashboard : Form
     {
         if (!TryGetSelectedStudent(out var student)) return;
 
-        if (string.IsNullOrWhiteSpace(student.LearningMaterialPath))
+        if (string.IsNullOrWhiteSpace(student.AssignedMaterial))
         {
             ShowInfo($"{student.FullName} has no material assigned.", "No Material");
             return;
         }
 
-        if (!File.Exists(student.LearningMaterialPath))
+        if (!File.Exists(student.AssignedMaterial))
         {
-            ShowWarning($"Material file not found:\n{student.LearningMaterialPath}", "File Not Found");
+            ShowWarning($"Material file not found:\n{student.AssignedMaterial}", "File Not Found");
             return;
         }
 
-        OpenFile(student.LearningMaterialPath, $"Opened material for {student.FullName}");
+        OpenFile(student.AssignedMaterial, $"Opened material for {student.FullName}");
     }
 
     private async Task UpdateStudentMaterialAsync(Student student, string materialPath, string successMessage)
     {
         await ExecuteWithErrorHandlingAsync(async () =>
         {
-            student.LearningMaterialPath = materialPath;
+            student.AssignedMaterial = materialPath;
             await _studentService.UpdateStudentAsync(student, student);
             RefreshStudentInGrid(student);
             UpdateStatus(successMessage);
@@ -218,7 +218,7 @@ public partial class MainDashboard : Form
             {
                 FullName = form.StudentFullName,
                 Email = form.StudentEmail,
-                LearningMaterialPath = selectedStudent.LearningMaterialPath
+                AssignedMaterial = selectedStudent.AssignedMaterial
             };
 
             if (IsEmailChanged(selectedStudent, updatedStudent) && IsEmailDuplicate(updatedStudent.Email))
@@ -332,7 +332,7 @@ public partial class MainDashboard : Form
 
     private bool ValidateStudentMaterial(Student student, GenerationResult result)
     {
-        if (!string.IsNullOrEmpty(student.LearningMaterialPath) && File.Exists(student.LearningMaterialPath))
+        if (!string.IsNullOrEmpty(student.AssignedMaterial) && File.Exists(student.AssignedMaterial))
             return true;
 
         result.SkippedStudents.Add(student.FullName);

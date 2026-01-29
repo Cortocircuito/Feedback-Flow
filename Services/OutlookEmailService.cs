@@ -12,7 +12,7 @@ public class OutlookEmailService : IEmailService
     {
         if (student == null) throw new ArgumentNullException(nameof(student));
         // Master path is now per student
-        string learningMaterialPath = student.LearningMaterialPath;
+        string learningMaterialPath = student.AssignedMaterial;
 
         if (string.IsNullOrWhiteSpace(learningMaterialPath))
             throw new InvalidOperationException($"No learning material assigned for student {student.FullName}");
