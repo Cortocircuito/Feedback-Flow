@@ -212,7 +212,7 @@ sealed partial class MainDashboard
         lblModeTitle.Name = "lblModeTitle";
         lblModeTitle.Size = new Size(244, 21);
         lblModeTitle.TabIndex = 1;
-        lblModeTitle.Text = "Showing students for: MONDAY";
+        lblModeTitle.Text = $"Showing students for: {_currentDay}";
         // 
         // lblModeIcon
         // 

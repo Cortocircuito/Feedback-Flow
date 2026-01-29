@@ -15,6 +15,7 @@ public sealed partial class MainDashboard : Form
 
     private SortableBindingList<Student> _students;
     private string _dailyFolderPath = string.Empty;
+    private readonly string _currentDay;
 
     public MainDashboard(
         IStudentService studentService,
@@ -28,6 +29,8 @@ public sealed partial class MainDashboard : Form
         _pdfService = pdfService;
         _emailService = emailService;
         _noteService = noteService;
+
+        _currentDay = _studentService.GetCurrentDayOfWeek();
 
         InitializeComponent();
         this.MinimumSize = this.Size; // Set minimum size to current size
