@@ -1,6 +1,6 @@
 ﻿namespace Feedback_Flow;
 
-partial class MainDashboard
+sealed partial class MainDashboard
 {
     /// <summary>
     ///  Required designer variable.

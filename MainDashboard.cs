@@ -5,7 +5,7 @@ using Feedback_Flow.Services.Interfaces;
 
 namespace Feedback_Flow;
 
-public partial class MainDashboard : Form
+public sealed partial class MainDashboard : Form
 {
     private readonly IStudentService _studentService;
     private readonly INoteService _noteService;
@@ -30,6 +30,8 @@ public partial class MainDashboard : Form
         _noteService = noteService;
 
         InitializeComponent();
+        this.MinimumSize = this.Size; // Set minimum size to current size
+
         InitializeDataGrid();
     }
 
