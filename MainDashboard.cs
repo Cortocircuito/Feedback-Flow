@@ -39,9 +39,9 @@ public partial class MainDashboard : Form
     {
         _students = new SortableBindingList<Student>("FullName", ListSortDirection.Ascending);
         dgvStudents.AutoGenerateColumns = false;
-        
+
         // Fix: Grid must not be globally ReadOnly for checkboxes to work
-        dgvStudents.ReadOnly = false; 
+        dgvStudents.ReadOnly = false;
 
         dgvStudents.Columns.Add(new DataGridViewCheckBoxColumn
         {
@@ -52,6 +52,7 @@ public partial class MainDashboard : Form
             ReadOnly = false
         });
         dgvStudents.Columns.Add(CreateColumn("StudentName", "Student", "FullName"));
+        dgvStudents.Columns.Add(CreateColumn("ClassDay", "Class Day(s)", "ClassDay"));
         dgvStudents.Columns.Add(CreateColumn("LearningMaterial", "Learning Material", "AssignedMaterial"));
         dgvStudents.DataSource = _students;
 
@@ -75,14 +76,51 @@ public partial class MainDashboard : Form
     {
         await ExecuteWithErrorHandlingAsync(async () =>
         {
-            var loaded = await _studentService.LoadStudentsAsync();
-            foreach (var student in loaded)
-                _students.Add(student);
-
             _dailyFolderPath = _fileService.InitializeDailyFolder();
-            UpdateStatus($"Ready. Loaded {_students.Count} students.");
+
+            // Default: Load filtered by current day
+            await ReloadGridAsync();
+
+            UpdateStatus($"Ready. Showing students for {_studentService.GetCurrentDayOfWeek()}.");
             lblDayOfWeek.Text = DateTime.Now.ToString("dddd", System.Globalization.CultureInfo.InvariantCulture);
         }, "Startup Error");
+    }
+
+    private bool _showAllStudents = false;
+
+    private async Task ReloadGridAsync()
+    {
+        _students.Clear();
+
+        List<Student> loaded;
+        if (_showAllStudents)
+        {
+            loaded = await _studentService.GetAllStudentsAsync();
+            btnToggleFilter.Text = "Show Today Only";
+        }
+        else
+        {
+            string today = _studentService.GetCurrentDayOfWeek();
+            loaded = await _studentService.GetStudentsByDayAsync(today);
+            btnToggleFilter.Text = "Show All Students";
+        }
+
+        foreach (var student in loaded)
+            _students.Add(student);
+
+        dgvStudents.Refresh();
+    }
+
+    private async void btnToggleFilter_Click(object sender, EventArgs e)
+    {
+        _showAllStudents = !_showAllStudents;
+        await ExecuteWithErrorHandlingAsync(async () =>
+        {
+            await ReloadGridAsync();
+            UpdateStatus(_showAllStudents
+                ? "Showing all students."
+                : $"Showing students for {_studentService.GetCurrentDayOfWeek()}.");
+        }, "Error toggling filter");
     }
 
     #endregion
@@ -204,7 +242,8 @@ public partial class MainDashboard : Form
             var newStudent = new Student
             {
                 FullName = form.StudentFullName,
-                Email = form.StudentEmail
+                Email = form.StudentEmail,
+                ClassDay = form.ClassDays
             };
 
             if (IsEmailDuplicate(newStudent.Email))
@@ -214,7 +253,8 @@ public partial class MainDashboard : Form
             }
 
             await _studentService.AddStudentAsync(newStudent);
-            _students.Add(newStudent);
+            //_students.Add(newStudent); // Remove direct add, let reload handle it to respect filter
+            await ReloadGridAsync();
             UpdateStatus($"Added {newStudent.FullName}");
         }, "Error adding student");
     }
@@ -232,6 +272,7 @@ public partial class MainDashboard : Form
             {
                 FullName = form.StudentFullName,
                 Email = form.StudentEmail,
+                ClassDay = form.ClassDays,
                 AssignedMaterial = selectedStudent.AssignedMaterial
             };
 
@@ -245,8 +286,13 @@ public partial class MainDashboard : Form
 
             selectedStudent.FullName = updatedStudent.FullName;
             selectedStudent.Email = updatedStudent.Email;
+            selectedStudent.ClassDay = updatedStudent.ClassDay;
 
-            _students.Sort();
+            // If we are in filtered mode and the day was changed to something *not* today, we should probably remove it?
+            // But for simplicity, we just leave it until refresh. Or we can just ReloadGrid.
+            // KISS: Just refresh grid to be safe and correct.
+            await ReloadGridAsync();
+
             UpdateStatus($"Updated {selectedStudent.FullName}");
         }, "Error updating student");
     }
@@ -347,15 +393,15 @@ public partial class MainDashboard : Form
     private async void dgvStudents_CellContentClick(object sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0 || dgvStudents.Columns[e.ColumnIndex].Name != "AttendedClass") return;
-        
+
         // Commit change immediately to capture new value
         dgvStudents.CommitEdit(DataGridViewDataErrorContexts.Commit);
-        
+
         var student = _students[e.RowIndex];
-        await ExecuteWithErrorHandlingAsync(async () => 
+        await ExecuteWithErrorHandlingAsync(async () =>
         {
-             await _studentService.MarkAttendanceAsync(student, student.AttendedClass);
-             UpdateStatus($"Marked {student.FullName}: " + (student.AttendedClass ? "Present" : "Absent"));
+            await _studentService.MarkAttendanceAsync(student, student.AttendedClass);
+            UpdateStatus($"Marked {student.FullName}: " + (student.AttendedClass ? "Present" : "Absent"));
         }, "Error updating attendance");
     }
 
@@ -371,16 +417,16 @@ public partial class MainDashboard : Form
         // 2. Validate Material (Optional now, but if path is set, it must exist)
         if (!string.IsNullOrEmpty(student.AssignedMaterial) && !File.Exists(student.AssignedMaterial))
         {
-             // If assigned but missing, it's an error/warning scenario? 
-             // Requirement says: "Material attachment is still included if AssignedMaterial is assigned"
-             // I'll log it but proceed? Or skip? 
-             // New flow: "Generate emails -> Only students who attended get emails (with or without material)"
-             // So if file is missing but string is there, we should probably warn or clear it. 
-             // To be safe: warn and skip attachment, or fail? 
-             // Current logic skipped student. I will keep it strict: if path is assigned, file MUST exist.
-             result.SkippedStudents.Add($"{student.FullName} (Material Missing)");
-             UpdateStatus($"Skipping {student.FullName} (Missing Material File)");
-             return false;
+            // If assigned but missing, it's an error/warning scenario? 
+            // Requirement says: "Material attachment is still included if AssignedMaterial is assigned"
+            // I'll log it but proceed? Or skip? 
+            // New flow: "Generate emails -> Only students who attended get emails (with or without material)"
+            // So if file is missing but string is there, we should probably warn or clear it. 
+            // To be safe: warn and skip attachment, or fail? 
+            // Current logic skipped student. I will keep it strict: if path is assigned, file MUST exist.
+            result.SkippedStudents.Add($"{student.FullName} (Material Missing)");
+            UpdateStatus($"Skipping {student.FullName} (Missing Material File)");
+            return false;
         }
 
         return true;

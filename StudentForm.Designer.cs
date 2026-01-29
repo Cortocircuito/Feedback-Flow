@@ -23,6 +23,8 @@ partial class StudentForm
         btnSave = new Button();
         btnCancel = new Button();
         errorProvider = new ErrorProvider(components);
+        lblClassDays = new Label();
+        checkedListBoxClassDays = new CheckedListBox();
         ((System.ComponentModel.ISupportInitialize)errorProvider).BeginInit();
         SuspendLayout();
         // 
@@ -58,13 +60,32 @@ partial class StudentForm
         txtEmail.Size = new Size(260, 23);
         txtEmail.TabIndex = 3;
         // 
+        // lblClassDays
+        // 
+        lblClassDays.AutoSize = true;
+        lblClassDays.Location = new Point(12, 125);
+        lblClassDays.Name = "lblClassDays";
+        lblClassDays.Size = new Size(66, 15);
+        lblClassDays.TabIndex = 4;
+        lblClassDays.Text = "Class Days:";
+        // 
+        // checkedListBoxClassDays
+        // 
+        checkedListBoxClassDays.CheckOnClick = true;
+        checkedListBoxClassDays.FormattingEnabled = true;
+        checkedListBoxClassDays.Items.AddRange(new object[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" });
+        checkedListBoxClassDays.Location = new Point(12, 143);
+        checkedListBoxClassDays.Name = "checkedListBoxClassDays";
+        checkedListBoxClassDays.Size = new Size(260, 130);
+        checkedListBoxClassDays.TabIndex = 5;
+        // 
         // btnSave
         // 
         btnSave.DialogResult = DialogResult.OK;
-        btnSave.Location = new Point(116, 130);
+        btnSave.Location = new Point(116, 290);
         btnSave.Name = "btnSave";
         btnSave.Size = new Size(75, 23);
-        btnSave.TabIndex = 4;
+        btnSave.TabIndex = 6;
         btnSave.Text = "Save";
         btnSave.UseVisualStyleBackColor = true;
         btnSave.Click += btnSave_Click;
@@ -72,10 +93,10 @@ partial class StudentForm
         // btnCancel
         // 
         btnCancel.DialogResult = DialogResult.Cancel;
-        btnCancel.Location = new Point(197, 130);
+        btnCancel.Location = new Point(197, 290);
         btnCancel.Name = "btnCancel";
         btnCancel.Size = new Size(75, 23);
-        btnCancel.TabIndex = 5;
+        btnCancel.TabIndex = 7;
         btnCancel.Text = "Cancel";
         btnCancel.UseVisualStyleBackColor = true;
         // 
@@ -89,7 +110,9 @@ partial class StudentForm
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
         CancelButton = btnCancel;
-        ClientSize = new Size(296, 171);
+        ClientSize = new Size(296, 330);
+        Controls.Add(checkedListBoxClassDays);
+        Controls.Add(lblClassDays);
         Controls.Add(btnCancel);
         Controls.Add(btnSave);
         Controls.Add(txtEmail);
@@ -114,4 +137,6 @@ partial class StudentForm
     private System.Windows.Forms.Button btnSave;
     private System.Windows.Forms.Button btnCancel;
     private System.Windows.Forms.ErrorProvider errorProvider;
+    private System.Windows.Forms.Label lblClassDays;
+    private System.Windows.Forms.CheckedListBox checkedListBoxClassDays;
 }

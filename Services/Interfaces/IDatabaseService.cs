@@ -14,5 +14,6 @@ public interface IDatabaseService
     Task<bool> EmailExistsAsync(string email, int? excludeId = null);
     Task<bool> UpdateAttendanceAsync(int studentId, bool attended);
     Task<IEnumerable<Student>> GetStudentsWhoAttendedAsync();
+    Task<IEnumerable<Student>> GetStudentsByDayAsync(string dayName);
     Task<int> GetAttendanceCountAsync();
 }

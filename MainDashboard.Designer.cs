@@ -30,6 +30,7 @@ partial class MainDashboard
     {
         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainDashboard));
         dgvStudents = new DataGridView();
+        btnToggleFilter = new Button();
         btnAssignMaterial = new Button();
         btnUnassignMaterial = new Button();
         btnGenerate = new Button();
@@ -58,10 +59,20 @@ partial class MainDashboard
         dgvStudents.ReadOnly = true;
         dgvStudents.RowHeadersVisible = false;
         dgvStudents.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        dgvStudents.Size = new Size(523, 255);
+        dgvStudents.Size = new Size(634, 347);
         dgvStudents.TabIndex = 3;
         dgvStudents.CellDoubleClick += dgvStudents_CellDoubleClick;
         dgvStudents.CellFormatting += dgvStudents_CellFormatting;
+        // 
+        // btnToggleFilter
+        // 
+        btnToggleFilter.Location = new Point(516, 12);
+        btnToggleFilter.Name = "btnToggleFilter";
+        btnToggleFilter.Size = new Size(130, 42);
+        btnToggleFilter.TabIndex = 11;
+        btnToggleFilter.Text = "Show All Students";
+        btnToggleFilter.UseVisualStyleBackColor = true;
+        btnToggleFilter.Click += btnToggleFilter_Click;
         // 
         // btnAssignMaterial
         // 
@@ -86,9 +97,9 @@ partial class MainDashboard
         // btnGenerate
         // 
         btnGenerate.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-        btnGenerate.Location = new Point(12, 321);
+        btnGenerate.Location = new Point(12, 413);
         btnGenerate.Name = "btnGenerate";
-        btnGenerate.Size = new Size(649, 35);
+        btnGenerate.Size = new Size(760, 35);
         btnGenerate.TabIndex = 7;
         btnGenerate.Text = "Generate Feedback Emails";
         btnGenerate.UseVisualStyleBackColor = true;
@@ -97,9 +108,9 @@ partial class MainDashboard
         // statusStrip1
         // 
         statusStrip1.Items.AddRange(new ToolStripItem[] { lblStatus });
-        statusStrip1.Location = new Point(0, 365);
+        statusStrip1.Location = new Point(0, 457);
         statusStrip1.Name = "statusStrip1";
-        statusStrip1.Size = new Size(673, 22);
+        statusStrip1.Size = new Size(784, 22);
         statusStrip1.TabIndex = 8;
         statusStrip1.Text = "statusStrip1";
         // 
@@ -112,7 +123,7 @@ partial class MainDashboard
         // btnAdd
         // 
         btnAdd.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        btnAdd.Location = new Point(541, 60);
+        btnAdd.Location = new Point(652, 60);
         btnAdd.Name = "btnAdd";
         btnAdd.Size = new Size(120, 40);
         btnAdd.TabIndex = 4;
@@ -123,7 +134,7 @@ partial class MainDashboard
         // btnUpdate
         // 
         btnUpdate.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        btnUpdate.Location = new Point(541, 106);
+        btnUpdate.Location = new Point(652, 106);
         btnUpdate.Name = "btnUpdate";
         btnUpdate.Size = new Size(120, 40);
         btnUpdate.TabIndex = 5;
@@ -134,7 +145,7 @@ partial class MainDashboard
         // btnRemove
         // 
         btnRemove.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        btnRemove.Location = new Point(541, 152);
+        btnRemove.Location = new Point(652, 152);
         btnRemove.Name = "btnRemove";
         btnRemove.Size = new Size(120, 40);
         btnRemove.TabIndex = 6;
@@ -158,7 +169,7 @@ partial class MainDashboard
         lblDayOfWeek.AutoSize = true;
         lblDayOfWeek.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
         lblDayOfWeek.ForeColor = SystemColors.HotTrack;
-        lblDayOfWeek.Location = new Point(541, 12);
+        lblDayOfWeek.Location = new Point(652, 18);
         lblDayOfWeek.Name = "lblDayOfWeek";
         lblDayOfWeek.Size = new Size(86, 25);
         lblDayOfWeek.TabIndex = 9;
@@ -178,11 +189,12 @@ partial class MainDashboard
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(673, 387);
+        ClientSize = new Size(784, 479);
         Controls.Add(btnViewMaterial);
         Controls.Add(lblDayOfWeek);
         Controls.Add(statusStrip1);
         Controls.Add(btnGenerate);
+        Controls.Add(btnToggleFilter);
         Controls.Add(btnUnassignMaterial);
         Controls.Add(btnAssignMaterial);
         Controls.Add(btnEditFeedback);
@@ -217,6 +229,7 @@ partial class MainDashboard
     private System.Windows.Forms.Button btnEditFeedback;
     private System.Windows.Forms.Label lblDayOfWeek;
     private System.Windows.Forms.Button btnGenerate;
+    private System.Windows.Forms.Button btnToggleFilter;
     private System.Windows.Forms.Button btnViewMaterial;
 
     #endregion

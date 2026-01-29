@@ -57,6 +57,16 @@ public class SqliteDatabaseService : IDatabaseService
         {
             await connection.ExecuteAsync("ALTER TABLE Students ADD COLUMN AttendedClass INTEGER NOT NULL DEFAULT 0;");
         }
+
+        // Migration: Ensure ClassDay column exists
+        try 
+        {
+            await connection.ExecuteAsync("SELECT ClassDay FROM Students LIMIT 1");
+        }
+        catch
+        {
+            await connection.ExecuteAsync("ALTER TABLE Students ADD COLUMN ClassDay TEXT NOT NULL DEFAULT '';");
+        }
     }
 
     public async Task<bool> UpdateAttendanceAsync(int studentId, bool attended)
@@ -71,6 +81,15 @@ public class SqliteDatabaseService : IDatabaseService
     {
         using var connection = CreateConnection();
         return await connection.QueryAsync<Student>("SELECT * FROM Students WHERE AttendedClass = 1 ORDER BY FullName");
+    }
+
+    public async Task<IEnumerable<Student>> GetStudentsByDayAsync(string dayName)
+    {
+        using var connection = CreateConnection();
+        // Use string concatenation for LIKE pattern in SQL or parameterize the pattern
+        return await connection.QueryAsync<Student>(
+            "SELECT * FROM Students WHERE ClassDay LIKE '%' || @DayName || '%' ORDER BY FullName", 
+            new { DayName = dayName });
     }
 
     public async Task<int> GetAttendanceCountAsync()
@@ -107,8 +126,8 @@ public class SqliteDatabaseService : IDatabaseService
         if (string.IsNullOrWhiteSpace(student.UpdatedAt)) student.UpdatedAt = DateTime.UtcNow.ToString("o");
 
         string sql = @"
-            INSERT INTO Students (FullName, Email, AssignedMaterial, CreatedAt, UpdatedAt)
-            VALUES (@FullName, @Email, @AssignedMaterial, @CreatedAt, @UpdatedAt);
+            INSERT INTO Students (FullName, Email, AssignedMaterial, ClassDay, CreatedAt, UpdatedAt)
+            VALUES (@FullName, @Email, @AssignedMaterial, @ClassDay, @CreatedAt, @UpdatedAt);
             SELECT last_insert_rowid();";
 
         return await connection.ExecuteScalarAsync<int>(sql, student);
@@ -124,7 +143,8 @@ public class SqliteDatabaseService : IDatabaseService
             UPDATE Students 
             SET FullName = @FullName, 
                 Email = @Email, 
-                AssignedMaterial = @AssignedMaterial, 
+                AssignedMaterial = @AssignedMaterial,
+                ClassDay = @ClassDay,
                 UpdatedAt = @UpdatedAt
             WHERE Id = @Id";
 

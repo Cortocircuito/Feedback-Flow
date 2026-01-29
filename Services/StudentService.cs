@@ -94,4 +94,20 @@ public class StudentService : IStudentService
         var attended = await _db.GetStudentsWhoAttendedAsync();
         return attended.ToList();
     }
+
+    public async Task<List<Student>> GetStudentsByDayAsync(string dayName)
+    {
+        var students = await _db.GetStudentsByDayAsync(dayName);
+        return students.ToList();
+    }
+
+    public async Task<List<Student>> GetAllStudentsAsync()
+    {
+        return await LoadStudentsAsync();
+    }
+
+    public string GetCurrentDayOfWeek()
+    {
+        return DateTime.Now.ToString("dddd", System.Globalization.CultureInfo.InvariantCulture);
+    }
 }

@@ -10,4 +10,8 @@ public interface IStudentService
     Task DeleteStudentAsync(Student student);
     Task MarkAttendanceAsync(Student student, bool attended);
     Task<List<Student>> GetStudentsWhoAttendedAsync();
+    
+    Task<List<Student>> GetStudentsByDayAsync(string dayName);
+    Task<List<Student>> GetAllStudentsAsync();
+    string GetCurrentDayOfWeek();
 }

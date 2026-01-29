@@ -7,6 +7,19 @@ public partial class StudentForm : Form
 {
     public string StudentFullName => txtFullName.Text.Trim();
     public string StudentEmail => txtEmail.Text.Trim();
+    
+    public string ClassDays 
+    {
+        get 
+        {
+            var days = new List<string>();
+            foreach (var item in checkedListBoxClassDays.CheckedItems)
+            {
+                days.Add(item.ToString()!);
+            }
+            return string.Join(",", days);
+        }
+    }
 
     public StudentForm()
     {
@@ -19,6 +32,15 @@ public partial class StudentForm : Form
         {
             txtFullName.Text = student.FullName;
             txtEmail.Text = student.Email;
+            
+            var studentDays = student.GetClassDays();
+            for (int i = 0; i < checkedListBoxClassDays.Items.Count; i++)
+            {
+                if (studentDays.Contains(checkedListBoxClassDays.Items[i].ToString(), StringComparer.OrdinalIgnoreCase))
+                {
+                    checkedListBoxClassDays.SetItemChecked(i, true);
+                }
+            }
         }
     }
 
