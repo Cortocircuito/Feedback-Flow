@@ -416,20 +416,16 @@ public sealed partial class MainDashboard : Form
             return false; // Silently skip absent students
         }
 
-        // 2. Validate Material (Optional now, but if path is set, it must exist)
+        // 2. Validate Material (Optional)
+        // If assigned but missing, we warn but DO NOT skip the student. They still get feedback.
         if (!string.IsNullOrEmpty(student.AssignedMaterial) && !File.Exists(student.AssignedMaterial))
         {
-            // If assigned but missing, it's an error/warning scenario? 
-            // Requirement says: "Material attachment is still included if AssignedMaterial is assigned"
-            // I'll log it but proceed? Or skip? 
-            // New flow: "Generate emails -> Only students who attended get emails (with or without material)"
-            // So if file is missing but string is there, we should probably warn or clear it. 
-            // To be safe: warn and skip attachment, or fail? 
-            // Current logic skipped student. I will keep it strict: if path is assigned, file MUST exist.
-            result.SkippedStudents.Add($"{student.FullName} (Material Missing)");
-            UpdateStatus($"Skipping {student.FullName} (Missing Material File)");
-            return false;
+            result.SkippedStudents.Add($"{student.FullName} (Material File Last - Sending Feedback Only)");
+            UpdateStatus($"Warning: Material missing for {student.FullName}. Sending feedback only.");
+            // return true; // Proceed
         }
+
+        return true;
 
         return true;
     }

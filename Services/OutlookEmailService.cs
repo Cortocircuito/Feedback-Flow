@@ -14,13 +14,15 @@ public class OutlookEmailService : IEmailService
         // Master path is now per student
         string learningMaterialPath = student.AssignedMaterial;
 
-        if (string.IsNullOrWhiteSpace(learningMaterialPath))
-            throw new InvalidOperationException($"No learning material assigned for student {student.FullName}");
         if (string.IsNullOrWhiteSpace(studentPdfPath))
             throw new ArgumentNullException(nameof(studentPdfPath));
 
-        if (!string.IsNullOrWhiteSpace(learningMaterialPath) && !File.Exists(learningMaterialPath))
-            throw new FileNotFoundException("Learning Material PDF not found", learningMaterialPath);
+        if (!File.Exists(studentPdfPath)) throw new FileNotFoundException("Student PDF not found", studentPdfPath);
+        
+        // Material is optional now. We only check existence if a path is provided.
+        // If provided but missing, we will skip attaching it later, or we can warn here.
+        // For strictness in "Concept", if a path is in DB, it *should* exist. 
+        // But to generic "optional" behavior, we will just proceed.
         if (!File.Exists(studentPdfPath)) throw new FileNotFoundException("Student PDF not found", studentPdfPath);
 
         try
@@ -46,7 +48,7 @@ public class OutlookEmailService : IEmailService
             };
 
             // Add Attachments
-            if (!string.IsNullOrWhiteSpace(learningMaterialPath))
+            if (!string.IsNullOrWhiteSpace(learningMaterialPath) && File.Exists(learningMaterialPath))
             {
                 builder.Attachments.Add(learningMaterialPath);
             }
