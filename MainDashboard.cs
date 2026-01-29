@@ -39,10 +39,24 @@ public partial class MainDashboard : Form
     {
         _students = new SortableBindingList<Student>("FullName", ListSortDirection.Ascending);
         dgvStudents.AutoGenerateColumns = false;
+        
+        // Fix: Grid must not be globally ReadOnly for checkboxes to work
+        dgvStudents.ReadOnly = false; 
 
+        dgvStudents.Columns.Add(new DataGridViewCheckBoxColumn
+        {
+            Name = "AttendedClass",
+            HeaderText = "Attended",
+            DataPropertyName = "AttendedClass",
+            Width = 60,
+            ReadOnly = false
+        });
         dgvStudents.Columns.Add(CreateColumn("StudentName", "Student", "FullName"));
         dgvStudents.Columns.Add(CreateColumn("LearningMaterial", "Learning Material", "AssignedMaterial"));
         dgvStudents.DataSource = _students;
+
+        // Wire up manually added event handlers
+        dgvStudents.CellContentClick += dgvStudents_CellContentClick;
     }
 
     private static DataGridViewTextBoxColumn CreateColumn(string name, string headerText, string dataPropertyName)
@@ -330,15 +344,46 @@ public partial class MainDashboard : Form
         return result;
     }
 
+    private async void dgvStudents_CellContentClick(object sender, DataGridViewCellEventArgs e)
+    {
+        if (e.RowIndex < 0 || dgvStudents.Columns[e.ColumnIndex].Name != "AttendedClass") return;
+        
+        // Commit change immediately to capture new value
+        dgvStudents.CommitEdit(DataGridViewDataErrorContexts.Commit);
+        
+        var student = _students[e.RowIndex];
+        await ExecuteWithErrorHandlingAsync(async () => 
+        {
+             await _studentService.MarkAttendanceAsync(student, student.AttendedClass);
+             UpdateStatus($"Marked {student.FullName}: " + (student.AttendedClass ? "Present" : "Absent"));
+        }, "Error updating attendance");
+    }
+
     private bool ValidateStudentMaterial(Student student, GenerationResult result)
     {
-        if (!string.IsNullOrEmpty(student.AssignedMaterial) && File.Exists(student.AssignedMaterial))
-            return true;
+        // 1. Check Attendance
+        if (!student.AttendedClass)
+        {
+            UpdateStatus($"Skipping {student.FullName} (Absent)");
+            return false; // Silently skip absent students
+        }
 
-        result.SkippedStudents.Add(student.FullName);
-        UpdateStatus($"Skipping {student.FullName} (No Material)");
-        Application.DoEvents();
-        return false;
+        // 2. Validate Material (Optional now, but if path is set, it must exist)
+        if (!string.IsNullOrEmpty(student.AssignedMaterial) && !File.Exists(student.AssignedMaterial))
+        {
+             // If assigned but missing, it's an error/warning scenario? 
+             // Requirement says: "Material attachment is still included if AssignedMaterial is assigned"
+             // I'll log it but proceed? Or skip? 
+             // New flow: "Generate emails -> Only students who attended get emails (with or without material)"
+             // So if file is missing but string is there, we should probably warn or clear it. 
+             // To be safe: warn and skip attachment, or fail? 
+             // Current logic skipped student. I will keep it strict: if path is assigned, file MUST exist.
+             result.SkippedStudents.Add($"{student.FullName} (Material Missing)");
+             UpdateStatus($"Skipping {student.FullName} (Missing Material File)");
+             return false;
+        }
+
+        return true;
     }
 
     private async Task ProcessStudentAsync(Student student)

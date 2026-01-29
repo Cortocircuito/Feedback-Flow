@@ -13,11 +13,11 @@ public class StudentService : IStudentService
     {
         _db = db;
         _fileService = fileService;
-        
+
         string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         string dateFolder = DateTime.Now.ToString("yyyyMMdd");
         string expectedDailyPath = Path.Combine(documents, "Feedback-Flow", dateFolder);
-        
+
         bool isNewDay = !Directory.Exists(expectedDailyPath);
 
         _dailyFolderPath = _fileService.InitializeDailyFolder();
@@ -35,14 +35,15 @@ public class StudentService : IStudentService
             var students = await _db.GetAllStudentsAsync();
             foreach (var s in students)
             {
-                if (!string.IsNullOrEmpty(s.AssignedMaterial))
+                if (!string.IsNullOrEmpty(s.AssignedMaterial) || s.AttendedClass)
                 {
                     s.AssignedMaterial = string.Empty;
+                    s.AttendedClass = false;
                     await _db.UpdateStudentAsync(s);
                 }
             }
         }
-        catch 
+        catch
         {
             // Ignore init errors
         }
@@ -79,5 +80,18 @@ public class StudentService : IStudentService
     {
         ArgumentNullException.ThrowIfNull(student);
         await _db.DeleteStudentAsync(student.Id);
+    }
+
+    public async Task MarkAttendanceAsync(Student student, bool attended)
+    {
+        ArgumentNullException.ThrowIfNull(student);
+        student.AttendedClass = attended;
+        await _db.UpdateAttendanceAsync(student.Id, attended);
+    }
+
+    public async Task<List<Student>> GetStudentsWhoAttendedAsync()
+    {
+        var attended = await _db.GetStudentsWhoAttendedAsync();
+        return attended.ToList();
     }
 }

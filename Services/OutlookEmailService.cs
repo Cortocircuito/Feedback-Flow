@@ -19,7 +19,7 @@ public class OutlookEmailService : IEmailService
         if (string.IsNullOrWhiteSpace(studentPdfPath))
             throw new ArgumentNullException(nameof(studentPdfPath));
 
-        if (!File.Exists(learningMaterialPath))
+        if (!string.IsNullOrWhiteSpace(learningMaterialPath) && !File.Exists(learningMaterialPath))
             throw new FileNotFoundException("Learning Material PDF not found", learningMaterialPath);
         if (!File.Exists(studentPdfPath)) throw new FileNotFoundException("Student PDF not found", studentPdfPath);
 
@@ -46,7 +46,10 @@ public class OutlookEmailService : IEmailService
             };
 
             // Add Attachments
-            builder.Attachments.Add(learningMaterialPath);
+            if (!string.IsNullOrWhiteSpace(learningMaterialPath))
+            {
+                builder.Attachments.Add(learningMaterialPath);
+            }
             builder.Attachments.Add(studentPdfPath);
 
             message.Body = builder.ToMessageBody();

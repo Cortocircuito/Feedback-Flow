@@ -5,6 +5,7 @@ public class Student
     public int Id { get; set; }
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public bool AttendedClass { get; set; }
     public string AssignedMaterial { get; set; } = string.Empty;
     public string CreatedAt { get; set; } = string.Empty;
     public string UpdatedAt { get; set; } = string.Empty;

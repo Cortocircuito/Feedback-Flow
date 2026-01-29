@@ -8,4 +8,6 @@ public interface IStudentService
     Task AddStudentAsync(Student student);
     Task UpdateStudentAsync(Student originalStudent, Student updatedStudent);
     Task DeleteStudentAsync(Student student);
+    Task MarkAttendanceAsync(Student student, bool attended);
+    Task<List<Student>> GetStudentsWhoAttendedAsync();
 }
