@@ -10,6 +10,15 @@
     <ApplicationIcon>fluent-color-person-edit-32.ico</ApplicationIcon>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PublishSingleFile>false</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+	
   <ItemGroup>
     <Content Include="fluent-color-person-edit-32.ico" />
   </ItemGroup>
