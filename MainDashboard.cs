@@ -84,7 +84,7 @@ public sealed partial class MainDashboard : Form
             await ReloadGridAsync();
 
             UpdateStatus($"Ready. Showing students for {_studentService.GetCurrentDayOfWeek()}.");
-            lblDayOfWeek.Text = DateTime.Now.ToString("dddd", System.Globalization.CultureInfo.InvariantCulture);
+
         }, "Startup Error");
     }
 
@@ -98,13 +98,11 @@ public sealed partial class MainDashboard : Form
         if (_showAllStudents)
         {
             loaded = await _studentService.GetAllStudentsAsync();
-            btnToggleFilter.Text = "Show Today Only";
         }
         else
         {
             string today = _studentService.GetCurrentDayOfWeek();
             loaded = await _studentService.GetStudentsByDayAsync(today);
-            btnToggleFilter.Text = "Show All Students";
         }
 
         foreach (var student in loaded)
@@ -119,10 +117,102 @@ public sealed partial class MainDashboard : Form
         await ExecuteWithErrorHandlingAsync(async () =>
         {
             await ReloadGridAsync();
-            UpdateStatus(_showAllStudents
-                ? "Showing all students."
-                : $"Showing students for {_studentService.GetCurrentDayOfWeek()}.");
+            UpdateUIForViewMode();
         }, "Error toggling filter");
+    }
+
+    private void UpdateUIForViewMode()
+    {
+        if (_showAllStudents)
+        {
+            SetAllStudentsMode();
+        }
+        else
+        {
+            SetCurrentDayMode();
+        }
+    }
+
+    private void SetAllStudentsMode()
+    {
+        // Visual feedback
+        UpdateModeIndicator(true);
+        btnToggleFilter.Text = "Show Today Only";
+
+        // Disable day-specific buttons
+        ToggleDaySpecificActions(false);
+
+        // Update grid ReadOnly state for Attended column
+        // dgvStudents.Columns["AttendedClass"].ReadOnly = true; 
+        // Note: Checkbox column ReadOnly property doesn't always visually gray out well in WinForms standard.
+        // But it prevents editing.
+        
+        UpdateStatus($"Viewing all students ({dgvStudents.Rows.Count} total) - Day-specific actions disabled");
+    }
+
+    private void SetCurrentDayMode()
+    {
+        // Visual feedback
+        UpdateModeIndicator(false);
+        btnToggleFilter.Text = "Show All Students";
+
+        // Enable day-specific buttons
+        ToggleDaySpecificActions(true);
+
+        // dgvStudents.Columns["AttendedClass"].ReadOnly = false;
+
+        string currentDay = _studentService.GetCurrentDayOfWeek();
+        UpdateStatus($"Showing {currentDay}'s students ({dgvStudents.Rows.Count} students)");
+    }
+
+    private void ToggleDaySpecificActions(bool enabled)
+    {
+        btnAssignMaterial.Enabled = enabled;
+        btnUnassignMaterial.Enabled = enabled;
+        btnViewMaterial.Enabled = enabled;
+        btnEditFeedback.Enabled = enabled;
+        btnGenerate.Enabled = enabled;
+        // btnMarkAttendance - implied by grid column readonly if we set it
+
+        // Tooltips
+        if (enabled)
+        {
+            toolTip.SetToolTip(btnAssignMaterial, "Assign learning material to selected student");
+            toolTip.SetToolTip(btnUnassignMaterial, "Remove assigned material from selected student");
+            toolTip.SetToolTip(btnEditFeedback, "Edit feedback notes for selected student");
+            toolTip.SetToolTip(btnGenerate, "Generate feedback emails for students who attended");
+        }
+        else
+        {
+            string msg = "This action is only available when viewing today's students";
+            toolTip.SetToolTip(btnAssignMaterial, msg);
+            toolTip.SetToolTip(btnUnassignMaterial, msg);
+            toolTip.SetToolTip(btnEditFeedback, msg);
+            toolTip.SetToolTip(btnGenerate, msg);
+        }
+    }
+
+    private void UpdateModeIndicator(bool showingAll)
+    {
+        if (showingAll)
+        {
+            panelModeIndicator.BackColor = Color.FromArgb(227, 242, 253); // Light Blue
+            lblModeIcon.Text = "👥";
+            lblModeTitle.Text = "Viewing ALL students (all days)";
+            lblModeTitle.ForeColor = Color.FromArgb(21, 101, 192); // Dark Blue
+            lblModeDescription.Text = "Day-specific actions are disabled";
+            lblModeDescription.ForeColor = Color.FromArgb(21, 101, 192);
+        }
+        else
+        {
+            panelModeIndicator.BackColor = Color.FromArgb(232, 245, 233); // Light Green
+            lblModeIcon.Text = "📅";
+            string currentDay = _studentService.GetCurrentDayOfWeek().ToUpper();
+            lblModeTitle.Text = $"Showing students for: {currentDay}";
+            lblModeTitle.ForeColor = Color.FromArgb(46, 125, 50); // Dark Green
+            lblModeDescription.Text = "Ready to manage today's class";
+            lblModeDescription.ForeColor = Color.FromArgb(46, 125, 50);
+        }
     }
 
     #endregion
@@ -394,6 +484,9 @@ public sealed partial class MainDashboard : Form
 
     private async void dgvStudents_CellContentClick(object sender, DataGridViewCellEventArgs e)
     {
+        // Disable attendance toggling in Show All mode
+        if (_showAllStudents) return;
+
         if (e.RowIndex < 0 || dgvStudents.Columns[e.ColumnIndex].Name != "AttendedClass") return;
 
         // Commit change immediately to capture new value
@@ -427,7 +520,7 @@ public sealed partial class MainDashboard : Form
 
         return true;
 
-        return true;
+
     }
 
     private async Task ProcessStudentAsync(Student student)
