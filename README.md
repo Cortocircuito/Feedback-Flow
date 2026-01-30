@@ -10,7 +10,7 @@
 
 **A modern desktop application for automating personalized student feedback distribution**
 
-[Quick Start](#-quick-start) • [Features](#-features) • [Use Cases](#-use-cases) • [Installation](#-installation) • [Architecture](#-architecture) • [FAQ](#-faq)
+[Quick Start](#-quick-start) • [Features](#-features) • [Use Cases](#-use-cases) • [Installation](#-installation) • [Architecture](#️-architecture) • [FAQ](#-faq)
 
 </div>
 
