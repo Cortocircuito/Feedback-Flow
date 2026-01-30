@@ -16,6 +16,20 @@ public sealed partial class MainDashboard : Form
     private SortableBindingList<Student> _students;
     private string _dailyFolderPath = string.Empty;
 
+    // Search Functionality
+    private Panel? _panelSearch;
+    private TextBox? _txtSearch;
+    private Button? _btnClearSearch;
+    private Label? _lblSearchIcon;
+    private List<Student> _allStudentsCache = new();
+    
+    // Layout State
+    private int _originalY_Buttons;
+    private int _originalY_Grid;
+    private int _originalY_RightButtons;
+    private int _originalHeight_Grid;
+    private bool _searchLayoutActive = false;
+
     public MainDashboard(
         IStudentService studentService,
         IFileSystemService fileService,
@@ -33,6 +47,7 @@ public sealed partial class MainDashboard : Form
         this.MinimumSize = this.Size; // Set minimum size to current size
 
         InitializeDataGrid();
+        InitializeSearchPanel(); 
     }
 
     #region Initialization
@@ -63,6 +78,62 @@ public sealed partial class MainDashboard : Form
 
         // Initialize tooltips
         InitializeTooltips();
+    }
+
+    private void InitializeSearchPanel()
+    {
+        // 1. Create Container Panel
+        _panelSearch = new Panel
+        {
+            Name = "panelSearch",
+            Visible = false, // Hidden by default
+            BackColor = Color.FromArgb(250, 250, 250),
+            BorderStyle = BorderStyle.FixedSingle,
+            Height = 45,
+            Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+        };
+
+        // 2. Create Icon
+        _lblSearchIcon = new Label
+        {
+            Text = "🔍",
+            AutoSize = true,
+            Location = new Point(10, 12),
+            Font = new Font("Segoe UI Emoji", 10f)
+        };
+
+        // 3. Create TextBox
+        _txtSearch = new TextBox
+        {
+            Name = "txtSearchStudent",
+            Location = new Point(40, 10),
+            Width = 300,
+            Font = new Font("Segoe UI", 10f),
+            PlaceholderText = "Type student name to search..."
+        };
+        _txtSearch.TextChanged += TxtSearch_TextChanged;
+        _txtSearch.KeyDown += TxtSearch_KeyDown;
+
+        // 4. Create Clear Button
+        _btnClearSearch = new Button
+        {
+            Text = "✕",
+            Location = new Point(350, 9),
+            Size = new Size(40, 25),
+            FlatStyle = FlatStyle.Flat,
+            Enabled = false,
+            BackColor = Color.White
+        };
+        _btnClearSearch.FlatAppearance.BorderSize = 0;
+        _btnClearSearch.Click += BtnClearSearch_Click;
+
+        // 5. Assemble
+        _panelSearch.Controls.Add(_lblSearchIcon);
+        _panelSearch.Controls.Add(_txtSearch);
+        _panelSearch.Controls.Add(_btnClearSearch);
+        
+        // 6. Add to Form
+        this.Controls.Add(_panelSearch);
     }
 
     private void InitializeTooltips()
@@ -97,6 +168,9 @@ public sealed partial class MainDashboard : Form
 
     private async void MainDashboard_Load(object sender, EventArgs e)
     {
+        // Capture original layout positions for search toggle
+        CaptureOriginalLayout();
+
         await ExecuteWithErrorHandlingAsync(async () =>
         {
             _dailyFolderPath = _fileService.InitializeDailyFolder();
@@ -110,25 +184,45 @@ public sealed partial class MainDashboard : Form
         }, "Startup Error");
     }
 
+    private void CaptureOriginalLayout()
+    {
+        _originalY_Buttons = btnAssignMaterial.Top; // Top row of buttons
+        _originalY_Grid = dgvStudents.Top;
+        _originalHeight_Grid = dgvStudents.Height;
+        _originalY_RightButtons = btnAdd.Top; // Right side buttons start here
+        
+        // Position the search panel dynamically based on Mode Indicator
+        if (_panelSearch != null)
+        {
+            _panelSearch.Top = panelModeIndicator.Bottom + 10;
+            _panelSearch.Left = panelModeIndicator.Left;
+            _panelSearch.Width = panelModeIndicator.Width;
+        }
+    }
+
     private bool _showAllStudents = false;
 
     private async Task ReloadGridAsync()
     {
         _students.Clear();
 
-        List<Student> loaded;
         if (_showAllStudents)
         {
-            loaded = await _studentService.GetAllStudentsAsync();
+            // Cache full list
+            _allStudentsCache = await _studentService.GetAllStudentsAsync();
+            
+            // Allow filter to populate _students
+            FilterStudentsBySearch(_txtSearch?.Text ?? string.Empty);
         }
         else
         {
+            // Current day mode - Direct load
             string today = _studentService.GetCurrentDayOfWeek();
-            loaded = await _studentService.GetStudentsByDayAsync(today);
+            var loaded = await _studentService.GetStudentsByDayAsync(today);
+            
+            foreach (var student in loaded)
+                _students.Add(student);
         }
-
-        foreach (var student in loaded)
-            _students.Add(student);
 
         dgvStudents.Refresh();
     }
@@ -138,8 +232,8 @@ public sealed partial class MainDashboard : Form
         _showAllStudents = !_showAllStudents;
         await ExecuteWithErrorHandlingAsync(async () =>
         {
-            await ReloadGridAsync();
             UpdateUIForViewMode();
+            await ReloadGridAsync();
         }, "Error toggling filter");
     }
 
@@ -161,13 +255,16 @@ public sealed partial class MainDashboard : Form
         UpdateModeIndicator(true);
         btnToggleFilter.Text = "Show Today Only";
 
+        // Enable Search Mode Layout
+        SetSearchLayout(true);
+
         // Disable day-specific buttons
         ToggleDaySpecificActions(false);
 
         // Hide day-specific columns
         SetDaySpecificColumnsVisible(false);
 
-        UpdateStatus($"Viewing all students ({dgvStudents.Rows.Count} total) - Day-specific columns hidden");
+        // Text will be updated by filtering logic
     }
 
     private void SetCurrentDayMode()
@@ -175,6 +272,10 @@ public sealed partial class MainDashboard : Form
         // Visual feedback
         UpdateModeIndicator(false);
         btnToggleFilter.Text = "Show All Students";
+
+        // Disable Search Mode Layout
+        SetSearchLayout(false);
+        if (_txtSearch != null) _txtSearch.Text = string.Empty; // Clear search
 
         // Enable day-specific buttons
         ToggleDaySpecificActions(true);
@@ -184,6 +285,36 @@ public sealed partial class MainDashboard : Form
 
         string currentDay = _studentService.GetCurrentDayOfWeek();
         UpdateStatus($"Showing {currentDay}'s students ({dgvStudents.Rows.Count} students)");
+    }
+
+    private void SetSearchLayout(bool active)
+    {
+        if (_searchLayoutActive == active) return;
+        if (_panelSearch == null) return;
+
+        int shift = active ? 50 : 0;
+        
+        // Toggle Panel
+        _panelSearch.Visible = active;
+        if (active) _txtSearch?.Focus();
+        
+        // Shift Action Buttons (Y=82 group)
+        btnAssignMaterial.Top = _originalY_Buttons + shift;
+        btnUnassignMaterial.Top = _originalY_Buttons + shift;
+        btnViewMaterial.Top = _originalY_Buttons + shift;
+        btnEditFeedback.Top = _originalY_Buttons + shift;
+        btnToggleFilter.Top = _originalY_Buttons + shift;
+        
+        // Shift Right Side Buttons
+        btnAdd.Top = _originalY_RightButtons + shift;
+        btnUpdate.Top = _originalY_RightButtons + 46 + shift; // 46 is gap
+        btnRemove.Top = _originalY_RightButtons + 92 + shift;
+
+        // Shift and Resize Grid
+        dgvStudents.Top = _originalY_Grid + shift;
+        dgvStudents.Height = _originalHeight_Grid - shift;
+
+        _searchLayoutActive = active;
     }
 
     private void SetDaySpecificColumnsVisible(bool visible)
@@ -580,6 +711,80 @@ public sealed partial class MainDashboard : Form
         }
 
         MessageBox.Show(message, "Finished", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    #endregion
+
+    #region Search Logic & Events
+
+    private void TxtSearch_TextChanged(object? sender, EventArgs e)
+    {
+        if (_txtSearch == null || _btnClearSearch == null) return;
+
+        string text = _txtSearch.Text;
+        _btnClearSearch.Enabled = !string.IsNullOrWhiteSpace(text);
+
+        // Real-time filtering
+        if (_showAllStudents)
+        {
+            FilterStudentsBySearch(text);
+        }
+    }
+
+    private void TxtSearch_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.KeyCode == Keys.Escape && _txtSearch != null)
+        {
+            _txtSearch.Clear();
+            e.Handled = true;
+        }
+    }
+
+    private void BtnClearSearch_Click(object? sender, EventArgs e)
+    {
+        _txtSearch?.Clear();
+        _txtSearch?.Focus();
+    }
+
+    private void FilterStudentsBySearch(string searchText)
+    {
+        _students.Clear();
+        
+        // Case insensitive search
+        var query = searchText.Trim();
+        var isSearchActive = !string.IsNullOrWhiteSpace(query);
+
+        var filtered = isSearchActive
+            ? _allStudentsCache.Where(s => s.FullName.Contains(query, StringComparison.OrdinalIgnoreCase))
+            : _allStudentsCache;
+
+        foreach (var student in filtered)
+        {
+            _students.Add(student);
+        }
+
+        // Update Status
+        if (_showAllStudents)
+        {
+            if (isSearchActive)
+            {
+                if (_students.Count == 0)
+                {
+                    lblStatus.ForeColor = Color.OrangeRed;
+                    UpdateStatus($"No students found matching '{query}'");
+                }
+                else
+                {
+                    lblStatus.ForeColor = SystemColors.ControlText;
+                    UpdateStatus($"Found {_students.Count} of {_allStudentsCache.Count} students");
+                }
+            }
+            else
+            {
+                lblStatus.ForeColor = SystemColors.ControlText;
+                UpdateStatus($"Viewing all students ({_students.Count} total) - Day-specific columns hidden");
+            }
+        }
     }
 
     #endregion
