@@ -588,7 +588,14 @@ public sealed partial class MainDashboard : Form
 
     private bool TryGetSelectedStudent(out Student student)
     {
+        // Try CurrentRow first (preferred)
         student = dgvStudents.CurrentRow?.DataBoundItem as Student;
+        
+        // Fallback to SelectedRows if CurrentRow is null but there's a selection
+        if (student == null && dgvStudents.SelectedRows.Count > 0)
+        {
+            student = dgvStudents.SelectedRows[0].DataBoundItem as Student;
+        }
 
         if (student != null) return true;
 
