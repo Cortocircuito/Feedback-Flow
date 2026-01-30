@@ -67,3 +67,13 @@
 - **Preserved data**: All existing student information, materials, and folders are maintained
 
 ## 📦 Database Structure
+- **Table Name**: `Students`
+- **Columns**:
+  - `Id` (INTEGER PRIMARY KEY): Unique identifier for each student
+  - `FullName` (TEXT NOT NULL): Student's full name
+  - `Email` (TEXT NOT NULL UNIQUE): Student's email address
+  - `ClassDay` (TEXT): Comma-separated list of assigned class days (e.g., "Monday,Wednesday")
+  - `AssignedMaterial` (TEXT): Path to the currently assigned learning material file
+  - `AttendedClass` (INTEGER): Boolean flag tracking daily attendance (0 or 1)
+  - `CreatedAt` (TEXT): Timestamp of record creation
+  - `UpdatedAt` (TEXT): Timestamp of last modification
