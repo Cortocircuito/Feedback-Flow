@@ -114,7 +114,7 @@ sealed partial class MainDashboard
         // statusStrip1
         // 
         statusStrip1.Items.AddRange(new ToolStripItem[] { lblStatus });
-        statusStrip1.Location = new Point(0, 527);
+        statusStrip1.Location = new Point(0, 528);
         statusStrip1.Name = "statusStrip1";
         statusStrip1.Size = new Size(784, 22);
         statusStrip1.TabIndex = 8;
@@ -129,6 +129,7 @@ sealed partial class MainDashboard
         // btnAdd
         // 
         btnAdd.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        btnAdd.Enabled = false;
         btnAdd.Location = new Point(652, 130);
         btnAdd.Name = "btnAdd";
         btnAdd.Size = new Size(120, 40);
@@ -140,6 +141,7 @@ sealed partial class MainDashboard
         // btnUpdate
         // 
         btnUpdate.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        btnUpdate.Enabled = false;
         btnUpdate.Location = new Point(652, 176);
         btnUpdate.Name = "btnUpdate";
         btnUpdate.Size = new Size(120, 40);
@@ -151,6 +153,7 @@ sealed partial class MainDashboard
         // btnRemove
         // 
         btnRemove.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        btnRemove.Enabled = false;
         btnRemove.Location = new Point(652, 222);
         btnRemove.Name = "btnRemove";
         btnRemove.Size = new Size(120, 40);
@@ -212,7 +215,7 @@ sealed partial class MainDashboard
         lblModeTitle.Name = "lblModeTitle";
         lblModeTitle.Size = new Size(244, 21);
         lblModeTitle.TabIndex = 1;
-        lblModeTitle.Text = $"Showing students for: {_currentDay}";
+        lblModeTitle.Text = "Showing students for: Monday";
         // 
         // lblModeIcon
         // 
@@ -220,7 +223,7 @@ sealed partial class MainDashboard
         lblModeIcon.Font = new Font("Segoe UI Emoji", 20F);
         lblModeIcon.Location = new Point(10, 10);
         lblModeIcon.Name = "lblModeIcon";
-        lblModeIcon.Size = new Size(46, 36);
+        lblModeIcon.Size = new Size(52, 36);
         lblModeIcon.TabIndex = 0;
         lblModeIcon.Text = "📅";
         // 

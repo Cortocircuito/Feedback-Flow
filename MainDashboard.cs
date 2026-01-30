@@ -15,7 +15,6 @@ public sealed partial class MainDashboard : Form
 
     private SortableBindingList<Student> _students;
     private string _dailyFolderPath = string.Empty;
-    private readonly string _currentDay;
 
     public MainDashboard(
         IStudentService studentService,
@@ -29,8 +28,6 @@ public sealed partial class MainDashboard : Form
         _pdfService = pdfService;
         _emailService = emailService;
         _noteService = noteService;
-
-        _currentDay = _studentService.GetCurrentDayOfWeek();
 
         InitializeComponent();
         this.MinimumSize = this.Size; // Set minimum size to current size
@@ -63,6 +60,27 @@ public sealed partial class MainDashboard : Form
 
         // Wire up manually added event handlers
         dgvStudents.CellContentClick += dgvStudents_CellContentClick;
+
+        // Initialize tooltips
+        InitializeTooltips();
+    }
+
+    private void InitializeTooltips()
+    {
+        // Set initial tooltips for day-specific actions (will be updated based on mode)
+        toolTip.SetToolTip(btnAssignMaterial, "Assign learning material to selected student");
+        toolTip.SetToolTip(btnUnassignMaterial, "Remove assigned material from selected student");
+        toolTip.SetToolTip(btnViewMaterial, "View the assigned material file");
+        toolTip.SetToolTip(btnEditFeedback, "Edit feedback notes for selected student");
+        toolTip.SetToolTip(btnGenerate, "Generate feedback emails for students who attended");
+
+        // Set tooltips for CRUD operations
+        toolTip.SetToolTip(btnAdd, "Add a new student to the system");
+        toolTip.SetToolTip(btnUpdate, "Edit the selected student's information");
+        toolTip.SetToolTip(btnRemove, "Remove the selected student from the system");
+
+        // Set tooltip for filter toggle
+        toolTip.SetToolTip(btnToggleFilter, "Switch between viewing all students or today's students only");
     }
 
     private static DataGridViewTextBoxColumn CreateColumn(string name, string headerText, string dataPropertyName)
@@ -86,8 +104,9 @@ public sealed partial class MainDashboard : Form
             // Default: Load filtered by current day
             await ReloadGridAsync();
 
-            UpdateStatus($"Ready. Showing students for {_studentService.GetCurrentDayOfWeek()}.");
-
+            var currentDay = _studentService.GetCurrentDayOfWeek();
+            lblModeTitle.Text = $"Showing students for: {currentDay}";
+            UpdateStatus($"Ready. Showing students for {currentDay}.");
         }, "Startup Error");
     }
 
@@ -147,7 +166,7 @@ public sealed partial class MainDashboard : Form
 
         // Hide day-specific columns
         SetDaySpecificColumnsVisible(false);
-        
+
         UpdateStatus($"Viewing all students ({dgvStudents.Rows.Count} total) - Day-specific columns hidden");
     }
 
@@ -184,23 +203,23 @@ public sealed partial class MainDashboard : Form
         btnViewMaterial.Enabled = enabled;
         btnEditFeedback.Enabled = enabled;
         btnGenerate.Enabled = enabled;
-        // btnMarkAttendance - implied by grid column readonly if we set it
 
-        // Tooltips
+        btnAdd.Enabled = !enabled;
+        btnUpdate.Enabled = !enabled;
+        btnRemove.Enabled = !enabled;
+
+        // Update tooltips only when buttons are enabled
         if (enabled)
         {
             toolTip.SetToolTip(btnAssignMaterial, "Assign learning material to selected student");
             toolTip.SetToolTip(btnUnassignMaterial, "Remove assigned material from selected student");
+            toolTip.SetToolTip(btnViewMaterial, "View the assigned material file");
             toolTip.SetToolTip(btnEditFeedback, "Edit feedback notes for selected student");
             toolTip.SetToolTip(btnGenerate, "Generate feedback emails for students who attended");
-        }
-        else
-        {
-            string msg = "This action is only available when viewing today's students";
-            toolTip.SetToolTip(btnAssignMaterial, msg);
-            toolTip.SetToolTip(btnUnassignMaterial, msg);
-            toolTip.SetToolTip(btnEditFeedback, msg);
-            toolTip.SetToolTip(btnGenerate, msg);
+
+            toolTip.SetToolTip(btnAdd, "Add a new student to the system");
+            toolTip.SetToolTip(btnUpdate, "Edit the selected student's information");
+            toolTip.SetToolTip(btnRemove, "Remove the selected student from the system");
         }
     }
 
@@ -422,7 +441,12 @@ public sealed partial class MainDashboard : Form
 
     private void dgvStudents_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
     {
-        if (e.RowIndex >= 0)
+        if (e.RowIndex < 0)
+            return;
+
+        if (_showAllStudents)
+            btnUpdate_Click(sender, e);
+        else
             btnEditFeedback_Click(sender, e);
     }
 
