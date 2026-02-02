@@ -38,8 +38,14 @@ public class StudentService : IStudentService
                 if (!string.IsNullOrEmpty(s.AssignedMaterial) || s.AttendedClass)
                 {
                     s.AssignedMaterial = string.Empty;
-                    s.AttendedClass = false;
                     await _db.UpdateStudentAsync(s);
+
+                    // Use dedicated method to update attendance
+                    if (s.AttendedClass)
+                    {
+                        s.AttendedClass = false;
+                        await _db.UpdateAttendanceAsync(s.Id, false);
+                    }
                 }
             }
         }
