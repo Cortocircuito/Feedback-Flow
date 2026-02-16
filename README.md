@@ -20,6 +20,13 @@
 
 **Feedback Flow** is a desktop application developed in C# WinForms (.NET 10) designed to streamline the teaching workflow by automating the distribution of personalized feedback to students. It combines student management, attendance tracking, material assignment, and automated email generation into a single, intuitive interface.
 
+## 🚀 Recent Updates (v1.0.7)
+
+- **🖥️ High DPI Support**: Fully optimized for 4K monitors and scaling settings (100% - 200%).
+- **🔍 Smart Search**: Instantly filter students by name with the new search bar in "Show All" mode.
+- **✨ Enhanced UI**: Modernized layout with responsive grids, cleaner buttons, and improved spacing.
+- **📄 Pro Reports**: Redesigned PDF feedback reports for a more professional look.
+
 ## 🚀 Quick Start
 
 1. **Download** the latest release from [GitHub Releases](https://github.com/Cortocircuito/Feedback-Flow/releases)
@@ -47,6 +54,12 @@ Feedback Flow is perfect for:
 - **Complete CRUD Operations**: Add, edit, and remove students with a dedicated dialog form
 - **Class Day Assignment**: Assign students to specific weekdays (Monday-Friday) with multi-day support
 - **Smart Filtering**: Dashboard automatically displays only students assigned to the current day
+### 👥 Student Management
+- **Complete CRUD Operations**: Add, edit, and remove students with a dedicated dialog form
+- **Class Day Assignment**: Assign students to specific weekdays (Monday-Friday) with multi-day support
+- **Smart Filtering**: Dashboard automatically displays only students assigned to the current day
+- **Instant Search**: Real-time filtering by name in "View All" mode
+- **High DPI Ready**: Scales perfectly on high-resolution displays
 - **View All Mode**: Toggle to view all students across all days for planning and administration
 - **Column Sorting**: Alphabetic sorting for "Student Name" and "Learning Material" columns
 
