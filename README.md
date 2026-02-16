@@ -20,7 +20,7 @@
 
 **Feedback Flow** is a desktop application developed in C# WinForms (.NET 10) designed to streamline the teaching workflow by automating the distribution of personalized feedback to students. It combines student management, attendance tracking, material assignment, and automated email generation into a single, intuitive interface.
 
-## 🚀 Recent Updates (v1.0.7)
+## 📣 Recent Updates (v1.0.7)
 
 - **🖥️ High DPI Support**: Fully optimized for 4K monitors and scaling settings (100% - 200%).
 - **🔍 Smart Search**: Instantly filter students by name with the new search bar in "Show All" mode.
@@ -50,10 +50,6 @@ Feedback Flow is perfect for:
 
 ## ✨ Features
 
-### 👥 Student Management
-- **Complete CRUD Operations**: Add, edit, and remove students with a dedicated dialog form
-- **Class Day Assignment**: Assign students to specific weekdays (Monday-Friday) with multi-day support
-- **Smart Filtering**: Dashboard automatically displays only students assigned to the current day
 ### 👥 Student Management
 - **Complete CRUD Operations**: Add, edit, and remove students with a dedicated dialog form
 - **Class Day Assignment**: Assign students to specific weekdays (Monday-Friday) with multi-day support
@@ -103,7 +99,7 @@ All data is stored locally on your machine:
 
 | Data Type | Location | Format |
 |-----------|----------|--------|
-| **Student Database** | `Documents/Feedback-Flow/students.db` | SQLite |
+| **Student Database** | `Documents/Feedback-Flow/feedbackflow.db` | SQLite |
 | **Feedback Notes** | `Documents/Feedback-Flow/{student-name}/` | `.txt` files |
 | **PDF Feedback** | `Documents/Feedback-Flow/{student-name}/` | `.pdf` files |
 | **Email Drafts** | `Documents/Feedback-Flow/TempEmails/` | `.eml` files |
