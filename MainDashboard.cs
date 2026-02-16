@@ -47,7 +47,54 @@ public sealed partial class MainDashboard : Form
         this.MinimumSize = this.Size; // Set minimum size to current size
 
         InitializeDataGrid();
-        InitializeSearchPanel(); 
+        InitializeSearchPanel();
+        InitializeVersionLabel();
+    }
+
+    private void InitializeVersionLabel()
+    {
+        // Enable tooltips for the StatusStrip
+        statusStrip1.ShowItemToolTips = true;
+
+        // Add a spring label to push the version to the right
+        var springLabel = new ToolStripStatusLabel
+        {
+            Spring = true
+        };
+
+        // Get version from assembly
+        var rawVersion = Application.ProductVersion;
+        var displayVersion = rawVersion;
+        var tooltipText = $"Build: {rawVersion}";
+
+        // Tries to split "1.0.7+abc123..."
+        if (!string.IsNullOrEmpty(rawVersion) && rawVersion.Contains('+'))
+        {
+            var parts = rawVersion.Split('+');
+            if (parts.Length == 2)
+            {
+                var ver = parts[0];
+                var hash = parts[1];
+                
+                // Shorten hash to 7 chars if possible
+                var shortHash = hash.Length >= 7 ? hash[0..7] : hash;
+                
+                displayVersion = $"{ver} ({shortHash})";
+            }
+        }
+        
+        // Create version label
+        var versionLabel = new ToolStripStatusLabel
+        {
+            Text = $"v{displayVersion}",
+            ForeColor = Color.Gray,
+            Font = new Font("Segoe UI", 9f),
+            Margin = new Padding(0, 0, 10, 0),
+            ToolTipText = tooltipText
+        };
+
+        statusStrip1.Items.Add(springLabel);
+        statusStrip1.Items.Add(versionLabel);
     }
 
     #region Initialization
