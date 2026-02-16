@@ -22,12 +22,8 @@ public sealed partial class MainDashboard : Form
     private Button? _btnClearSearch;
     private Label? _lblSearchIcon;
     private List<Student> _allStudentsCache = new();
-    
+
     // Layout State
-    private int _originalY_Buttons;
-    private int _originalY_Grid;
-    private int _originalY_RightButtons;
-    private int _originalHeight_Grid;
     private bool _searchLayoutActive = false;
 
     public MainDashboard(
@@ -75,14 +71,14 @@ public sealed partial class MainDashboard : Form
             {
                 var ver = parts[0];
                 var hash = parts[1];
-                
+
                 // Shorten hash to 7 chars if possible
                 var shortHash = hash.Length >= 7 ? hash[0..7] : hash;
-                
+
                 displayVersion = $"{ver} ({shortHash})";
             }
         }
-        
+
         // Create version label
         var versionLabel = new ToolStripStatusLabel
         {
@@ -98,6 +94,12 @@ public sealed partial class MainDashboard : Form
     }
 
     #region Initialization
+
+    protected override void OnDpiChanged(DpiChangedEventArgs e)
+    {
+        base.OnDpiChanged(e);
+        PerformLayout();
+    }
 
     private void InitializeDataGrid()
     {
@@ -178,9 +180,12 @@ public sealed partial class MainDashboard : Form
         _panelSearch.Controls.Add(_lblSearchIcon);
         _panelSearch.Controls.Add(_txtSearch);
         _panelSearch.Controls.Add(_btnClearSearch);
-        
-        // 6. Add to Form
-        this.Controls.Add(_panelSearch);
+
+        // 6. Add to Mode Indicator Panel instead of Form
+        _panelSearch.Location = new Point(10, 60); // Below the labels
+        _panelSearch.Width = panelModeIndicator.Width - 20;
+        _panelSearch.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        panelModeIndicator.Controls.Add(_panelSearch);
     }
 
     private void InitializeTooltips()
@@ -215,36 +220,18 @@ public sealed partial class MainDashboard : Form
 
     private async void MainDashboard_Load(object sender, EventArgs e)
     {
-        // Capture original layout positions for search toggle
-        CaptureOriginalLayout();
+        await ExecuteWithErrorHandlingAsync(
+            async () =>
+            {
+                _dailyFolderPath = _fileService.InitializeDailyFolder();
 
-        await ExecuteWithErrorHandlingAsync(async () =>
-        {
-            _dailyFolderPath = _fileService.InitializeDailyFolder();
+                // Default: Load filtered by current day
+                await ReloadGridAsync();
 
-            // Default: Load filtered by current day
-            await ReloadGridAsync();
-
-            var currentDay = _studentService.GetCurrentDayOfWeek();
-            lblModeTitle.Text = $"Showing students for: {currentDay}";
-            UpdateStatus($"Ready. Showing students for {currentDay}.");
-        }, "Startup Error");
-    }
-
-    private void CaptureOriginalLayout()
-    {
-        _originalY_Buttons = btnAssignMaterial.Top; // Top row of buttons
-        _originalY_Grid = dgvStudents.Top;
-        _originalHeight_Grid = dgvStudents.Height;
-        _originalY_RightButtons = btnAdd.Top; // Right side buttons start here
-        
-        // Position the search panel dynamically based on Mode Indicator
-        if (_panelSearch != null)
-        {
-            _panelSearch.Top = panelModeIndicator.Bottom + 10;
-            _panelSearch.Left = panelModeIndicator.Left;
-            _panelSearch.Width = panelModeIndicator.Width;
-        }
+                var currentDay = _studentService.GetCurrentDayOfWeek();
+                lblModeTitle.Text = $"Showing students for: {currentDay}";
+                UpdateStatus($"Ready. Showing students for {currentDay}.");
+            }, "Startup Error");
     }
 
     private bool _showAllStudents = false;
@@ -339,27 +326,11 @@ public sealed partial class MainDashboard : Form
         if (_searchLayoutActive == active) return;
         if (_panelSearch == null) return;
 
-        int shift = active ? 50 : 0;
-        
-        // Toggle Panel
+        // Visual Toggle of Search Panel
+        // Since it's inside the AutoSize ModeIndicator, the TableLayout will handle the resize
         _panelSearch.Visible = active;
-        if (active) _txtSearch?.Focus();
-        
-        // Shift Action Buttons (Y=82 group)
-        btnAssignMaterial.Top = _originalY_Buttons + shift;
-        btnUnassignMaterial.Top = _originalY_Buttons + shift;
-        btnViewMaterial.Top = _originalY_Buttons + shift;
-        btnEditFeedback.Top = _originalY_Buttons + shift;
-        btnToggleFilter.Top = _originalY_Buttons + shift;
-        
-        // Shift Right Side Buttons
-        btnAdd.Top = _originalY_RightButtons + shift;
-        btnUpdate.Top = _originalY_RightButtons + 46 + shift; // 46 is gap
-        btnRemove.Top = _originalY_RightButtons + 92 + shift;
 
-        // Shift and Resize Grid
-        dgvStudents.Top = _originalY_Grid + shift;
-        dgvStudents.Height = _originalHeight_Grid - shift;
+        if (active) _txtSearch?.Focus();
 
         _searchLayoutActive = active;
     }

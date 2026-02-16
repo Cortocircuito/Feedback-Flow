@@ -44,6 +44,12 @@ public partial class StudentForm : Form
         }
     }
 
+    protected override void OnDpiChanged(DpiChangedEventArgs e)
+    {
+        base.OnDpiChanged(e);
+        PerformLayout();
+    }
+
     private void btnSave_Click(object sender, EventArgs e)
     {
         if (!ValidateInput())
