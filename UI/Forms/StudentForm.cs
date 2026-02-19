@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using Feedback_Flow.Models;
 
-namespace Feedback_Flow;
+namespace Feedback_Flow.UI.Forms;
 
 public partial class StudentForm : Form
 {

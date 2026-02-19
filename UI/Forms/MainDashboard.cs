@@ -3,7 +3,7 @@ using Feedback_Flow.Helpers;
 using Feedback_Flow.Models;
 using Feedback_Flow.Services.Interfaces;
 
-namespace Feedback_Flow;
+namespace Feedback_Flow.UI.Forms;
 
 public sealed partial class MainDashboard : Form
 {
@@ -888,14 +888,4 @@ public sealed partial class MainDashboard : Form
 
     #endregion
 
-    #region Result Class
-
-    private class GenerationResult
-    {
-        public int SuccessCount { get; set; }
-        public int ErrorCount { get; set; }
-        public List<string> SkippedStudents { get; } = new();
-    }
-
-    #endregion
 }

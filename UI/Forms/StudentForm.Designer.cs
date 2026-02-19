@@ -1,4 +1,4 @@
-namespace Feedback_Flow;
+namespace Feedback_Flow.UI.Forms;
 
 partial class StudentForm
 {

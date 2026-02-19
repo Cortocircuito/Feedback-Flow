@@ -1,5 +1,7 @@
+using Feedback_Flow.Models;
 using Feedback_Flow.Services;
 using Feedback_Flow.Services.Interfaces;
+using Feedback_Flow.UI.Forms;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Feedback_Flow;
@@ -24,7 +26,6 @@ internal static class Program
 
         // Run Database Migration
         var databaseService = ServiceProvider.GetRequiredService<IDatabaseService>();
-        // Ensure DB exists first
         Task.Run(async () => await databaseService.InitializeDatabaseAsync()).Wait();
 
         var migrationService = ServiceProvider.GetRequiredService<IMigrationService>();
@@ -37,18 +38,16 @@ internal static class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
-        // Register Services
+        // Services
         services.AddSingleton<IDatabaseService, SqliteDatabaseService>();
         services.AddSingleton<IMigrationService, MigrationService>();
-        
         services.AddSingleton<IFileSystemService, FileSystemService>();
-        // services.AddSingleton<IDataService, CsvDataService>(); // Removed
         services.AddSingleton<IPdfService, PdfGenerationService>();
         services.AddSingleton<IEmailService, OutlookEmailService>();
         services.AddSingleton<IStudentService, StudentService>();
         services.AddSingleton<INoteService, NoteService>();
 
-        // Register Forms
+        // Forms
         services.AddTransient<MainDashboard>();
     }
 }

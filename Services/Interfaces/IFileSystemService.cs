@@ -26,28 +26,3 @@ public interface IFileSystemService
     /// </summary>
     void RenameStudentFolder(string dailyFolderPath, string oldName, string newName);
 }
-
-public interface IDataService
-{
-    /// <summary>
-    /// Loads students from the CSV file.
-    /// </summary>
-    IEnumerable<Student> LoadStudents(string csvPath);
-}
-
-public interface IPdfService
-{
-    /// <summary>
-    /// Generates a PDF for the student based on their note content.
-    /// Returns the absolute path of the generated PDF.
-    /// </summary>
-    string GenerateStudentPdf(Student student, string content, string outputFolder);
-}
-
-public interface IEmailService
-{
-    /// <summary>
-    /// Opens a new Outlook email window with recipients and attachments pre-filled.
-    /// </summary>
-    void DraftEmail(Student student, string studentPdfPath);
-}
