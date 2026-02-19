@@ -256,6 +256,8 @@ public sealed partial class MainDashboard : Form
             
             foreach (var student in loaded)
                 _students.Add(student);
+
+            UpdateStatus($"Showing {today}'s students ({_students.Count} students)");
         }
 
         dgvStudents.Refresh();
@@ -316,9 +318,6 @@ public sealed partial class MainDashboard : Form
 
         // Show day-specific columns
         SetDaySpecificColumnsVisible(true);
-
-        string currentDay = _studentService.GetCurrentDayOfWeek();
-        UpdateStatus($"Showing {currentDay}'s students ({dgvStudents.Rows.Count} students)");
     }
 
     private void SetSearchLayout(bool active)
