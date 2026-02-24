@@ -13,47 +13,13 @@ public class StudentService : IStudentService
     {
         _db = db;
         _fileService = fileService;
-
-        string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        string dateFolder = DateTime.Now.ToString("yyyyMMdd");
-        string expectedDailyPath = Path.Combine(documents, "Feedback-Flow", dateFolder);
-
-        bool isNewDay = !Directory.Exists(expectedDailyPath);
-
         _dailyFolderPath = _fileService.InitializeDailyFolder();
-
-        if (isNewDay)
-        {
-            Task.Run(async () => await PerformDailyResetAsync()).Wait();
-        }
+        // Daily reset logic removed — session data is preserved historically.
     }
 
-    private async Task PerformDailyResetAsync()
-    {
-        try 
-        {
-            var students = await _db.GetAllStudentsAsync();
-            foreach (var s in students)
-            {
-                if (!string.IsNullOrEmpty(s.AssignedMaterial) || s.AttendedClass)
-                {
-                    s.AssignedMaterial = string.Empty;
-                    await _db.UpdateStudentAsync(s);
-
-                    // Use dedicated method to update attendance
-                    if (s.AttendedClass)
-                    {
-                        s.AttendedClass = false;
-                        await _db.UpdateAttendanceAsync(s.Id, false);
-                    }
-                }
-            }
-        }
-        catch
-        {
-            // Ignore init errors
-        }
-    }
+    // -------------------------------------------------------------------------
+    // Student Identity CRUD
+    // -------------------------------------------------------------------------
 
     public async Task<List<Student>> LoadStudentsAsync()
     {
@@ -86,30 +52,38 @@ public class StudentService : IStudentService
     {
         ArgumentNullException.ThrowIfNull(student);
         await _db.DeleteStudentAsync(student.Id);
-    }
-
-    public async Task MarkAttendanceAsync(Student student, bool attended)
-    {
-        ArgumentNullException.ThrowIfNull(student);
-        student.AttendedClass = attended;
-        await _db.UpdateAttendanceAsync(student.Id, attended);
-    }
-
-    public async Task<List<Student>> GetStudentsWhoAttendedAsync()
-    {
-        var attended = await _db.GetStudentsWhoAttendedAsync();
-        return attended.ToList();
-    }
-
-    public async Task<List<Student>> GetStudentsByDayAsync(string dayName)
-    {
-        var students = await _db.GetStudentsByDayAsync(dayName);
-        return students.ToList();
+        // ClassSessions are cleaned up automatically via ON DELETE CASCADE
     }
 
     public async Task<List<Student>> GetAllStudentsAsync()
     {
         return await LoadStudentsAsync();
+    }
+
+    // -------------------------------------------------------------------------
+    // Session-Based Data Access
+    // -------------------------------------------------------------------------
+
+    public async Task<List<StudentSessionView>> GetTodaySessionViewsAsync()
+    {
+        string today = GetCurrentDayOfWeek();
+        DateTime date = DateTime.Today;
+
+        // Idempotent: creates session rows for any student without one today
+        await _db.EnsureTodaySessionsAsync(today, date);
+
+        var views = await _db.GetTodaySessionViewsAsync(today, date);
+        return views.ToList();
+    }
+
+    public async Task MarkAttendanceAsync(int sessionId, bool attended)
+    {
+        await _db.UpdateSessionAttendanceAsync(sessionId, attended);
+    }
+
+    public async Task UpdateSessionMaterialAsync(int sessionId, string? materialPath)
+    {
+        await _db.UpdateSessionMaterialAsync(sessionId, materialPath);
     }
 
     public string GetCurrentDayOfWeek()

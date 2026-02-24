@@ -13,7 +13,10 @@ public sealed partial class MainDashboard : Form
     private readonly IPdfService _pdfService;
     private readonly IEmailService _emailService;
 
-    private SortableBindingList<Student> _students;
+    // Day mode: binds StudentSessionView (Student + today's ClassSession)
+    private SortableBindingList<StudentSessionView> _sessions;
+    // Show-All mode: binds plain Student for CRUD
+    private SortableBindingList<Student> _allStudentsList;
     private string _dailyFolderPath = string.Empty;
 
     // Search Functionality
@@ -103,29 +106,31 @@ public sealed partial class MainDashboard : Form
 
     private void InitializeDataGrid()
     {
-        _students = new SortableBindingList<Student>("FullName", ListSortDirection.Ascending);
-        dgvStudents.AutoGenerateColumns = false;
+        // Day-mode binding list
+        _sessions = new SortableBindingList<StudentSessionView>("FullName", ListSortDirection.Ascending);
+        // All-students-mode binding list
+        _allStudentsList = new SortableBindingList<Student>("FullName", ListSortDirection.Ascending);
 
-        // Fix: Grid must not be globally ReadOnly for checkboxes to work
+        dgvStudents.AutoGenerateColumns = false;
         dgvStudents.ReadOnly = false;
 
+        // DataPropertyName maps to StudentSessionView.Attended
         dgvStudents.Columns.Add(new DataGridViewCheckBoxColumn
         {
             Name = "AttendedClass",
             HeaderText = "Attended",
-            DataPropertyName = "AttendedClass",
+            DataPropertyName = "Attended",
             Width = 60,
             ReadOnly = false
         });
         dgvStudents.Columns.Add(CreateColumn("StudentName", "Student", "FullName"));
         dgvStudents.Columns.Add(CreateColumn("ClassDay", "Class Day(s)", "ClassDay"));
         dgvStudents.Columns.Add(CreateColumn("LearningMaterial", "Learning Material", "AssignedMaterial"));
-        dgvStudents.DataSource = _students;
 
-        // Wire up manually added event handlers
+        // Start in day mode
+        dgvStudents.DataSource = _sessions;
+
         dgvStudents.CellContentClick += dgvStudents_CellContentClick;
-
-        // Initialize tooltips
         InitializeTooltips();
     }
 
@@ -238,26 +243,25 @@ public sealed partial class MainDashboard : Form
 
     private async Task ReloadGridAsync()
     {
-        _students.Clear();
-
         if (_showAllStudents)
         {
-            // Cache full list
+            // All-students mode: show identity only, swap to Student binding list
             _allStudentsCache = await _studentService.GetAllStudentsAsync();
-            
-            // Allow filter to populate _students
+            dgvStudents.DataSource = _allStudentsList;
             FilterStudentsBySearch(_txtSearch?.Text ?? string.Empty);
         }
         else
         {
-            // Current day mode - Direct load
+            // Day mode: ensure today's sessions exist then load JOIN view
+            _sessions.Clear();
+            dgvStudents.DataSource = _sessions;
             string today = _studentService.GetCurrentDayOfWeek();
-            var loaded = await _studentService.GetStudentsByDayAsync(today);
-            
-            foreach (var student in loaded)
-                _students.Add(student);
+            var sessions = await _studentService.GetTodaySessionViewsAsync();
 
-            UpdateStatus($"Showing {today}'s students ({_students.Count} students)");
+            foreach (var session in sessions)
+                _sessions.Add(session);
+
+            UpdateStatus($"Showing {today}'s students ({_sessions.Count} students)");
         }
 
         dgvStudents.Refresh();
@@ -429,56 +433,56 @@ public sealed partial class MainDashboard : Form
 
     private async void btnAssignMaterial_Click(object sender, EventArgs e)
     {
-        if (!TryGetSelectedStudent(out var student)) return;
+        if (!TryGetSelectedSession(out var session)) return;
 
-        var filePath = ShowMaterialFileDialog(student.FullName);
+        var filePath = ShowMaterialFileDialog(session.FullName);
         if (string.IsNullOrEmpty(filePath)) return;
 
-        await UpdateStudentMaterialAsync(student, filePath, $"Assigned material to {student.FullName}");
+        await UpdateSessionMaterialAsync(session, filePath, $"Assigned material to {session.FullName}");
     }
 
     private async void btnUnassignMaterial_Click(object sender, EventArgs e)
     {
-        if (!TryGetSelectedStudent(out var student)) return;
+        if (!TryGetSelectedSession(out var session)) return;
 
-        if (string.IsNullOrWhiteSpace(student.AssignedMaterial))
+        if (string.IsNullOrWhiteSpace(session.AssignedMaterial))
         {
-            ShowInfo($"{student.FullName} has no material assigned.", "Information");
+            ShowInfo($"{session.FullName} has no material assigned.", "Information");
             return;
         }
 
-        if (!ShowConfirmation($"Unassign material from {student.FullName}?", "Confirm Unassignment"))
+        if (!ShowConfirmation($"Unassign material from {session.FullName}?", "Confirm Unassignment"))
             return;
 
-        await UpdateStudentMaterialAsync(student, string.Empty, $"Unassigned material from {student.FullName}");
+        await UpdateSessionMaterialAsync(session, null, $"Unassigned material from {session.FullName}");
     }
 
     private async void btnViewMaterial_Click(object sender, EventArgs e)
     {
-        if (!TryGetSelectedStudent(out var student)) return;
+        if (!TryGetSelectedSession(out var session)) return;
 
-        if (string.IsNullOrWhiteSpace(student.AssignedMaterial))
+        if (string.IsNullOrWhiteSpace(session.AssignedMaterial))
         {
-            ShowInfo($"{student.FullName} has no material assigned.", "No Material");
+            ShowInfo($"{session.FullName} has no material assigned.", "No Material");
             return;
         }
 
-        if (!File.Exists(student.AssignedMaterial))
+        if (!File.Exists(session.AssignedMaterial))
         {
-            ShowWarning($"Material file not found:\n{student.AssignedMaterial}", "File Not Found");
+            ShowWarning($"Material file not found:\n{session.AssignedMaterial}", "File Not Found");
             return;
         }
 
-        OpenFile(student.AssignedMaterial, $"Opened material for {student.FullName}");
+        OpenFile(session.AssignedMaterial, $"Opened material for {session.FullName}");
     }
 
-    private async Task UpdateStudentMaterialAsync(Student student, string materialPath, string successMessage)
+    private async Task UpdateSessionMaterialAsync(StudentSessionView session, string? materialPath, string successMessage)
     {
         await ExecuteWithErrorHandlingAsync(async () =>
         {
-            student.AssignedMaterial = materialPath;
-            await _studentService.UpdateStudentAsync(student, student);
-            RefreshStudentInGrid(student);
+            await _studentService.UpdateSessionMaterialAsync(session.SessionId, materialPath);
+            session.AssignedMaterial = materialPath;
+            RefreshStudentInGrid(session);
             UpdateStatus(successMessage);
         }, "Error updating material");
     }
@@ -542,9 +546,8 @@ public sealed partial class MainDashboard : Form
             var updatedStudent = new Student
             {
                 FullName = form.StudentFullName,
-                Email = form.StudentEmail,
-                ClassDay = form.ClassDays,
-                AssignedMaterial = selectedStudent.AssignedMaterial
+                Email    = form.StudentEmail,
+                ClassDay = form.ClassDays
             };
 
             if (IsEmailChanged(selectedStudent, updatedStudent) && IsEmailDuplicate(updatedStudent.Email))
@@ -555,9 +558,9 @@ public sealed partial class MainDashboard : Form
 
             await _studentService.UpdateStudentAsync(selectedStudent, updatedStudent);
 
-            selectedStudent.FullName = updatedStudent.FullName;
-            selectedStudent.Email = updatedStudent.Email;
-            selectedStudent.ClassDay = updatedStudent.ClassDay;
+            selectedStudent.FullName  = updatedStudent.FullName;
+            selectedStudent.Email     = updatedStudent.Email;
+            selectedStudent.ClassDay  = updatedStudent.ClassDay;
 
             // If we are in filtered mode and the day was changed to something *not* today, we should probably remove it?
             // But for simplicity, we just leave it until refresh. Or we can just ReloadGrid.
@@ -578,7 +581,7 @@ public sealed partial class MainDashboard : Form
         await ExecuteWithErrorHandlingAsync(async () =>
         {
             await _studentService.DeleteStudentAsync(selectedStudent);
-            _students.Remove(selectedStudent);
+            _allStudentsList.Remove(selectedStudent);
             UpdateStatus($"Removed {selectedStudent.FullName}");
         }, "Error removing student");
     }
@@ -589,8 +592,7 @@ public sealed partial class MainDashboard : Form
 
     private void dgvStudents_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
     {
-        if (e.RowIndex < 0)
-            return;
+        if (e.RowIndex < 0) return;
 
         if (_showAllStudents)
             btnUpdate_Click(sender, e);
@@ -600,12 +602,13 @@ public sealed partial class MainDashboard : Form
 
     private async void btnEditFeedback_Click(object sender, EventArgs e)
     {
-        if (!TryGetSelectedStudent(out var selectedStudent)) return;
+        if (!TryGetSelectedSession(out var session)) return;
 
         await ExecuteWithErrorHandlingAsync(async () =>
         {
-            string studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, selectedStudent);
-            await _noteService.OpenOrCreateNotesAsync(studentFolder, selectedStudent.FullName);
+            var student = new Student { Id = session.StudentId, FullName = session.FullName, Email = session.Email, ClassDay = session.ClassDay };
+            string studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, student);
+            await _noteService.OpenOrCreateNotesAsync(studentFolder, session.FullName);
         }, "Error opening notes", ex =>
         {
             if (ex is DirectoryNotFoundException)
@@ -623,7 +626,7 @@ public sealed partial class MainDashboard : Form
 
     private async void btnGenerate_Click(object sender, EventArgs e)
     {
-        if (_students.Count == 0)
+        if (_sessions.Count == 0)
         {
             ShowWarning("No students loaded.", "Warning");
             return;
@@ -644,17 +647,17 @@ public sealed partial class MainDashboard : Form
     {
         var result = new GenerationResult();
 
-        foreach (var student in _students)
+        foreach (var session in _sessions)
         {
-            UpdateStatus($"Processing: {student.FullName}");
+            UpdateStatus($"Processing: {session.FullName}");
             Application.DoEvents();
 
-            if (!ValidateStudentMaterial(student, result))
+            if (!ValidateStudentMaterial(session, result))
                 continue;
 
             try
             {
-                await ProcessStudentAsync(student);
+                await ProcessStudentAsync(session);
                 result.SuccessCount++;
             }
             catch (Exception)
@@ -668,53 +671,51 @@ public sealed partial class MainDashboard : Form
 
     private async void dgvStudents_CellContentClick(object sender, DataGridViewCellEventArgs e)
     {
-        // Disable attendance toggling in Show All mode
+        // Attendance toggling is only available in day mode
         if (_showAllStudents) return;
 
         if (e.RowIndex < 0 || dgvStudents.Columns[e.ColumnIndex].Name != "AttendedClass") return;
 
-        // Commit change immediately to capture new value
         dgvStudents.CommitEdit(DataGridViewDataErrorContexts.Commit);
 
-        var student = _students[e.RowIndex];
+        var session = _sessions[e.RowIndex];
         await ExecuteWithErrorHandlingAsync(async () =>
         {
-            await _studentService.MarkAttendanceAsync(student, student.AttendedClass);
-            UpdateStatus($"Marked {student.FullName}: " + (student.AttendedClass ? "Present" : "Absent"));
+            await _studentService.MarkAttendanceAsync(session.SessionId, session.Attended);
+            UpdateStatus($"Marked {session.FullName}: " + (session.Attended ? "Present" : "Absent"));
         }, "Error updating attendance");
     }
 
-    private bool ValidateStudentMaterial(Student student, GenerationResult result)
+    private bool ValidateStudentMaterial(StudentSessionView session, GenerationResult result)
     {
         // 1. Check Attendance
-        if (!student.AttendedClass)
+        if (!session.Attended)
         {
-            UpdateStatus($"Skipping {student.FullName} (Absent)");
+            UpdateStatus($"Skipping {session.FullName} (Absent)");
             return false; // Silently skip absent students
         }
 
         // 2. Validate Material (Optional)
         // If assigned but missing, we warn but DO NOT skip the student. They still get feedback.
-        if (!string.IsNullOrEmpty(student.AssignedMaterial) && !File.Exists(student.AssignedMaterial))
+        if (!string.IsNullOrEmpty(session.AssignedMaterial) && !File.Exists(session.AssignedMaterial))
         {
-            result.SkippedStudents.Add($"{student.FullName} (Material File Last - Sending Feedback Only)");
-            UpdateStatus($"Warning: Material missing for {student.FullName}. Sending feedback only.");
-            // return true; // Proceed
+            result.SkippedStudents.Add($"{session.FullName} (Material File Last - Sending Feedback Only)");
+            UpdateStatus($"Warning: Material missing for {session.FullName}. Sending feedback only.");
         }
 
         return true;
-
-
     }
 
-    private async Task ProcessStudentAsync(Student student)
+    private async Task ProcessStudentAsync(StudentSessionView session)
     {
+        // Build a temporary Student object for folder/file operations that still need it
+        var student = new Student { Id = session.StudentId, FullName = session.FullName, Email = session.Email, ClassDay = session.ClassDay };
         string studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, student);
         string content = _fileService.GetStudentNoteContent(studentFolder) ??
                          "No specific notes found for this student.";
-        string studentPdfPath = _pdfService.GenerateStudentPdf(student, content, studentFolder);
+        string studentPdfPath = _pdfService.GenerateStudentPdf(session, content, studentFolder);
 
-        _emailService.DraftEmail(student, studentPdfPath);
+        _emailService.DraftEmail(session, studentPdfPath);
     }
 
     private static void ShowCompletionMessage(GenerationResult result)
@@ -765,9 +766,8 @@ public sealed partial class MainDashboard : Form
 
     private void FilterStudentsBySearch(string searchText)
     {
-        _students.Clear();
-        
-        // Case insensitive search
+        _allStudentsList.Clear();
+
         var query = searchText.Trim();
         var isSearchActive = !string.IsNullOrWhiteSpace(query);
 
@@ -776,16 +776,13 @@ public sealed partial class MainDashboard : Form
             : _allStudentsCache;
 
         foreach (var student in filtered)
-        {
-            _students.Add(student);
-        }
+            _allStudentsList.Add(student);
 
-        // Update Status
         if (_showAllStudents)
         {
             if (isSearchActive)
             {
-                if (_students.Count == 0)
+                if (_allStudentsList.Count == 0)
                 {
                     lblStatus.ForeColor = Color.OrangeRed;
                     UpdateStatus($"No students found matching '{query}'");
@@ -793,13 +790,13 @@ public sealed partial class MainDashboard : Form
                 else
                 {
                     lblStatus.ForeColor = SystemColors.ControlText;
-                    UpdateStatus($"Found {_students.Count} of {_allStudentsCache.Count} students");
+                    UpdateStatus($"Found {_allStudentsList.Count} of {_allStudentsCache.Count} students");
                 }
             }
             else
             {
                 lblStatus.ForeColor = SystemColors.ControlText;
-                UpdateStatus($"Viewing all students ({_students.Count} total) - Day-specific columns hidden");
+                UpdateStatus($"Viewing all students ({_allStudentsList.Count} total) - Day-specific columns hidden");
             }
         }
     }
@@ -808,34 +805,38 @@ public sealed partial class MainDashboard : Form
 
     #region Helper Methods
 
+    private bool TryGetSelectedSession(out StudentSessionView session)
+    {
+        session = dgvStudents.CurrentRow?.DataBoundItem as StudentSessionView;
+        if (session == null && dgvStudents.SelectedRows.Count > 0)
+            session = dgvStudents.SelectedRows[0].DataBoundItem as StudentSessionView;
+        if (session != null) return true;
+        ShowWarning("Please select a student first.", "Warning");
+        return false;
+    }
+
+    // Used by CRUD (btnUpdate/btnRemove) — only active in Show-All mode where DataSource is _allStudentsList
     private bool TryGetSelectedStudent(out Student student)
     {
-        // Try CurrentRow first (preferred)
         student = dgvStudents.CurrentRow?.DataBoundItem as Student;
-        
-        // Fallback to SelectedRows if CurrentRow is null but there's a selection
         if (student == null && dgvStudents.SelectedRows.Count > 0)
-        {
             student = dgvStudents.SelectedRows[0].DataBoundItem as Student;
-        }
-
         if (student != null) return true;
-
         ShowWarning("Please select a student first.", "Warning");
         return false;
     }
 
     private bool IsEmailDuplicate(string email) =>
-        _students.Any(s => s.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+        _allStudentsList.Any(s => s.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
 
     private static bool IsEmailChanged(Student original, Student updated) =>
         !original.Email.Equals(updated.Email, StringComparison.OrdinalIgnoreCase);
 
-    private void RefreshStudentInGrid(Student student)
+    private void RefreshStudentInGrid(StudentSessionView session)
     {
-        var index = _students.IndexOf(student);
+        var index = _sessions.IndexOf(session);
         if (index >= 0)
-            _students.ResetItem(index);
+            _sessions.ResetItem(index);
     }
 
     private void UpdateStatus(string message) => lblStatus.Text = message;

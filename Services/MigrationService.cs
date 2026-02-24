@@ -68,11 +68,9 @@ public class MigrationService : IMigrationService
 
                 var student = new Student
                 {
-                    FullName = name,
-                    Email = email,
-                    AssignedMaterial = assignedMaterial,
-                    CreatedAt = DateTime.UtcNow.ToString("o"),
-                    UpdatedAt = DateTime.UtcNow.ToString("o")
+                    FullName  = name,
+                    Email     = email,
+                    CreatedAt = DateTime.UtcNow.ToString("o")
                 };
 
                 await _databaseService.AddStudentAsync(student);

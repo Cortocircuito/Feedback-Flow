@@ -8,111 +8,64 @@ namespace Feedback_Flow.Services;
 
 public class OutlookEmailService : IEmailService
 {
-    public void DraftEmail(Student student, string studentPdfPath)
+    public void DraftEmail(StudentSessionView session, string studentPdfPath)
     {
-        if (student == null) throw new ArgumentNullException(nameof(student));
-        // Master path is now per student
-        string learningMaterialPath = student.AssignedMaterial;
-
+        if (session == null) throw new ArgumentNullException(nameof(session));
         if (string.IsNullOrWhiteSpace(studentPdfPath))
             throw new ArgumentNullException(nameof(studentPdfPath));
+        if (!File.Exists(studentPdfPath))
+            throw new FileNotFoundException("Student PDF not found", studentPdfPath);
 
-        if (!File.Exists(studentPdfPath)) throw new FileNotFoundException("Student PDF not found", studentPdfPath);
-        
-        // Material is optional now. We only check existence if a path is provided.
-        // If provided but missing, we will skip attaching it later, or we can warn here.
-        // For strictness in "Concept", if a path is in DB, it *should* exist. 
-        // But to generic "optional" behavior, we will just proceed.
-        if (!File.Exists(studentPdfPath)) throw new FileNotFoundException("Student PDF not found", studentPdfPath);
+        string learningMaterialPath = session.AssignedMaterial ?? string.Empty;
 
         try
         {
-            // 1. Create MimeMessage
             var message = new MimeMessage();
-            message.Subject = $"Feedback for {student.FullName} - {DateTime.Now:yyyy-MM-dd}";
+            message.Subject = $"Feedback for {session.FullName} - {DateTime.Now:yyyy-MM-dd}";
 
-            // Add Recipient
-            if (!string.IsNullOrWhiteSpace(student.Email))
-            {
-                message.To.Add(new MailboxAddress(student.FullName, student.Email));
-            }
+            if (!string.IsNullOrWhiteSpace(session.Email))
+                message.To.Add(new MailboxAddress(session.FullName, session.Email));
 
-            // Add "X-Unsent" header to open as Draft
             message.Headers.Add("X-Unsent", "1");
 
-            // 2. Build Body and Attachments
             var builder = new BodyBuilder
             {
-                TextBody =
-                    $"Hello {student.FullName},\n\nPlease find attached your class feedback and notes.\n\nBest regards,\nYour Teacher"
+                TextBody = $"Hello {session.FullName},\n\nPlease find attached your class feedback and notes.\n\nBest regards,\nYour Teacher"
             };
 
-            // Add Attachments
+            // Material is optional — only attach if path exists
             if (!string.IsNullOrWhiteSpace(learningMaterialPath) && File.Exists(learningMaterialPath))
-            {
                 builder.Attachments.Add(learningMaterialPath);
-            }
-            builder.Attachments.Add(studentPdfPath);
 
+            builder.Attachments.Add(studentPdfPath);
             message.Body = builder.ToMessageBody();
 
-            // 3. Save to Temporary Directory
-            // "TempEmails inside the Feedback-Flow root folder"
             string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string appRoot = Path.Combine(documents, "Feedback-Flow");
-            string tempDir = Path.Combine(appRoot, "TempEmails");
+            string tempDir = Path.Combine(documents, "Feedback-Flow", "TempEmails");
 
             if (!Directory.Exists(tempDir))
-            {
                 Directory.CreateDirectory(tempDir);
-            }
 
-            string safeName = student.GetFolderName();
-            // Ensure unique filename if multiple generated in same minute
-            string emlFileName =
-                $"{safeName}_{DateTime.Now:yyyyMMdd-HHmm}_{Guid.NewGuid().ToString().Substring(0, 4)}.eml";
+            string safeName = session.GetFolderName();
+            string emlFileName = $"{safeName}_{DateTime.Now:yyyyMMdd-HHmm}_{Guid.NewGuid().ToString()[..4]}.eml";
             string emlPath = Path.Combine(tempDir, emlFileName);
 
             message.WriteTo(emlPath);
 
-            // 4. Open with Default Mail Client (Outlook)
-
-            // Detect if Outlook is currently running
-            // If the process name is different (e.g., Thunderbird), this check simply defaults to adding a safe delay.
             bool isOutlookRunning = Process.GetProcessesByName("OUTLOOK").Length > 0;
 
-            var psi = new ProcessStartInfo
-            {
-                FileName = emlPath,
-                UseShellExecute = true
-            };
+            Process.Start(new ProcessStartInfo { FileName = emlPath, UseShellExecute = true });
 
-            Process.Start(psi);
-
-            if (!isOutlookRunning)
-            {
-                // Outlook was closed and is now starting via the command above.
-                // We must wait for it to initialize; otherwise, subsequent emails in the loop 
-                // will be ignored/lost during the startup phase.
-                Thread.Sleep(5000);
-            }
-            else
-            {
-                // Even if running, a small delay prevents overwhelming the inter-process communication
-                // and ensures the OS processes the file associations in order.
-                Thread.Sleep(500);
-            }
+            Thread.Sleep(isOutlookRunning ? 500 : 5000);
         }
         catch (Win32Exception ex)
         {
             throw new InvalidOperationException(
-                $"Could not open the generated .eml file. Ensure a default mail client is configured.\nFile: {student.FullName}",
-                ex);
+                $"Could not open the generated .eml file. Ensure a default mail client is configured.\nFile: {session.FullName}", ex);
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException(
-                $"Failed to draft email for {student.FullName}: {ex.Message}", ex);
+            throw new InvalidOperationException($"Failed to draft email for {session.FullName}: {ex.Message}", ex);
         }
     }
 }

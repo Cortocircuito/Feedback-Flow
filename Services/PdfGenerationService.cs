@@ -9,110 +9,87 @@ namespace Feedback_Flow.Services;
 
 public class PdfGenerationService : IPdfService
 {
-    public string GenerateStudentPdf(Student student, string content, string outputFolder)
+    public string GenerateStudentPdf(StudentSessionView session, string content, string outputFolder)
     {
-        if (student == null) throw new ArgumentNullException(nameof(student));
+        if (session == null) throw new ArgumentNullException(nameof(session));
         if (string.IsNullOrWhiteSpace(outputFolder))
             throw new ArgumentException("Output folder cannot be empty", nameof(outputFolder));
 
-        // Ensure output folder exists
         if (!Directory.Exists(outputFolder))
-        {
             Directory.CreateDirectory(outputFolder);
-        }
 
-        var cleanName = student.GetFolderName();
+        var cleanName = session.GetFolderName();
         var fileName = $"{cleanName}_Feedback.pdf";
         var outputPath = Path.Combine(outputFolder, fileName);
 
         try
         {
-            using (var writer = new PdfWriter(outputPath))
-            using (var pdf = new PdfDocument(writer))
-            using (var document = new Document(pdf))
+            using var writer = new PdfWriter(outputPath);
+            using var pdf = new PdfDocument(writer);
+            using var document = new Document(pdf);
+
+            var primaryColor = new iText.Kernel.Colors.DeviceRgb(0, 102, 204);
+            var greyColor = new iText.Kernel.Colors.DeviceRgb(128, 128, 128);
+
+            // 1. Header
+            var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 1, 1 })).UseAllAvailableWidth();
+            headerTable.AddCell(new Cell().Add(new Paragraph("Feedback Report")
+                    .SetFontSize(24).SetFontColor(primaryColor).SimulateBold())
+                .SetBorder(iText.Layout.Borders.Border.NO_BORDER));
+
+            headerTable.AddCell(new Cell().Add(new Paragraph(DateTime.Now.ToString("MMMM dd, yyyy"))
+                    .SetFontSize(12).SetFontColor(greyColor).SetTextAlignment(TextAlignment.RIGHT))
+                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                .SetBorder(iText.Layout.Borders.Border.NO_BORDER));
+
+            document.Add(headerTable);
+            document.Add(new Paragraph("\n"));
+
+            // 2. Student Details
+            document.Add(new Paragraph("Student Information")
+                .SetFontSize(14).SetFontColor(primaryColor).SimulateBold());
+
+            var infoTable = new Table(UnitValue.CreatePercentArray(new float[] { 1, 3 })).UseAllAvailableWidth();
+
+            void AddInfoRow(string label, string value)
             {
-                // Define colors and styles
-                var primaryColor = new iText.Kernel.Colors.DeviceRgb(0, 102, 204); // Dark Blue
-                var greyColor = new iText.Kernel.Colors.DeviceRgb(128, 128, 128); // Grey
-                
-                // 1. Header Section
-                var headerTable = new Table(UnitValue.CreatePercentArray(new float[] { 1, 1 })).UseAllAvailableWidth();
-                headerTable.AddCell(new Cell().Add(new Paragraph("Feedback Report")
-                        .SetFontSize(24)
-                        .SetFontColor(primaryColor)
-                        .SimulateBold())
+                infoTable.AddCell(new Cell().Add(new Paragraph(label).SimulateBold().SetFontSize(10))
+                    .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
+                    .SetBackgroundColor(new iText.Kernel.Colors.DeviceGray(0.95f)));
+
+                infoTable.AddCell(new Cell().Add(new Paragraph(value ?? "-").SetFontSize(10))
                     .SetBorder(iText.Layout.Borders.Border.NO_BORDER));
-                
-                headerTable.AddCell(new Cell().Add(new Paragraph(DateTime.Now.ToString("MMMM dd, yyyy"))
-                        .SetFontSize(12)
-                        .SetFontColor(greyColor)
-                        .SetTextAlignment(TextAlignment.RIGHT))
-                    .SetVerticalAlignment(VerticalAlignment.MIDDLE)
-                    .SetBorder(iText.Layout.Borders.Border.NO_BORDER));
-
-                document.Add(headerTable);
-                document.Add(new Paragraph("\n")); // Spacer
-
-                // 2. Student Details Section
-                document.Add(new Paragraph("Student Information")
-                    .SetFontSize(14)
-                    .SetFontColor(primaryColor)
-                    .SimulateBold());
-
-                var infoTable = new Table(UnitValue.CreatePercentArray(new float[] { 1, 3 })).UseAllAvailableWidth();
-                
-                // Helper to add rows
-                void AddInfoRow(string label, string value)
-                {
-                    infoTable.AddCell(new Cell().Add(new Paragraph(label).SimulateBold().SetFontSize(10))
-                        .SetBorder(iText.Layout.Borders.Border.NO_BORDER)
-                        .SetBackgroundColor(new iText.Kernel.Colors.DeviceGray(0.95f))); // Light grey background for labels
-                        
-                    infoTable.AddCell(new Cell().Add(new Paragraph(value ?? "-").SetFontSize(10))
-                        .SetBorder(iText.Layout.Borders.Border.NO_BORDER));
-                }
-
-                AddInfoRow("Name:", student.FullName);
-                AddInfoRow("Class Days:", student.ClassDay);
-                AddInfoRow("Assigned Material:", Path.GetFileName(student.AssignedMaterial));
-
-                document.Add(infoTable);
-                document.Add(new Paragraph("\n"));
-
-                // Separator Line
-                document.Add(new LineSeparator(new iText.Kernel.Pdf.Canvas.Draw.SolidLine(1f)));
-                document.Add(new Paragraph("\n"));
-
-                // 3. Feedback Content
-                document.Add(new Paragraph("Feedback Notes")
-                    .SetFontSize(14)
-                    .SetFontColor(primaryColor)
-                    .SimulateBold());
-
-                document.Add(new Paragraph(content ?? "No specific notes provided.")
-                    .SetFontSize(11)
-                    .SetTextAlignment(TextAlignment.JUSTIFIED)
-                    .SetMarginTop(5));
-
-                // 4. Footer (stick to bottom manually or just add at end for now)
-                document.Add(new Paragraph("\n\n"));
-                document.Add(
-                    new Paragraph("Generated by Feedback Flow System")
-                        .SetFontSize(8)
-                        .SetFontColor(greyColor)
-                        .SetTextAlignment(TextAlignment.CENTER)
-                        .SimulateItalic());
             }
+
+            AddInfoRow("Name:", session.FullName);
+            AddInfoRow("Class Days:", session.ClassDay);
+            AddInfoRow("Assigned Material:", Path.GetFileName(session.AssignedMaterial ?? string.Empty));
+
+            document.Add(infoTable);
+            document.Add(new Paragraph("\n"));
+
+            // Separator
+            document.Add(new LineSeparator(new iText.Kernel.Pdf.Canvas.Draw.SolidLine(1f)));
+            document.Add(new Paragraph("\n"));
+
+            // 3. Feedback Content
+            document.Add(new Paragraph("Feedback Notes")
+                .SetFontSize(14).SetFontColor(primaryColor).SimulateBold());
+
+            document.Add(new Paragraph(content ?? "No specific notes provided.")
+                .SetFontSize(11).SetTextAlignment(TextAlignment.JUSTIFIED).SetMarginTop(5));
+
+            // 4. Footer
+            document.Add(new Paragraph("\n\n"));
+            document.Add(new Paragraph("Generated by Feedback Flow System")
+                .SetFontSize(8).SetFontColor(greyColor)
+                .SetTextAlignment(TextAlignment.CENTER).SimulateItalic());
 
             return outputPath;
         }
         catch (Exception ex)
         {
-            // Log or display the full exception details
-            //var fullError =
-            //    $"Error: {ex.Message}\nInner: {ex.InnerException?.Message}\nStack: {ex.StackTrace}";
-            throw new IOException(
-                $"Error generating PDF for {student.FullName}: {ex.Message}", ex);
+            throw new IOException($"Error generating PDF for {session.FullName}: {ex.Message}", ex);
         }
     }
 }
