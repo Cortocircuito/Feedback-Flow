@@ -23,7 +23,6 @@
 ## 📣 Recent Updates (v1.0.7)
 
 - **🖥️ High DPI Support**: Fully optimized for 4K monitors and scaling settings (100% - 200%).
-- **🔍 Smart Search**: Instantly filter students by name with the new search bar in "Show All" mode.
 - **✨ Enhanced UI**: Modernized layout with responsive grids, cleaner buttons, and improved spacing.
 - **📄 Pro Reports**: Redesigned PDF feedback reports for a more professional look.
 
