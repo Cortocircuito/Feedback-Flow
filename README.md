@@ -74,7 +74,7 @@ Feedback Flow is perfect for:
 ### 📝 Feedback Management
 - **Direct Note Editing**: One-click access to student feedback notes in your default text editor
 - **Automated Organization**: Daily folders (`YYYYMMDD`) created within `Documents/Feedback-Flow`
-- **PDF Generation**: Converts feedback notes to professional PDFs using iText 9
+- **PDF Generation**: Converts feedback notes to professional PDFs using PDFSharp
 - **Persistent Storage**: Student folders are **never deleted** when removing students
 
 ### 📧 Email Integration
@@ -150,7 +150,7 @@ On first launch, the application will:
 ### Technology Stack
 - **Framework**: .NET 10 (Windows Forms)
 - **Database**: SQLite with Dapper ORM
-- **PDF Generation**: iText 9
+- **PDF Generation**: PDFSharp
 - **Email**: MimeKit for `.eml` generation
 - **Dependency Injection**: Microsoft.Extensions.DependencyInjection
 
@@ -322,7 +322,7 @@ This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.t
 ## 🙏 Acknowledgments
 
 ### Libraries & Frameworks
-- **[iText 9](https://itextpdf.com/)**: PDF generation library
+- **[PDFSharp](https://docs.pdfsharp.net/)**: PDF generation library (MIT License)
 - **[MimeKit](https://github.com/jstedfast/MimeKit)**: Email message creation
 - **[Dapper](https://github.com/DapperLib/Dapper)**: Lightweight ORM for .NET
 - **[SQLite](https://www.sqlite.org/)**: Embedded database engine

@@ -2,6 +2,12 @@
 
 This software uses the following third-party resources:
 
+## PDFSharp
+  - [PDFSharp] by [empira Software GmbH]
+  - Source: https://github.com/empira/PDFsharp
+  - License: MIT
+  - Copyright (c) 2005-2025 empira Software GmbH, Troisdorf (Cologne Area), Germany
+
 ## Icons
   - [Fluent UI System Color Icons] by [Microsoft Corporation]
   - Source: https://github.com/microsoft/fluentui-system-icons
