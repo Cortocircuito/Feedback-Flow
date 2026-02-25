@@ -8,6 +8,10 @@ versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Replaced iText 9 (AGPL) with PDFSharp 6.2.4 (MIT) for PDF generation in `PdfGenerationService`
+- Removed `itext.bouncy-castle-adapter` dependency (no longer needed)
+
 ## [1.0.8] - 2026-02-19
 
 ### Changed
