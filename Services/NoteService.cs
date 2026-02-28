@@ -35,8 +35,7 @@ public class NoteService : INoteService
 
             notePath = Path.Combine(studentFolderPath, fileName);
 
-            var content = $"{studentName} Feedback Notes:\n";
-            await File.WriteAllTextAsync(notePath, content);
+            await File.WriteAllTextAsync(notePath, string.Empty);
         }
 
         try
