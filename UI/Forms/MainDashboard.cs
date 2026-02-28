@@ -442,7 +442,7 @@ public sealed partial class MainDashboard : Form
         {
             panelModeIndicator.BackColor = Color.FromArgb(255, 253, 231); // Amber / light yellow
             lblModeTitle.ForeColor = Color.FromArgb(245, 124, 0); // Orange-amber
-            lblModeDescription.Text = "Viewing a previous class session";
+            lblModeDescription.Text = "Viewing a previous class session — read-only history";
             lblModeDescription.ForeColor = Color.FromArgb(245, 124, 0);
         }
     }
