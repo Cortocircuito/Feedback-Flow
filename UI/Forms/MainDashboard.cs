@@ -631,6 +631,7 @@ public sealed partial class MainDashboard : Form
         {
             await _studentService.DeleteStudentAsync(selectedStudent);
             _allStudentsList.Remove(selectedStudent);
+            await ReloadGridAsync();
             UpdateStatus($"Removed {selectedStudent.FullName}");
         }, "Error removing student");
     }
@@ -876,7 +877,8 @@ public sealed partial class MainDashboard : Form
     }
 
     private bool IsEmailDuplicate(string email) =>
-        _allStudentsList.Any(s => s.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+        _allStudentsCache != null &&
+        _allStudentsCache.Any(s => s.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
 
     private static bool IsEmailChanged(Student original, Student updated) =>
         !original.Email.Equals(updated.Email, StringComparison.OrdinalIgnoreCase);
