@@ -6,11 +6,20 @@ versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## [1.1.0] - 2026-02-28
+
+### Added
+- **Session-Based Attendance**: Refactored attendance tracking to a dedicated session model for improved reliability
+- **Landing Page**: New modern landing page (`index.html`) with **Dark Mode** support and responsive layout
+- Project-wide public landing page for downloads and showcase
 
 ### Changed
-- Replaced iText 9 (AGPL) with PDFSharp 6.2.4 (MIT) for PDF generation in `PdfGenerationService`
-- Removed `itext.bouncy-castle-adapter` dependency (no longer needed)
+- **Significant Version Bump**: Upgraded to **v1.1.0** to reflect major new features and architectural improvements
+- **PDF Library Migration**: Replaced iText 9 (AGPL) with PDFSharp 6.2.4 (MIT) for PDF generation in `PdfGenerationService`
+- **Modernized Layout**: Advanced responsive grid system using `TableLayoutPanel` for high-DPI scaling reliability
+- **README Updates**: Broadened project description and removed outdated search feature references
+- Removed `itext.bouncy-castle-adapter` and other legacy dependencies
+- Refined landing page aesthetics (Note: **Dark Mode currently applies to the landing page only**)
 
 ## [1.0.8] - 2026-02-19
 
