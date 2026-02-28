@@ -266,10 +266,11 @@ public sealed partial class MainDashboard : Form
             foreach (var session in sessions)
                 _sessions.Add(session);
 
-            // Update mode indicator title to reflect the selected date
+            // Update the mode indicator panel based on whether date is today or historical
+            UpdateDayModeIndicator(selectedDate);
+
             bool isToday = selectedDate == DateTime.Today;
             string dateLabel = isToday ? dayName : $"{dayName} ({selectedDate:dd MMM yyyy})";
-            lblModeTitle.Text = $"Showing students for: {dateLabel}";
             UpdateStatus($"Showing {dateLabel}'s students ({_sessions.Count} students)");
         }
 
@@ -412,13 +413,37 @@ public sealed partial class MainDashboard : Form
         }
         else
         {
+            // Day mode appearance is handled by UpdateDayModeIndicator based on selected date
+            UpdateDayModeIndicator(dtpClassDate.Value.Date);
+        }
+    }
+
+    /// <summary>
+    /// Updates the mode indicator panel colour and text to reflect whether
+    /// the user is viewing today's class (green) or a previous one (yellow).
+    /// </summary>
+    private void UpdateDayModeIndicator(DateTime selectedDate)
+    {
+        bool isToday = selectedDate == DateTime.Today;
+        string dayName = _studentService.GetDayOfWeek(selectedDate).ToUpper();
+        string dateLabel = isToday ? dayName : $"{dayName} ({selectedDate:dd MMM yyyy})";
+
+        lblModeIcon.Text = isToday ? "📅" : "🕐";
+        lblModeTitle.Text = $"Showing students for: {dateLabel}";
+
+        if (isToday)
+        {
             panelModeIndicator.BackColor = Color.FromArgb(232, 245, 233); // Light Green
-            lblModeIcon.Text = "📅";
-            string currentDay = _studentService.GetDayOfWeek(dtpClassDate.Value.Date).ToUpper();
-            lblModeTitle.Text = $"Showing students for: {currentDay}";
             lblModeTitle.ForeColor = Color.FromArgb(46, 125, 50); // Dark Green
             lblModeDescription.Text = "Ready to manage today's class";
             lblModeDescription.ForeColor = Color.FromArgb(46, 125, 50);
+        }
+        else
+        {
+            panelModeIndicator.BackColor = Color.FromArgb(255, 253, 231); // Amber / light yellow
+            lblModeTitle.ForeColor = Color.FromArgb(245, 124, 0); // Orange-amber
+            lblModeDescription.Text = "Viewing a previous class session";
+            lblModeDescription.ForeColor = Color.FromArgb(245, 124, 0);
         }
     }
 
