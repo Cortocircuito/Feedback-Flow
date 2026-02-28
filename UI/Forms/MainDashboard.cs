@@ -230,7 +230,8 @@ public sealed partial class MainDashboard : Form
             {
                 _dailyFolderPath = _fileService.InitializeDailyFolder();
 
-                // Initialize date picker at today (MaxDate prevents future dates)
+                // Initialize date picker range and value based on today (prevents future dates)
+                dtpClassDate.MaxDate = DateTime.Today;
                 dtpClassDate.Value = DateTime.Today;
 
                 // Default: Load filtered by current day
