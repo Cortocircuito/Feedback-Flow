@@ -15,6 +15,7 @@ public sealed partial class MainDashboard : Form
 
     // Day mode: binds StudentSessionView (Student + today's ClassSession)
     private SortableBindingList<StudentSessionView> _sessions;
+
     // Show-All mode: binds plain Student for CRUD
     private SortableBindingList<Student> _allStudentsList;
     private string _dailyFolderPath = string.Empty;
@@ -66,7 +67,7 @@ public sealed partial class MainDashboard : Form
         var displayVersion = rawVersion;
         var tooltipText = $"Build: {rawVersion}";
 
-        // Tries to split "1.0.7+abc123..."
+        // Tries to split "x.x.x+abc123..."
         if (!string.IsNullOrEmpty(rawVersion) && rawVersion.Contains('+'))
         {
             var parts = rawVersion.Split('+');
@@ -107,22 +108,25 @@ public sealed partial class MainDashboard : Form
     private void InitializeDataGrid()
     {
         // Day-mode binding list
-        _sessions = new SortableBindingList<StudentSessionView>("FullName", ListSortDirection.Ascending);
+        _sessions = new SortableBindingList<StudentSessionView>(
+            "FullName", ListSortDirection.Ascending);
         // All-students-mode binding list
-        _allStudentsList = new SortableBindingList<Student>("FullName", ListSortDirection.Ascending);
+        _allStudentsList =
+            new SortableBindingList<Student>("FullName", ListSortDirection.Ascending);
 
         dgvStudents.AutoGenerateColumns = false;
         dgvStudents.ReadOnly = false;
 
         // DataPropertyName maps to StudentSessionView.Attended
-        dgvStudents.Columns.Add(new DataGridViewCheckBoxColumn
-        {
-            Name = "AttendedClass",
-            HeaderText = "Attended",
-            DataPropertyName = "Attended",
-            Width = 60,
-            ReadOnly = false
-        });
+        dgvStudents.Columns.Add(
+            new DataGridViewCheckBoxColumn
+            {
+                Name = "AttendedClass",
+                HeaderText = "Attended",
+                DataPropertyName = "Attended",
+                Width = 60,
+                ReadOnly = false
+            });
         dgvStudents.Columns.Add(CreateColumn("StudentName", "Student", "FullName"));
         dgvStudents.Columns.Add(CreateColumn("ClassDay", "Class Day(s)", "ClassDay"));
         dgvStudents.Columns.Add(CreateColumn("LearningMaterial", "Learning Material", "AssignedMaterial"));
@@ -294,12 +298,13 @@ public sealed partial class MainDashboard : Form
         // Only reload when in day mode; all-students mode ignores the date picker
         if (_showAllStudents) return;
 
-        await ExecuteWithErrorHandlingAsync(async () =>
-        {
-            // Ensure the folder for the selected date exists and update the cached path
-            _dailyFolderPath = _fileService.InitializeDailyFolder(dtpClassDate.Value.Date);
-            await ReloadGridAsync();
-        }, "Error loading sessions for selected date");
+        await ExecuteWithErrorHandlingAsync(
+            async () =>
+            {
+                // Ensure the folder for the selected date exists and update the cached path
+                _dailyFolderPath = _fileService.InitializeDailyFolder(dtpClassDate.Value.Date);
+                await ReloadGridAsync();
+            }, "Error loading sessions for selected date");
     }
 
     private void UpdateUIForViewMode()
@@ -396,7 +401,8 @@ public sealed partial class MainDashboard : Form
         if (dayActionsEnabled)
         {
             toolTip.SetToolTip(btnAssignMaterial, "Assign learning material to selected student");
-            toolTip.SetToolTip(btnUnassignMaterial, "Remove assigned material from selected student");
+            toolTip.SetToolTip(
+                btnUnassignMaterial, "Remove assigned material from selected student");
             toolTip.SetToolTip(btnViewMaterial, "View the assigned material file");
             toolTip.SetToolTip(btnEditFeedback, "Edit feedback notes for selected student");
             toolTip.SetToolTip(btnGenerate, "Generate feedback emails for students who attended");
@@ -419,9 +425,12 @@ public sealed partial class MainDashboard : Form
         }
         else
         {
-            toolTip.SetToolTip(btnAdd, "Disabled - switch to 'Show All Students' mode to edit system records");
-            toolTip.SetToolTip(btnUpdate, "Disabled - switch to 'Show All Students' mode to edit system records");
-            toolTip.SetToolTip(btnRemove, "Disabled - switch to 'Show All Students' mode to edit system records");
+            toolTip.SetToolTip(
+                btnAdd, "Disabled - switch to 'Show All Students' mode to edit system records");
+            toolTip.SetToolTip(
+                btnUpdate, "Disabled - switch to 'Show All Students' mode to edit system records");
+            toolTip.SetToolTip(
+                btnRemove, "Disabled - switch to 'Show All Students' mode to edit system records");
         }
     }
 
@@ -461,9 +470,10 @@ public sealed partial class MainDashboard : Form
 
         // Generate emails is always available — past sessions still need to be emailed
         btnGenerate.Enabled = true;
-        toolTip.SetToolTip(btnGenerate, isToday
-            ? "Generate feedback emails for students who attended"
-            : "Send feedback emails for this past session");
+        toolTip.SetToolTip(
+            btnGenerate, isToday
+                ? "Generate feedback emails for students who attended"
+                : "Send feedback emails for this past session");
 
         // Disable attendance checkbox column
         if (dgvStudents.Columns["AttendedClass"] is { } attendedCol)
@@ -473,16 +483,16 @@ public sealed partial class MainDashboard : Form
 
         if (isToday)
         {
-            panelModeIndicator.BackColor = Color.FromArgb(232, 245, 233);  // Light Green
-            lblModeTitle.ForeColor    = Color.FromArgb(46, 125, 50);        // Dark Green
-            lblModeDescription.Text   = "Ready to manage today's class";
+            panelModeIndicator.BackColor = Color.FromArgb(232, 245, 233); // Light Green
+            lblModeTitle.ForeColor = Color.FromArgb(46, 125, 50); // Dark Green
+            lblModeDescription.Text = "Ready to manage today's class";
             lblModeDescription.ForeColor = Color.FromArgb(46, 125, 50);
         }
         else
         {
-            panelModeIndicator.BackColor = Color.FromArgb(255, 253, 231);  // Amber / light yellow
-            lblModeTitle.ForeColor    = Color.FromArgb(245, 124, 0);        // Orange-amber
-            lblModeDescription.Text   = "Viewing a previous class session — read-only history";
+            panelModeIndicator.BackColor = Color.FromArgb(255, 253, 231); // Amber / light yellow
+            lblModeTitle.ForeColor = Color.FromArgb(245, 124, 0); // Orange-amber
+            lblModeDescription.Text = "Viewing a previous class session — read-only history";
             lblModeDescription.ForeColor = Color.FromArgb(245, 124, 0);
         }
     }
@@ -527,7 +537,8 @@ public sealed partial class MainDashboard : Form
         var filePath = ShowMaterialFileDialog(session.FullName);
         if (string.IsNullOrEmpty(filePath)) return;
 
-        await UpdateSessionMaterialAsync(session, filePath, $"Assigned material to {session.FullName}");
+        await UpdateSessionMaterialAsync(
+            session, filePath, $"Assigned material to {session.FullName}");
     }
 
     private async void btnUnassignMaterial_Click(object sender, EventArgs e)
@@ -540,10 +551,12 @@ public sealed partial class MainDashboard : Form
             return;
         }
 
-        if (!ShowConfirmation($"Unassign material from {session.FullName}?", "Confirm Unassignment"))
+        if (!ShowConfirmation(
+                $"Unassign material from {session.FullName}?", "Confirm Unassignment"))
             return;
 
-        await UpdateSessionMaterialAsync(session, null, $"Unassigned material from {session.FullName}");
+        await UpdateSessionMaterialAsync(
+            session, null, $"Unassigned material from {session.FullName}");
     }
 
     private async void btnViewMaterial_Click(object sender, EventArgs e)
@@ -565,7 +578,8 @@ public sealed partial class MainDashboard : Form
         OpenFile(session.AssignedMaterial, $"Opened material for {session.FullName}");
     }
 
-    private async Task UpdateSessionMaterialAsync(StudentSessionView session, string? materialPath, string successMessage)
+    private async Task UpdateSessionMaterialAsync(
+        StudentSessionView session, string? materialPath, string successMessage)
     {
         await ExecuteWithErrorHandlingAsync(async () =>
         {
@@ -635,7 +649,7 @@ public sealed partial class MainDashboard : Form
             var updatedStudent = new Student
             {
                 FullName = form.StudentFullName,
-                Email    = form.StudentEmail,
+                Email = form.StudentEmail,
                 ClassDay = form.ClassDays
             };
 
@@ -647,9 +661,9 @@ public sealed partial class MainDashboard : Form
 
             await _studentService.UpdateStudentAsync(selectedStudent, updatedStudent);
 
-            selectedStudent.FullName  = updatedStudent.FullName;
-            selectedStudent.Email     = updatedStudent.Email;
-            selectedStudent.ClassDay  = updatedStudent.ClassDay;
+            selectedStudent.FullName = updatedStudent.FullName;
+            selectedStudent.Email = updatedStudent.Email;
+            selectedStudent.ClassDay = updatedStudent.ClassDay;
 
             // If we are in filtered mode and the day was changed to something *not* today, we should probably remove it?
             // But for simplicity, we just leave it until refresh. Or we can just ReloadGrid.
@@ -696,9 +710,14 @@ public sealed partial class MainDashboard : Form
 
         await ExecuteWithErrorHandlingAsync(async () =>
         {
-            var student = new Student { Id = session.StudentId, FullName = session.FullName, Email = session.Email, ClassDay = session.ClassDay };
+            var student = new Student
+            {
+                Id = session.StudentId, FullName = session.FullName, Email = session.Email,
+                ClassDay = session.ClassDay
+            };
             string studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, student);
-            await _noteService.OpenOrCreateNotesAsync(studentFolder, session.FullName, dtpClassDate.Value.Date);
+            await _noteService.OpenOrCreateNotesAsync(
+                studentFolder, session.FullName, dtpClassDate.Value.Date);
         }, "Error opening notes", ex =>
         {
             if (ex is DirectoryNotFoundException)
@@ -772,7 +791,8 @@ public sealed partial class MainDashboard : Form
         await ExecuteWithErrorHandlingAsync(async () =>
         {
             await _studentService.MarkAttendanceAsync(session.SessionId, session.Attended);
-            UpdateStatus($"Marked {session.FullName}: " + (session.Attended ? "Present" : "Absent"));
+            UpdateStatus(
+                $"Marked {session.FullName}: " + (session.Attended ? "Present" : "Absent"));
         }, "Error updating attendance");
     }
 
@@ -787,10 +807,13 @@ public sealed partial class MainDashboard : Form
 
         // 2. Validate Material (Optional)
         // If assigned but missing, we warn but DO NOT skip the student. They still get feedback.
-        if (!string.IsNullOrEmpty(session.AssignedMaterial) && !File.Exists(session.AssignedMaterial))
+        if (!string.IsNullOrEmpty(session.AssignedMaterial) &&
+            !File.Exists(session.AssignedMaterial))
         {
-            result.SkippedStudents.Add($"{session.FullName} (Material File Last - Sending Feedback Only)");
-            UpdateStatus($"Warning: Material missing for {session.FullName}. Sending feedback only.");
+            result.SkippedStudents.Add(
+                $"{session.FullName} (Material File Last - Sending Feedback Only)");
+            UpdateStatus(
+                $"Warning: Material missing for {session.FullName}. Sending feedback only.");
         }
 
         return true;
@@ -799,7 +822,11 @@ public sealed partial class MainDashboard : Form
     private async Task ProcessStudentAsync(StudentSessionView session)
     {
         // Build a temporary Student object for folder/file operations that still need it
-        var student = new Student { Id = session.StudentId, FullName = session.FullName, Email = session.Email, ClassDay = session.ClassDay };
+        var student = new Student
+        {
+            Id = session.StudentId, FullName = session.FullName, Email = session.Email,
+            ClassDay = session.ClassDay
+        };
         string studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, student);
         string content = _fileService.GetStudentNoteContent(studentFolder) ??
                          "No specific notes found for this student.";
@@ -880,13 +907,15 @@ public sealed partial class MainDashboard : Form
                 else
                 {
                     lblStatus.ForeColor = SystemColors.ControlText;
-                    UpdateStatus($"Found {_allStudentsList.Count} of {_allStudentsCache.Count} students");
+                    UpdateStatus(
+                        $"Found {_allStudentsList.Count} of {_allStudentsCache.Count} students");
                 }
             }
             else
             {
                 lblStatus.ForeColor = SystemColors.ControlText;
-                UpdateStatus($"Viewing all students ({_allStudentsList.Count} total) - Day-specific columns hidden");
+                UpdateStatus(
+                    $"Viewing all students ({_allStudentsList.Count} total) - Day-specific columns hidden");
             }
         }
     }
