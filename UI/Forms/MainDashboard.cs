@@ -631,6 +631,7 @@ public sealed partial class MainDashboard : Form
         {
             await _studentService.DeleteStudentAsync(selectedStudent);
             _allStudentsList.Remove(selectedStudent);
+            await ReloadGridAsync();
             UpdateStatus($"Removed {selectedStudent.FullName}");
         }, "Error removing student");
     }
