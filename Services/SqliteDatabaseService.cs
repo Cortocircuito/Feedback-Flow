@@ -49,6 +49,12 @@ public class SqliteDatabaseService : IDatabaseService
         try { await connection.ExecuteAsync("SELECT ClassDay FROM Students LIMIT 1"); }
         catch { await connection.ExecuteAsync("ALTER TABLE Students ADD COLUMN ClassDay TEXT NOT NULL DEFAULT '';"); }
 
+        // Migration: Drop legacy UpdatedAt column (was TEXT NOT NULL with no default, breaks new inserts)
+        bool hasUpdatedAt = true;
+        try { await connection.ExecuteAsync("SELECT UpdatedAt FROM Students LIMIT 1"); }
+        catch { hasUpdatedAt = false; }
+        if (hasUpdatedAt) await connection.ExecuteAsync("ALTER TABLE Students DROP COLUMN UpdatedAt;");
+
         // ClassSessions table — one row per student per date
         await connection.ExecuteAsync(@"
             CREATE TABLE IF NOT EXISTS ClassSessions (
