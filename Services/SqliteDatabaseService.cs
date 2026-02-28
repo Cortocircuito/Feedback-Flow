@@ -175,14 +175,12 @@ public class SqliteDatabaseService : IDatabaseService
                    cs.FeedbackNotePath
             FROM   Students s
             INNER  JOIN ClassSessions cs ON cs.StudentId = s.Id
-            WHERE  s.ClassDay LIKE '%' || @DayName || '%'
-              AND  cs.ClassDate = @Date
+            WHERE  cs.ClassDate = @Date
             ORDER  BY s.FullName;";
 
         return await connection.QueryAsync<StudentSessionView>(sql, new
         {
-            DayName = dayName,
-            Date    = date.ToString("yyyy-MM-dd")
+            Date = date.ToString("yyyy-MM-dd")
         });
     }
 
