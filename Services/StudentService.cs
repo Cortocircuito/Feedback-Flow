@@ -68,8 +68,11 @@ public class StudentService : IStudentService
     {
         string dayName = GetDayOfWeek(date);
 
-        // Idempotent: creates session rows for any student without one for this date
-        await _db.EnsureTodaySessionsAsync(dayName, date);
+        // Only auto-create sessions for the current day to avoid mutating historical data.
+        if (date.Date == DateTime.Today)
+        {
+            await _db.EnsureTodaySessionsAsync(dayName, date);
+        }
 
         var views = await _db.GetTodaySessionViewsAsync(dayName, date);
         return views.ToList();
