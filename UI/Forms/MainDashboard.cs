@@ -323,8 +323,8 @@ public sealed partial class MainDashboard : Form
         // Enable Search Mode Layout
         SetSearchLayout(true);
 
-        // Disable day-specific buttons
-        ToggleDaySpecificActions(false);
+        // Day actions disabled, Identity actions enabled
+        SetActionButtons(dayActionsEnabled: false, identityActionsEnabled: true);
 
         // Hide day-specific columns
         SetDaySpecificColumnsVisible(false);
@@ -346,15 +346,14 @@ public sealed partial class MainDashboard : Form
         SetSearchLayout(false);
         if (_txtSearch != null) _txtSearch.Text = string.Empty; // Clear search
 
-        // Enable day-specific buttons
-        ToggleDaySpecificActions(true);
-
         // Show day-specific columns
         SetDaySpecificColumnsVisible(true);
 
         // Re-enable the date picker
         dtpClassDate.Enabled = true;
         dtpClassDate.Visible = true;
+
+        // Button state is handled inside UpdateDayModeIndicator based on selected date
     }
 
     private void SetSearchLayout(bool active)
@@ -381,30 +380,48 @@ public sealed partial class MainDashboard : Form
             materialCol.Visible = visible;
     }
 
-    private void ToggleDaySpecificActions(bool enabled)
+    private void SetActionButtons(bool dayActionsEnabled, bool identityActionsEnabled)
     {
-        btnAssignMaterial.Enabled = enabled;
-        btnUnassignMaterial.Enabled = enabled;
-        btnViewMaterial.Enabled = enabled;
-        btnEditFeedback.Enabled = enabled;
-        btnGenerate.Enabled = enabled;
+        btnAssignMaterial.Enabled = dayActionsEnabled;
+        btnUnassignMaterial.Enabled = dayActionsEnabled;
+        btnViewMaterial.Enabled = dayActionsEnabled;
+        btnEditFeedback.Enabled = dayActionsEnabled;
+        btnGenerate.Enabled = dayActionsEnabled;
 
-        btnAdd.Enabled = !enabled;
-        btnUpdate.Enabled = !enabled;
-        btnRemove.Enabled = !enabled;
+        btnAdd.Enabled = identityActionsEnabled;
+        btnUpdate.Enabled = identityActionsEnabled;
+        btnRemove.Enabled = identityActionsEnabled;
 
-        // Update tooltips only when buttons are enabled
-        if (enabled)
+        // Tooltips for Day actions
+        if (dayActionsEnabled)
         {
             toolTip.SetToolTip(btnAssignMaterial, "Assign learning material to selected student");
             toolTip.SetToolTip(btnUnassignMaterial, "Remove assigned material from selected student");
             toolTip.SetToolTip(btnViewMaterial, "View the assigned material file");
             toolTip.SetToolTip(btnEditFeedback, "Edit feedback notes for selected student");
             toolTip.SetToolTip(btnGenerate, "Generate feedback emails for students who attended");
+        }
+        else
+        {
+            toolTip.SetToolTip(btnAssignMaterial, "Disabled - not applicable to this view");
+            toolTip.SetToolTip(btnUnassignMaterial, "Disabled - not applicable to this view");
+            toolTip.SetToolTip(btnViewMaterial, "Disabled - not applicable to this view");
+            toolTip.SetToolTip(btnEditFeedback, "Disabled - not applicable to this view");
+            toolTip.SetToolTip(btnGenerate, "Disabled - not applicable to this view");
+        }
 
+        // Tooltips for Identity actions
+        if (identityActionsEnabled)
+        {
             toolTip.SetToolTip(btnAdd, "Add a new student to the system");
             toolTip.SetToolTip(btnUpdate, "Edit the selected student's information");
             toolTip.SetToolTip(btnRemove, "Remove the selected student from the system");
+        }
+        else
+        {
+            toolTip.SetToolTip(btnAdd, "Disabled - switch to 'Show All Students' mode to edit system records");
+            toolTip.SetToolTip(btnUpdate, "Disabled - switch to 'Show All Students' mode to edit system records");
+            toolTip.SetToolTip(btnRemove, "Disabled - switch to 'Show All Students' mode to edit system records");
         }
     }
 
@@ -439,18 +456,27 @@ public sealed partial class MainDashboard : Form
         lblModeIcon.Text = isToday ? "📅" : "🕐";
         lblModeTitle.Text = $"Showing students for: {dateLabel}";
 
+        // Disable day actions and identity actions when viewing historical session
+        SetActionButtons(dayActionsEnabled: isToday, identityActionsEnabled: false);
+
+        // Disable attendance checkbox column
+        if (dgvStudents.Columns["AttendedClass"] is { } attendedCol)
+        {
+            attendedCol.ReadOnly = !isToday;
+        }
+
         if (isToday)
         {
-            panelModeIndicator.BackColor = Color.FromArgb(232, 245, 233); // Light Green
-            lblModeTitle.ForeColor = Color.FromArgb(46, 125, 50); // Dark Green
-            lblModeDescription.Text = "Ready to manage today's class";
+            panelModeIndicator.BackColor = Color.FromArgb(232, 245, 233);  // Light Green
+            lblModeTitle.ForeColor    = Color.FromArgb(46, 125, 50);        // Dark Green
+            lblModeDescription.Text   = "Ready to manage today's class";
             lblModeDescription.ForeColor = Color.FromArgb(46, 125, 50);
         }
         else
         {
-            panelModeIndicator.BackColor = Color.FromArgb(255, 253, 231); // Amber / light yellow
-            lblModeTitle.ForeColor = Color.FromArgb(245, 124, 0); // Orange-amber
-            lblModeDescription.Text = "Viewing a previous class session — read-only history";
+            panelModeIndicator.BackColor = Color.FromArgb(255, 253, 231);  // Amber / light yellow
+            lblModeTitle.ForeColor    = Color.FromArgb(245, 124, 0);        // Orange-amber
+            lblModeDescription.Text   = "Viewing a previous class session — read-only history";
             lblModeDescription.ForeColor = Color.FromArgb(245, 124, 0);
         }
     }
