@@ -459,6 +459,12 @@ public sealed partial class MainDashboard : Form
         // Disable day actions and identity actions when viewing historical session
         SetActionButtons(dayActionsEnabled: isToday, identityActionsEnabled: false);
 
+        // Generate emails is always available — past sessions still need to be emailed
+        btnGenerate.Enabled = true;
+        toolTip.SetToolTip(btnGenerate, isToday
+            ? "Generate feedback emails for students who attended"
+            : "Send feedback emails for this past session");
+
         // Disable attendance checkbox column
         if (dgvStudents.Columns["AttendedClass"] is { } attendedCol)
         {
