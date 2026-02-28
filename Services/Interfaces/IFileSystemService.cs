@@ -5,10 +5,10 @@ namespace Feedback_Flow.Services.Interfaces;
 public interface IFileSystemService
 {
     /// <summary>
-    /// Ensures the root "Documents/Feedback-Flow" and today's "YYYYMMDD" folders exist.
-    /// Returns the path to today's folder.
+    /// Ensures the root "Documents/Feedback-Flow" and the "YYYYMMDD" folder for
+    /// the specified date exist. Returns the path to that date's folder.
     /// </summary>
-    string InitializeDailyFolder();
+    string InitializeDailyFolder(DateTime date);
 
     /// <summary>
     /// Ensures a subfolder exists for the specific student within the daily folder.

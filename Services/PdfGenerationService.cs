@@ -17,23 +17,23 @@ public class PdfGenerationService : IPdfService
         GlobalFontSettings.FontResolver ??= new WindowsFontResolver();
     }
 
-    public string GenerateStudentPdf(Student student, string content, string outputFolder)
+    public string GenerateStudentPdf(StudentSessionView session, string content, string outputFolder)
     {
-        if (student == null) throw new ArgumentNullException(nameof(student));
+        if (session == null) throw new ArgumentNullException(nameof(session));
         if (string.IsNullOrWhiteSpace(outputFolder))
             throw new ArgumentException("Output folder cannot be empty", nameof(outputFolder));
 
         if (!Directory.Exists(outputFolder))
             Directory.CreateDirectory(outputFolder);
 
-        var cleanName = student.GetFolderName();
+        var cleanName = session.GetFolderName();
         var fileName = $"{cleanName}_Feedback.pdf";
         var outputPath = Path.Combine(outputFolder, fileName);
 
         try
         {
             var document = new PdfDocument();
-            document.Info.Title = $"Feedback Report - {student.FullName}";
+            document.Info.Title = $"Feedback Report - {session.FullName}";
             document.Info.Author = "Feedback Flow";
 
             var page = document.AddPage();
@@ -89,9 +89,9 @@ public class PdfGenerationService : IPdfService
                 y += rowHeight;
             }
 
-            DrawInfoRow("Name:", student.FullName);
-            DrawInfoRow("Class Days:", student.ClassDay);
-            DrawInfoRow("Material:", Path.GetFileName(student.AssignedMaterial ?? string.Empty));
+            DrawInfoRow("Name:", session.FullName);
+            DrawInfoRow("Class Days:", session.ClassDay);
+            DrawInfoRow("Material:", Path.GetFileName(session.AssignedMaterial ?? string.Empty));
 
             y += 15;
 
@@ -122,7 +122,7 @@ public class PdfGenerationService : IPdfService
         }
         catch (Exception ex)
         {
-            throw new IOException($"Error generating PDF for {student.FullName}: {ex.Message}", ex);
+            throw new IOException($"Error generating PDF for {session.FullName}: {ex.Message}", ex);
         }
     }
 }

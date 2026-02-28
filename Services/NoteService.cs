@@ -5,7 +5,7 @@ namespace Feedback_Flow.Services;
 
 public class NoteService : INoteService
 {
-    public async Task OpenOrCreateNotesAsync(string studentFolderPath, string studentName)
+    public async Task OpenOrCreateNotesAsync(string studentFolderPath, string studentName, DateTime date)
     {
         if (string.IsNullOrWhiteSpace(studentFolderPath))
             throw new ArgumentException("Folder path cannot be empty.", nameof(studentFolderPath));
@@ -30,13 +30,12 @@ public class NoteService : INoteService
             // Format: feedback-alumn-name-yyyyMMdd.txt
             // Sanitize name for filename
             var sanitizedName = studentName.Trim().Replace(" ", "-").ToLower();
-            var date = DateTime.Now.ToString("yyyyMMdd");
-            var fileName = $"feedback-{sanitizedName}-{date}.txt";
+            var dateStamp = date.ToString("yyyyMMdd");
+            var fileName = $"feedback-{sanitizedName}-{dateStamp}.txt";
 
             notePath = Path.Combine(studentFolderPath, fileName);
 
-            var content = $"{studentName} Feedback Notes:\n";
-            await File.WriteAllTextAsync(notePath, content);
+            await File.WriteAllTextAsync(notePath, string.Empty);
         }
 
         try
