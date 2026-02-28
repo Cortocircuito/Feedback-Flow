@@ -91,7 +91,7 @@ Feedback Flow is perfect for:
 
 ## 🖼️ Screenshots
 
-> **Note**: Add screenshots of the main dashboard, student form, and email generation features here.
+![Application Screenshot](app-screenshot.png)
 
 ## 💾 Data Storage
 
