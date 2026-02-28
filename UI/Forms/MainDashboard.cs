@@ -228,9 +228,11 @@ public sealed partial class MainDashboard : Form
         await ExecuteWithErrorHandlingAsync(
             async () =>
             {
-                _dailyFolderPath = _fileService.InitializeDailyFolder();
+                // Initialize folder path for today on startup.
+                // It will be updated when the user picks a different date.
+                _dailyFolderPath = _fileService.InitializeDailyFolder(DateTime.Today);
 
-                // Initialize date picker range and value based on today (prevents future dates)
+                // Initialize date picker to today (MaxDate prevents future dates)
                 dtpClassDate.MaxDate = DateTime.Today;
                 dtpClassDate.Value = DateTime.Today;
 
@@ -238,7 +240,6 @@ public sealed partial class MainDashboard : Form
                 await ReloadGridAsync();
 
                 var currentDay = _studentService.GetDayOfWeek(DateTime.Today);
-                lblModeTitle.Text = $"Showing students for: {currentDay}";
                 UpdateStatus($"Ready. Showing students for {currentDay}.");
             }, "Startup Error");
     }
@@ -292,7 +293,13 @@ public sealed partial class MainDashboard : Form
     {
         // Only reload when in day mode; all-students mode ignores the date picker
         if (_showAllStudents) return;
-        await ExecuteWithErrorHandlingAsync(ReloadGridAsync, "Error loading sessions for selected date");
+
+        await ExecuteWithErrorHandlingAsync(async () =>
+        {
+            // Ensure the folder for the selected date exists and update the cached path
+            _dailyFolderPath = _fileService.InitializeDailyFolder(dtpClassDate.Value.Date);
+            await ReloadGridAsync();
+        }, "Error loading sessions for selected date");
     }
 
     private void UpdateUIForViewMode()
@@ -659,7 +666,7 @@ public sealed partial class MainDashboard : Form
         {
             var student = new Student { Id = session.StudentId, FullName = session.FullName, Email = session.Email, ClassDay = session.ClassDay };
             string studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, student);
-            await _noteService.OpenOrCreateNotesAsync(studentFolder, session.FullName);
+            await _noteService.OpenOrCreateNotesAsync(studentFolder, session.FullName, dtpClassDate.Value.Date);
         }, "Error opening notes", ex =>
         {
             if (ex is DirectoryNotFoundException)

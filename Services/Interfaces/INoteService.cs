@@ -8,5 +8,5 @@ public interface INoteService
     /// </summary>
     /// <param name="studentFolderPath">Absolute path to the student's folder.</param>
     /// <param name="studentName">The name of the student for file naming.</param>
-    Task OpenOrCreateNotesAsync(string studentFolderPath, string studentName);
+    Task OpenOrCreateNotesAsync(string studentFolderPath, string studentName, DateTime date);
 }

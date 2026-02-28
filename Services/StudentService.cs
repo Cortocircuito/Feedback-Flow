@@ -13,7 +13,7 @@ public class StudentService : IStudentService
     {
         _db = db;
         _fileService = fileService;
-        _dailyFolderPath = _fileService.InitializeDailyFolder();
+        _dailyFolderPath = _fileService.InitializeDailyFolder(DateTime.Today);
         // Daily reset logic removed — session data is preserved historically.
     }
 

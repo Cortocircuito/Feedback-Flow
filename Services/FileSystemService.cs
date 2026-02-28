@@ -7,7 +7,7 @@ public class FileSystemService : IFileSystemService
 {
     private readonly string _rootFolderName = "Feedback-Flow";
 
-    public string InitializeDailyFolder()
+    public string InitializeDailyFolder(DateTime date)
     {
         try
         {
@@ -15,17 +15,13 @@ public class FileSystemService : IFileSystemService
             string rootPath = Path.Combine(documents, _rootFolderName);
 
             if (!Directory.Exists(rootPath))
-            {
                 Directory.CreateDirectory(rootPath);
-            }
 
-            string dateFolder = DateTime.Now.ToString("yyyyMMdd");
+            string dateFolder = date.ToString("yyyyMMdd");
             string dailyPath = Path.Combine(rootPath, dateFolder);
 
             if (!Directory.Exists(dailyPath))
-            {
                 Directory.CreateDirectory(dailyPath);
-            }
 
             return dailyPath;
         }
