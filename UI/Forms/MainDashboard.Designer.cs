@@ -329,11 +329,9 @@ sealed partial class MainDashboard
         dtpClassDate.Format = DateTimePickerFormat.Short;
         dtpClassDate.Location = new Point(3, 13);
         dtpClassDate.Margin = new Padding(3, 9, 3, 4);
-        dtpClassDate.MaxDate = new DateTime(2026, 2, 28, 0, 0, 0, 0);
         dtpClassDate.Name = "dtpClassDate";
         dtpClassDate.Size = new Size(120, 27);
         dtpClassDate.TabIndex = 2;
-        dtpClassDate.Value = new DateTime(2026, 2, 28, 0, 0, 0, 0);
         dtpClassDate.ValueChanged += dtpClassDate_ValueChanged;
         // 
         // mainContentPanel
