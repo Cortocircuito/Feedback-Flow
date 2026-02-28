@@ -230,10 +230,13 @@ public sealed partial class MainDashboard : Form
             {
                 _dailyFolderPath = _fileService.InitializeDailyFolder();
 
+                // Initialize date picker at today (MaxDate prevents future dates)
+                dtpClassDate.Value = DateTime.Today;
+
                 // Default: Load filtered by current day
                 await ReloadGridAsync();
 
-                var currentDay = _studentService.GetCurrentDayOfWeek();
+                var currentDay = _studentService.GetDayOfWeek(DateTime.Today);
                 lblModeTitle.Text = $"Showing students for: {currentDay}";
                 UpdateStatus($"Ready. Showing students for {currentDay}.");
             }, "Startup Error");
@@ -252,16 +255,22 @@ public sealed partial class MainDashboard : Form
         }
         else
         {
-            // Day mode: ensure today's sessions exist then load JOIN view
+            // Day mode: load sessions for the date selected in the date picker
+            var selectedDate = dtpClassDate.Value.Date;
+            var dayName = _studentService.GetDayOfWeek(selectedDate);
+
             _sessions.Clear();
             dgvStudents.DataSource = _sessions;
-            string today = _studentService.GetCurrentDayOfWeek();
-            var sessions = await _studentService.GetTodaySessionViewsAsync();
 
+            var sessions = await _studentService.GetSessionViewsAsync(selectedDate);
             foreach (var session in sessions)
                 _sessions.Add(session);
 
-            UpdateStatus($"Showing {today}'s students ({_sessions.Count} students)");
+            // Update mode indicator title to reflect the selected date
+            bool isToday = selectedDate == DateTime.Today;
+            string dateLabel = isToday ? dayName : $"{dayName} ({selectedDate:dd MMM yyyy})";
+            lblModeTitle.Text = $"Showing students for: {dateLabel}";
+            UpdateStatus($"Showing {dateLabel}'s students ({_sessions.Count} students)");
         }
 
         dgvStudents.Refresh();
@@ -275,6 +284,13 @@ public sealed partial class MainDashboard : Form
             UpdateUIForViewMode();
             await ReloadGridAsync();
         }, "Error toggling filter");
+    }
+
+    private async void dtpClassDate_ValueChanged(object sender, EventArgs e)
+    {
+        // Only reload when in day mode; all-students mode ignores the date picker
+        if (_showAllStudents) return;
+        await ExecuteWithErrorHandlingAsync(ReloadGridAsync, "Error loading sessions for selected date");
     }
 
     private void UpdateUIForViewMode()
@@ -304,6 +320,10 @@ public sealed partial class MainDashboard : Form
         // Hide day-specific columns
         SetDaySpecificColumnsVisible(false);
 
+        // Disable and hide the date picker — it's meaningless in Show All mode
+        dtpClassDate.Enabled = false;
+        dtpClassDate.Visible = false;
+
         // Text will be updated by filtering logic
     }
 
@@ -322,6 +342,10 @@ public sealed partial class MainDashboard : Form
 
         // Show day-specific columns
         SetDaySpecificColumnsVisible(true);
+
+        // Re-enable the date picker
+        dtpClassDate.Enabled = true;
+        dtpClassDate.Visible = true;
     }
 
     private void SetSearchLayout(bool active)
@@ -390,7 +414,7 @@ public sealed partial class MainDashboard : Form
         {
             panelModeIndicator.BackColor = Color.FromArgb(232, 245, 233); // Light Green
             lblModeIcon.Text = "📅";
-            string currentDay = _studentService.GetCurrentDayOfWeek().ToUpper();
+            string currentDay = _studentService.GetDayOfWeek(dtpClassDate.Value.Date).ToUpper();
             lblModeTitle.Text = $"Showing students for: {currentDay}";
             lblModeTitle.ForeColor = Color.FromArgb(46, 125, 50); // Dark Green
             lblModeDescription.Text = "Ready to manage today's class";

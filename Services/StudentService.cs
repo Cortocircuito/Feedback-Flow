@@ -64,15 +64,14 @@ public class StudentService : IStudentService
     // Session-Based Data Access
     // -------------------------------------------------------------------------
 
-    public async Task<List<StudentSessionView>> GetTodaySessionViewsAsync()
+    public async Task<List<StudentSessionView>> GetSessionViewsAsync(DateTime date)
     {
-        string today = GetCurrentDayOfWeek();
-        DateTime date = DateTime.Today;
+        string dayName = GetDayOfWeek(date);
 
-        // Idempotent: creates session rows for any student without one today
-        await _db.EnsureTodaySessionsAsync(today, date);
+        // Idempotent: creates session rows for any student without one for this date
+        await _db.EnsureTodaySessionsAsync(dayName, date);
 
-        var views = await _db.GetTodaySessionViewsAsync(today, date);
+        var views = await _db.GetTodaySessionViewsAsync(dayName, date);
         return views.ToList();
     }
 
@@ -86,8 +85,8 @@ public class StudentService : IStudentService
         await _db.UpdateSessionMaterialAsync(sessionId, materialPath);
     }
 
-    public string GetCurrentDayOfWeek()
+    public string GetDayOfWeek(DateTime date)
     {
-        return DateTime.Now.ToString("dddd", System.Globalization.CultureInfo.InvariantCulture);
+        return date.ToString("dddd", System.Globalization.CultureInfo.InvariantCulture);
     }
 }

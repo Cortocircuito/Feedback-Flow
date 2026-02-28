@@ -14,10 +14,10 @@ public interface IStudentService
     // --- Session-Based Data Access ---
 
     /// <summary>
-    /// Ensures today's session rows exist for all students with class on the current day,
+    /// Ensures session rows exist for students with class on the given date's weekday,
     /// then returns the joined view for grid binding.
     /// </summary>
-    Task<List<StudentSessionView>> GetTodaySessionViewsAsync();
+    Task<List<StudentSessionView>> GetSessionViewsAsync(DateTime date);
 
     /// <summary>Marks attendance on a specific session row.</summary>
     Task MarkAttendanceAsync(int sessionId, bool attended);
@@ -25,5 +25,6 @@ public interface IStudentService
     /// <summary>Sets or clears the material path on a specific session row.</summary>
     Task UpdateSessionMaterialAsync(int sessionId, string? materialPath);
 
-    string GetCurrentDayOfWeek();
+    /// <summary>Returns the English day-of-week name for the given date.</summary>
+    string GetDayOfWeek(DateTime date);
 }
