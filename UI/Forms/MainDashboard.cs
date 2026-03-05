@@ -792,7 +792,8 @@ public sealed partial class MainDashboard : Form
                 return candidate;
         }
 
-        return null;
+        throw new InvalidOperationException(
+            "Invariant violated: non-empty class days set, but no matching day found within the next 7 days.");
     }
 
     #endregion
