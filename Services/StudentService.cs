@@ -92,4 +92,15 @@ public class StudentService : IStudentService
     {
         return date.ToString("dddd", System.Globalization.CultureInfo.InvariantCulture);
     }
+
+    public async Task<ClassSession?> GetNextClassSessionAsync(int studentId, DateTime nextDate)
+    {
+        return await _db.GetSessionByStudentAndDateAsync(studentId, nextDate);
+    }
+
+    public async Task SaveNextClassPlanAsync(int studentId, DateTime nextDate, string? material, string? description)
+    {
+        int sessionId = await _db.EnsureSessionForStudentAsync(studentId, nextDate);
+        await _db.UpdateSessionPlanAsync(sessionId, material, description);
+    }
 }

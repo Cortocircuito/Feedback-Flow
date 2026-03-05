@@ -30,4 +30,20 @@ public interface IDatabaseService
 
     Task<bool> UpdateSessionAttendanceAsync(int sessionId, bool attended);
     Task<bool> UpdateSessionMaterialAsync(int sessionId, string? materialPath);
+
+    /// <summary>
+    /// Returns an existing ClassSession for a specific student and date, or null if none exists.
+    /// </summary>
+    Task<ClassSession?> GetSessionByStudentAndDateAsync(int studentId, DateTime date);
+
+    /// <summary>
+    /// Inserts a blank session row for the student on the given date if one doesn't exist yet,
+    /// then returns the session Id.
+    /// </summary>
+    Task<int> EnsureSessionForStudentAsync(int studentId, DateTime date);
+
+    /// <summary>
+    /// Sets the material path and class description on a session row.
+    /// </summary>
+    Task<bool> UpdateSessionPlanAsync(int sessionId, string? material, string? description);
 }
