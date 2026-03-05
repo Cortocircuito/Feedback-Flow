@@ -121,7 +121,7 @@ sealed partial class MainDashboard
         btnGenerateEmail.Margin = new Padding(3, 4, 3, 4);
         btnGenerateEmail.Name = "btnGenerateEmail";
         btnGenerateEmail.Size = new Size(137, 40);
-        btnGenerateEmail.TabIndex = 3;
+        btnGenerateEmail.TabIndex = 1;
         btnGenerateEmail.Text = "Generate Email";
         btnGenerateEmail.UseVisualStyleBackColor = true;
         btnGenerateEmail.Click += btnGenerate_Click;
@@ -185,7 +185,7 @@ sealed partial class MainDashboard
         btnEditFeedback.Margin = new Padding(3, 4, 3, 4);
         btnEditFeedback.Name = "btnEditFeedback";
         btnEditFeedback.Size = new Size(137, 40);
-        btnEditFeedback.TabIndex = 3;
+        btnEditFeedback.TabIndex = 0;
         btnEditFeedback.Text = "Edit Feedback";
         btnEditFeedback.UseVisualStyleBackColor = true;
         btnEditFeedback.Click += btnEditFeedback_Click;
@@ -315,7 +315,7 @@ sealed partial class MainDashboard
         flowLayoutPanel1.Location = new Point(494, 3);
         flowLayoutPanel1.Name = "flowLayoutPanel1";
         flowLayoutPanel1.Size = new Size(282, 54);
-        flowLayoutPanel1.TabIndex = 3;
+        flowLayoutPanel1.TabIndex = 1;
         flowLayoutPanel1.WrapContents = false;
         // 
         // btnToggleFilter
@@ -383,7 +383,7 @@ sealed partial class MainDashboard
         flowLayoutPanel2.Margin = new Padding(3, 4, 3, 4);
         flowLayoutPanel2.Name = "flowLayoutPanel2";
         flowLayoutPanel2.Size = new Size(449, 45);
-        flowLayoutPanel2.TabIndex = 3;
+        flowLayoutPanel2.TabIndex = 4;
         // 
         // btnPrepareNextClass
         // 
@@ -391,7 +391,7 @@ sealed partial class MainDashboard
         btnPrepareNextClass.Margin = new Padding(3, 4, 3, 4);
         btnPrepareNextClass.Name = "btnPrepareNextClass";
         btnPrepareNextClass.Size = new Size(157, 40);
-        btnPrepareNextClass.TabIndex = 4;
+        btnPrepareNextClass.TabIndex = 2;
         btnPrepareNextClass.Text = "Prepare Next Class";
         btnPrepareNextClass.UseVisualStyleBackColor = true;
         btnPrepareNextClass.Click += btnPrepareNextClass_Click;
@@ -406,6 +406,7 @@ sealed partial class MainDashboard
         panelClassDescription.Margin = new Padding(0, 0, 0, 4);
         panelClassDescription.Name = "panelClassDescription";
         panelClassDescription.Padding = new Padding(8, 4, 8, 4);
+        panelClassDescription.TabIndex = 3;
         panelClassDescription.Visible = false;
         //
         // lblDescriptionTitle
