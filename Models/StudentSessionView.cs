@@ -17,6 +17,7 @@ public class StudentSessionView
     public bool Attended { get; set; }
     public string? AssignedMaterial { get; set; }
     public string? FeedbackNotePath { get; set; }
+    public string? ClassDescription { get; set; }
 
     /// <summary>
     /// Sanitized folder name matching Student.GetFolderName() convention.

@@ -91,7 +91,7 @@ Feedback Flow is perfect for:
 
 ## 🖼️ Screenshots
 
-![Application Screenshot](app-screenshot.png)
+![Application Screenshot](Assets/app-screenshot.png)
 
 ## 💾 Data Storage
 

@@ -27,4 +27,14 @@ public interface IStudentService
 
     /// <summary>Returns the English day-of-week name for the given date.</summary>
     string GetDayOfWeek(DateTime date);
+
+    /// <summary>
+    /// Returns the existing ClassSession for the student on the given date, or null if none exists yet.
+    /// </summary>
+    Task<ClassSession?> GetNextClassSessionAsync(int studentId, DateTime nextDate);
+
+    /// <summary>
+    /// Creates the session row if needed, then saves material and class description to it.
+    /// </summary>
+    Task SaveNextClassPlanAsync(int studentId, DateTime nextDate, string? material, string? description);
 }

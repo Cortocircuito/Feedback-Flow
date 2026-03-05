@@ -64,8 +64,17 @@ public class SqliteDatabaseService : IDatabaseService
                 Attended         INTEGER NOT NULL DEFAULT 0,
                 AssignedMaterial TEXT    NULL,
                 FeedbackNotePath TEXT    NULL,
+                ClassDescription TEXT    NULL,
                 FOREIGN KEY (StudentId) REFERENCES Students(Id) ON DELETE CASCADE
             );");
+
+        // Migration: Add ClassDescription column to existing databases
+        var classDescriptionColumnCount = await connection.ExecuteScalarAsync<long>(
+            "SELECT COUNT(*) FROM pragma_table_info('ClassSessions') WHERE name = 'ClassDescription';");
+        if (classDescriptionColumnCount == 0)
+        {
+            await connection.ExecuteAsync("ALTER TABLE ClassSessions ADD COLUMN ClassDescription TEXT NULL;");
+        }
 
         // Unique index prevents duplicate sessions for the same student+date
         await connection.ExecuteAsync(@"
@@ -178,7 +187,8 @@ public class SqliteDatabaseService : IDatabaseService
                    cs.Id  AS SessionId,
                    cs.Attended,
                    cs.AssignedMaterial,
-                   cs.FeedbackNotePath
+                   cs.FeedbackNotePath,
+                   cs.ClassDescription
             FROM   Students s
             INNER  JOIN ClassSessions cs ON cs.StudentId = s.Id
             WHERE  cs.ClassDate = @Date
@@ -203,6 +213,41 @@ public class SqliteDatabaseService : IDatabaseService
         using var connection = CreateConnection();
         const string sql = "UPDATE ClassSessions SET AssignedMaterial = @Material WHERE Id = @Id";
         var rows = await connection.ExecuteAsync(sql, new { Material = materialPath, Id = sessionId });
+        return rows > 0;
+    }
+
+    public async Task<ClassSession?> GetSessionByStudentAndDateAsync(int studentId, DateTime date)
+    {
+        using var connection = CreateConnection();
+        return await connection.QuerySingleOrDefaultAsync<ClassSession>(
+            "SELECT * FROM ClassSessions WHERE StudentId = @StudentId AND ClassDate = @Date",
+            new { StudentId = studentId, Date = date.ToString("yyyy-MM-dd") });
+    }
+
+    public async Task<int> EnsureSessionForStudentAsync(int studentId, DateTime date)
+    {
+        using var connection = CreateConnection();
+        var dateStr = date.ToString("yyyy-MM-dd");
+
+        await connection.ExecuteAsync(@"
+            INSERT OR IGNORE INTO ClassSessions (StudentId, ClassDate, Attended)
+            VALUES (@StudentId, @Date, 0);",
+            new { StudentId = studentId, Date = dateStr });
+
+        return await connection.ExecuteScalarAsync<int>(
+            "SELECT Id FROM ClassSessions WHERE StudentId = @StudentId AND ClassDate = @Date",
+            new { StudentId = studentId, Date = dateStr });
+    }
+
+    public async Task<bool> UpdateSessionPlanAsync(int sessionId, string? material, string? description)
+    {
+        using var connection = CreateConnection();
+        const string sql = @"
+            UPDATE ClassSessions
+            SET AssignedMaterial = @Material,
+                ClassDescription = @Description
+            WHERE Id = @Id";
+        var rows = await connection.ExecuteAsync(sql, new { Material = material, Description = description, Id = sessionId });
         return rows > 0;
     }
 }

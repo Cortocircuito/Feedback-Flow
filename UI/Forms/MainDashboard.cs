@@ -135,6 +135,7 @@ public sealed partial class MainDashboard : Form
         dgvStudents.DataSource = _sessions;
 
         dgvStudents.CellContentClick += dgvStudents_CellContentClick;
+        dgvStudents.SelectionChanged += dgvStudents_SelectionChanged;
         InitializeTooltips();
     }
 
@@ -204,7 +205,8 @@ public sealed partial class MainDashboard : Form
         toolTip.SetToolTip(btnUnassignMaterial, "Remove assigned material from selected student");
         toolTip.SetToolTip(btnViewMaterial, "View the assigned material file");
         toolTip.SetToolTip(btnEditFeedback, "Edit feedback notes for selected student");
-        toolTip.SetToolTip(btnGenerate, "Generate feedback emails for students who attended");
+        toolTip.SetToolTip(btnGenerateEmail, "Generate and draft feedback email for the selected student");
+        toolTip.SetToolTip(btnPrepareNextClass, "Set material and class description for the student's next class");
 
         // Set tooltips for CRUD operations
         toolTip.SetToolTip(btnAdd, "Add a new student to the system");
@@ -331,6 +333,9 @@ public sealed partial class MainDashboard : Form
         // Day actions disabled, Identity actions enabled
         SetActionButtons(dayActionsEnabled: false, identityActionsEnabled: true);
 
+        // Hide description panel — no session context in all-students mode
+        UpdateDescriptionPanel(null);
+
         // Hide day-specific columns
         SetDaySpecificColumnsVisible(false);
 
@@ -391,11 +396,12 @@ public sealed partial class MainDashboard : Form
         btnUnassignMaterial.Enabled = dayActionsEnabled;
         btnViewMaterial.Enabled = dayActionsEnabled;
         btnEditFeedback.Enabled = dayActionsEnabled;
-        btnGenerate.Enabled = dayActionsEnabled;
+        btnGenerateEmail.Enabled = dayActionsEnabled;
 
         btnAdd.Enabled = identityActionsEnabled;
         btnUpdate.Enabled = identityActionsEnabled;
         btnRemove.Enabled = identityActionsEnabled;
+        btnPrepareNextClass.Enabled = dayActionsEnabled;
 
         // Tooltips for Day actions
         if (dayActionsEnabled)
@@ -405,7 +411,10 @@ public sealed partial class MainDashboard : Form
                 btnUnassignMaterial, "Remove assigned material from selected student");
             toolTip.SetToolTip(btnViewMaterial, "View the assigned material file");
             toolTip.SetToolTip(btnEditFeedback, "Edit feedback notes for selected student");
-            toolTip.SetToolTip(btnGenerate, "Generate feedback emails for students who attended");
+            toolTip.SetToolTip(
+                btnGenerateEmail, "Generate and draft feedback email for the selected student");
+            toolTip.SetToolTip(
+                btnPrepareNextClass, "Set material and class description for the student's next class");
         }
         else
         {
@@ -413,7 +422,8 @@ public sealed partial class MainDashboard : Form
             toolTip.SetToolTip(btnUnassignMaterial, "Disabled - not applicable to this view");
             toolTip.SetToolTip(btnViewMaterial, "Disabled - not applicable to this view");
             toolTip.SetToolTip(btnEditFeedback, "Disabled - not applicable to this view");
-            toolTip.SetToolTip(btnGenerate, "Disabled - not applicable to this view");
+            toolTip.SetToolTip(btnGenerateEmail, "Disabled - not applicable to this view");
+            toolTip.SetToolTip(btnPrepareNextClass, "Disabled - not applicable to this view");
         }
 
         // Tooltips for Identity actions
@@ -468,12 +478,14 @@ public sealed partial class MainDashboard : Form
         // Disable day actions and identity actions when viewing historical session
         SetActionButtons(dayActionsEnabled: isToday, identityActionsEnabled: false);
 
-        // Generate emails is always available — past sessions still need to be emailed
-        btnGenerate.Enabled = true;
+        // These actions are available for both today and historical sessions
+        btnGenerateEmail.Enabled = true;
         toolTip.SetToolTip(
-            btnGenerate, isToday
-                ? "Generate feedback emails for students who attended"
-                : "Send feedback emails for this past session");
+            btnGenerateEmail, "Generate and draft feedback email for the selected student");
+
+        btnPrepareNextClass.Enabled = true;
+        toolTip.SetToolTip(
+            btnPrepareNextClass, "Set material and class description for the student's next class");
 
         // Disable attendance checkbox column
         if (dgvStudents.Columns["AttendedClass"] is { } attendedCol)
@@ -731,51 +743,83 @@ public sealed partial class MainDashboard : Form
 
     #endregion
 
+    #region Prepare Next Class
+
+    private async void btnPrepareNextClass_Click(object sender, EventArgs e)
+    {
+        if (!TryGetSelectedSession(out var session)) return;
+
+        var referenceDate = dtpClassDate.Value.Date < DateTime.Today
+            ? DateTime.Today
+            : dtpClassDate.Value.Date;
+        var nextDate = ComputeNextClassDate(session.ClassDay, referenceDate);
+        if (nextDate is null)
+        {
+            ShowWarning(
+                $"The next class date for {session.FullName} could not be determined. This may be due to missing or invalid class day configuration. Please review the student's class days and try again.",
+                "Unable to Determine Next Class Date");
+            return;
+        }
+        var existingSession = await _studentService.GetNextClassSessionAsync(session.StudentId, nextDate.Value);
+
+        using var form = new PrepareNextClassForm(session.FullName, nextDate.Value, existingSession);
+        if (form.ShowDialog() != DialogResult.OK) return;
+
+        await ExecuteWithErrorHandlingAsync(async () =>
+        {
+            await _studentService.SaveNextClassPlanAsync(
+                session.StudentId, nextDate.Value, form.SelectedMaterial, form.ClassDescription);
+            UpdateStatus($"Next class prepared for {session.FullName} ({nextDate.Value:dd MMM yyyy}).");
+        }, "Error saving next class plan");
+    }
+
+    private static DateTime? ComputeNextClassDate(string classDays, DateTime fromDate)
+    {
+        var days = classDays.Split(',')
+            .Select(d => d.Trim())
+            .Select(d => Enum.TryParse<DayOfWeek>(d, true, out var day) ? (DayOfWeek?)day : null)
+            .Where(d => d.HasValue)
+            .Select(d => d.Value)
+            .ToHashSet();
+
+        if (days.Count == 0)
+            return null;
+
+        var candidate = fromDate.AddDays(1);
+        for (int i = 0; i < 7; i++, candidate = candidate.AddDays(1))
+        {
+            if (days.Contains(candidate.DayOfWeek))
+                return candidate;
+        }
+
+        throw new InvalidOperationException(
+            "Invariant violated: non-empty class days set, but no matching day found within the next 7 days.");
+    }
+
+    #endregion
+
     #region Email Generation
 
     private async void btnGenerate_Click(object sender, EventArgs e)
     {
-        if (_sessions.Count == 0)
+        if (!TryGetSelectedSession(out var session)) return;
+
+        if (!session.Attended)
         {
-            ShowWarning("No students loaded.", "Warning");
+            ShowWarning($"{session.FullName} did not attend this class.", "Cannot Generate Email");
             return;
         }
 
-        btnGenerate.Enabled = false;
-        UpdateStatus("Processing...");
+        btnGenerateEmail.Enabled = false;
+        UpdateStatus($"Processing: {session.FullName}...");
 
-        var result = await ProcessAllStudentsAsync();
-
-        btnGenerate.Enabled = true;
-        UpdateStatus(
-            $"Done. Success: {result.SuccessCount}, Skipped: {result.SkippedStudents.Count}, Errors: {result.ErrorCount}");
-        ShowCompletionMessage(result);
-    }
-
-    private async Task<GenerationResult> ProcessAllStudentsAsync()
-    {
-        var result = new GenerationResult();
-
-        foreach (var session in _sessions)
+        await ExecuteWithErrorHandlingAsync(async () =>
         {
-            UpdateStatus($"Processing: {session.FullName}");
-            Application.DoEvents();
+            await ProcessStudentAsync(session);
+            UpdateStatus($"Email drafted for {session.FullName}.");
+        }, "Error generating email");
 
-            if (!ValidateStudentMaterial(session, result))
-                continue;
-
-            try
-            {
-                await ProcessStudentAsync(session);
-                result.SuccessCount++;
-            }
-            catch (Exception)
-            {
-                result.ErrorCount++;
-            }
-        }
-
-        return result;
+        btnGenerateEmail.Enabled = true;
     }
 
     private async void dgvStudents_CellContentClick(object sender, DataGridViewCellEventArgs e)
@@ -796,29 +840,6 @@ public sealed partial class MainDashboard : Form
         }, "Error updating attendance");
     }
 
-    private bool ValidateStudentMaterial(StudentSessionView session, GenerationResult result)
-    {
-        // 1. Check Attendance
-        if (!session.Attended)
-        {
-            UpdateStatus($"Skipping {session.FullName} (Absent)");
-            return false; // Silently skip absent students
-        }
-
-        // 2. Validate Material (Optional)
-        // If assigned but missing, we warn but DO NOT skip the student. They still get feedback.
-        if (!string.IsNullOrEmpty(session.AssignedMaterial) &&
-            !File.Exists(session.AssignedMaterial))
-        {
-            result.SkippedStudents.Add(
-                $"{session.FullName} (Material File Last - Sending Feedback Only)");
-            UpdateStatus(
-                $"Warning: Material missing for {session.FullName}. Sending feedback only.");
-        }
-
-        return true;
-    }
-
     private async Task ProcessStudentAsync(StudentSessionView session)
     {
         // Build a temporary Student object for folder/file operations that still need it
@@ -833,19 +854,6 @@ public sealed partial class MainDashboard : Form
         string studentPdfPath = _pdfService.GenerateStudentPdf(session, content, studentFolder);
 
         _emailService.DraftEmail(session, studentPdfPath);
-    }
-
-    private static void ShowCompletionMessage(GenerationResult result)
-    {
-        var message = $"Process Completed.\nSuccess: {result.SuccessCount}\nErrors: {result.ErrorCount}";
-
-        if (result.SkippedStudents.Any())
-        {
-            message += $"\n\nSkipped ({result.SkippedStudents.Count}) - No Material:\n- " +
-                       string.Join("\n- ", result.SkippedStudents);
-        }
-
-        MessageBox.Show(message, "Finished", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     #endregion
@@ -1007,6 +1015,27 @@ public sealed partial class MainDashboard : Form
     private static bool ShowConfirmation(string message, string title) =>
         MessageBox.Show(message, title, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
 
-    #endregion
+    private void dgvStudents_SelectionChanged(object sender, EventArgs e)
+    {
+        if (_showAllStudents) return;
+        var session = dgvStudents.CurrentRow?.DataBoundItem as StudentSessionView;
+        UpdateDescriptionPanel(session);
+    }
 
+    private void UpdateDescriptionPanel(StudentSessionView? session)
+    {
+        bool hasDescription = session != null && !string.IsNullOrWhiteSpace(session.ClassDescription);
+
+        panelClassDescription.Visible = hasDescription;
+        rootLayout.RowStyles[3] = new RowStyle(SizeType.Absolute, hasDescription ? 100F : 0F);
+        rootLayout.PerformLayout();
+
+        if (hasDescription)
+        {
+            lblDescriptionTitle.Text = $"Class description — {session!.FullName}:";
+            txtDescriptionView.Text = session.ClassDescription;
+        }
+    }
+
+    #endregion
 }

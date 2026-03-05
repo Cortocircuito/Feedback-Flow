@@ -33,7 +33,7 @@ sealed partial class MainDashboard
         dgvStudents = new DataGridView();
         btnAssignMaterial = new Button();
         btnUnassignMaterial = new Button();
-        btnGenerate = new Button();
+        btnGenerateEmail = new Button();
         statusStrip1 = new StatusStrip();
         lblStatus = new ToolStripStatusLabel();
         btnAdd = new Button();
@@ -54,6 +54,11 @@ sealed partial class MainDashboard
         dtpClassDate = new DateTimePicker();
         mainContentPanel = new TableLayoutPanel();
         sideButtonPanel = new FlowLayoutPanel();
+        flowLayoutPanel2 = new FlowLayoutPanel();
+        btnPrepareNextClass = new Button();
+        panelClassDescription = new Panel();
+        lblDescriptionTitle = new Label();
+        txtDescriptionView = new TextBox();
         ((System.ComponentModel.ISupportInitialize)dgvStudents).BeginInit();
         statusStrip1.SuspendLayout();
         flowLayoutPanelActions.SuspendLayout();
@@ -63,6 +68,8 @@ sealed partial class MainDashboard
         flowLayoutPanel1.SuspendLayout();
         mainContentPanel.SuspendLayout();
         sideButtonPanel.SuspendLayout();
+        flowLayoutPanel2.SuspendLayout();
+        panelClassDescription.SuspendLayout();
         SuspendLayout();
         // 
         // dgvStudents
@@ -81,7 +88,7 @@ sealed partial class MainDashboard
         dgvStudents.RowHeadersVisible = false;
         dgvStudents.RowHeadersWidth = 51;
         dgvStudents.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        dgvStudents.Size = new Size(734, 333);
+        dgvStudents.Size = new Size(627, 335);
         dgvStudents.TabIndex = 0;
         dgvStudents.CellDoubleClick += dgvStudents_CellDoubleClick;
         dgvStudents.CellFormatting += dgvStudents_CellFormatting;
@@ -108,17 +115,16 @@ sealed partial class MainDashboard
         btnUnassignMaterial.UseVisualStyleBackColor = true;
         btnUnassignMaterial.Click += btnUnassignMaterial_Click;
         // 
-        // btnGenerate
+        // btnGenerateEmail
         // 
-        btnGenerate.Dock = DockStyle.Fill;
-        btnGenerate.Location = new Point(14, 530);
-        btnGenerate.Margin = new Padding(3, 4, 3, 4);
-        btnGenerate.Name = "btnGenerate";
-        btnGenerate.Size = new Size(880, 47);
-        btnGenerate.TabIndex = 3;
-        btnGenerate.Text = "Generate Feedback Emails";
-        btnGenerate.UseVisualStyleBackColor = true;
-        btnGenerate.Click += btnGenerate_Click;
+        btnGenerateEmail.Location = new Point(146, 4);
+        btnGenerateEmail.Margin = new Padding(3, 4, 3, 4);
+        btnGenerateEmail.Name = "btnGenerateEmail";
+        btnGenerateEmail.Size = new Size(137, 40);
+        btnGenerateEmail.TabIndex = 3;
+        btnGenerateEmail.Text = "Generate Email";
+        btnGenerateEmail.UseVisualStyleBackColor = true;
+        btnGenerateEmail.Click += btnGenerate_Click;
         // 
         // statusStrip1
         // 
@@ -127,7 +133,7 @@ sealed partial class MainDashboard
         statusStrip1.Location = new Point(0, 594);
         statusStrip1.Name = "statusStrip1";
         statusStrip1.Padding = new Padding(1, 0, 16, 0);
-        statusStrip1.Size = new Size(908, 26);
+        statusStrip1.Size = new Size(801, 26);
         statusStrip1.TabIndex = 8;
         statusStrip1.Text = "statusStrip1";
         // 
@@ -175,7 +181,7 @@ sealed partial class MainDashboard
         // 
         // btnEditFeedback
         // 
-        btnEditFeedback.Location = new Point(432, 4);
+        btnEditFeedback.Location = new Point(3, 4);
         btnEditFeedback.Margin = new Padding(3, 4, 3, 4);
         btnEditFeedback.Name = "btnEditFeedback";
         btnEditFeedback.Size = new Size(137, 40);
@@ -202,12 +208,11 @@ sealed partial class MainDashboard
         flowLayoutPanelActions.Controls.Add(btnAssignMaterial);
         flowLayoutPanelActions.Controls.Add(btnUnassignMaterial);
         flowLayoutPanelActions.Controls.Add(btnViewMaterial);
-        flowLayoutPanelActions.Controls.Add(btnEditFeedback);
         flowLayoutPanelActions.Dock = DockStyle.Fill;
         flowLayoutPanelActions.Location = new Point(3, 4);
         flowLayoutPanelActions.Margin = new Padding(3, 4, 3, 4);
         flowLayoutPanelActions.Name = "flowLayoutPanelActions";
-        flowLayoutPanelActions.Size = new Size(593, 52);
+        flowLayoutPanelActions.Size = new Size(485, 52);
         flowLayoutPanelActions.TabIndex = 0;
         // 
         // panelModeIndicator
@@ -223,7 +228,7 @@ sealed partial class MainDashboard
         panelModeIndicator.Location = new Point(14, 17);
         panelModeIndicator.Margin = new Padding(3, 4, 3, 13);
         panelModeIndicator.Name = "panelModeIndicator";
-        panelModeIndicator.Size = new Size(880, 69);
+        panelModeIndicator.Size = new Size(773, 69);
         panelModeIndicator.TabIndex = 0;
         // 
         // lblModeDescription
@@ -265,18 +270,20 @@ sealed partial class MainDashboard
         rootLayout.Controls.Add(panelModeIndicator, 0, 0);
         rootLayout.Controls.Add(actionsPanel, 0, 1);
         rootLayout.Controls.Add(mainContentPanel, 0, 2);
-        rootLayout.Controls.Add(btnGenerate, 0, 3);
+        rootLayout.Controls.Add(panelClassDescription, 0, 3);
+        rootLayout.Controls.Add(flowLayoutPanel2, 0, 4);
         rootLayout.Dock = DockStyle.Fill;
         rootLayout.Location = new Point(0, 0);
         rootLayout.Margin = new Padding(3, 4, 3, 4);
         rootLayout.Name = "rootLayout";
         rootLayout.Padding = new Padding(11, 13, 11, 13);
-        rootLayout.RowCount = 4;
+        rootLayout.RowCount = 5;
         rootLayout.RowStyles.Add(new RowStyle());
         rootLayout.RowStyles.Add(new RowStyle());
         rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-        rootLayout.RowStyles.Add(new RowStyle());
-        rootLayout.Size = new Size(908, 594);
+        rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 0F));   // description panel (hidden initially)
+        rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 53F));
+        rootLayout.Size = new Size(801, 594);
         rootLayout.TabIndex = 0;
         // 
         // actionsPanel
@@ -294,7 +301,7 @@ sealed partial class MainDashboard
         actionsPanel.Name = "actionsPanel";
         actionsPanel.RowCount = 1;
         actionsPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
-        actionsPanel.Size = new Size(886, 60);
+        actionsPanel.Size = new Size(779, 60);
         actionsPanel.TabIndex = 1;
         // 
         // flowLayoutPanel1
@@ -305,16 +312,16 @@ sealed partial class MainDashboard
         flowLayoutPanel1.Controls.Add(dtpClassDate);
         flowLayoutPanel1.Dock = DockStyle.Fill;
         flowLayoutPanel1.FlowDirection = FlowDirection.RightToLeft;
-        flowLayoutPanel1.Location = new Point(602, 3);
+        flowLayoutPanel1.Location = new Point(494, 3);
         flowLayoutPanel1.Name = "flowLayoutPanel1";
-        flowLayoutPanel1.Size = new Size(281, 54);
+        flowLayoutPanel1.Size = new Size(282, 54);
         flowLayoutPanel1.TabIndex = 3;
         flowLayoutPanel1.WrapContents = false;
         // 
         // btnToggleFilter
         // 
         btnToggleFilter.Anchor = AnchorStyles.Right;
-        btnToggleFilter.Location = new Point(129, 4);
+        btnToggleFilter.Location = new Point(130, 4);
         btnToggleFilter.Margin = new Padding(3, 4, 3, 4);
         btnToggleFilter.Name = "btnToggleFilter";
         btnToggleFilter.Size = new Size(149, 40);
@@ -330,7 +337,7 @@ sealed partial class MainDashboard
         dtpClassDate.Location = new Point(3, 13);
         dtpClassDate.Margin = new Padding(3, 9, 3, 4);
         dtpClassDate.Name = "dtpClassDate";
-        dtpClassDate.Size = new Size(120, 27);
+        dtpClassDate.Size = new Size(121, 27);
         dtpClassDate.TabIndex = 2;
         dtpClassDate.ValueChanged += dtpClassDate_ValueChanged;
         // 
@@ -347,7 +354,7 @@ sealed partial class MainDashboard
         mainContentPanel.Name = "mainContentPanel";
         mainContentPanel.RowCount = 1;
         mainContentPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-        mainContentPanel.Size = new Size(886, 341);
+        mainContentPanel.Size = new Size(779, 343);
         mainContentPanel.TabIndex = 2;
         // 
         // sideButtonPanel
@@ -358,18 +365,76 @@ sealed partial class MainDashboard
         sideButtonPanel.Controls.Add(btnRemove);
         sideButtonPanel.Dock = DockStyle.Fill;
         sideButtonPanel.FlowDirection = FlowDirection.TopDown;
-        sideButtonPanel.Location = new Point(743, 4);
+        sideButtonPanel.Location = new Point(636, 4);
         sideButtonPanel.Margin = new Padding(3, 4, 3, 4);
         sideButtonPanel.Name = "sideButtonPanel";
-        sideButtonPanel.Size = new Size(140, 333);
+        sideButtonPanel.Size = new Size(140, 335);
         sideButtonPanel.TabIndex = 1;
         sideButtonPanel.WrapContents = false;
         // 
-        // MainDashboard
+        // flowLayoutPanel2
         // 
+        flowLayoutPanel2.AutoSize = true;
+        flowLayoutPanel2.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+        flowLayoutPanel2.Controls.Add(btnEditFeedback);
+        flowLayoutPanel2.Controls.Add(btnGenerateEmail);
+        flowLayoutPanel2.Controls.Add(btnPrepareNextClass);
+        flowLayoutPanel2.Location = new Point(14, 532);
+        flowLayoutPanel2.Margin = new Padding(3, 4, 3, 4);
+        flowLayoutPanel2.Name = "flowLayoutPanel2";
+        flowLayoutPanel2.Size = new Size(449, 45);
+        flowLayoutPanel2.TabIndex = 3;
+        // 
+        // btnPrepareNextClass
+        // 
+        btnPrepareNextClass.Location = new Point(289, 4);
+        btnPrepareNextClass.Margin = new Padding(3, 4, 3, 4);
+        btnPrepareNextClass.Name = "btnPrepareNextClass";
+        btnPrepareNextClass.Size = new Size(157, 40);
+        btnPrepareNextClass.TabIndex = 4;
+        btnPrepareNextClass.Text = "Prepare Next Class";
+        btnPrepareNextClass.UseVisualStyleBackColor = true;
+        btnPrepareNextClass.Click += btnPrepareNextClass_Click;
+        //
+        // panelClassDescription
+        //
+        panelClassDescription.BackColor = Color.FromArgb(232, 244, 253);
+        panelClassDescription.BorderStyle = BorderStyle.FixedSingle;
+        panelClassDescription.Controls.Add(txtDescriptionView);
+        panelClassDescription.Controls.Add(lblDescriptionTitle);
+        panelClassDescription.Dock = DockStyle.Fill;
+        panelClassDescription.Margin = new Padding(0, 0, 0, 4);
+        panelClassDescription.Name = "panelClassDescription";
+        panelClassDescription.Padding = new Padding(8, 4, 8, 4);
+        panelClassDescription.Visible = false;
+        //
+        // lblDescriptionTitle
+        //
+        lblDescriptionTitle.AutoSize = false;
+        lblDescriptionTitle.Dock = DockStyle.Top;
+        lblDescriptionTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        lblDescriptionTitle.ForeColor = Color.FromArgb(13, 71, 161);
+        lblDescriptionTitle.Height = 20;
+        lblDescriptionTitle.Name = "lblDescriptionTitle";
+        lblDescriptionTitle.Text = "Class description:";
+        //
+        // txtDescriptionView
+        //
+        txtDescriptionView.BackColor = Color.FromArgb(232, 244, 253);
+        txtDescriptionView.BorderStyle = BorderStyle.None;
+        txtDescriptionView.Dock = DockStyle.Fill;
+        txtDescriptionView.Font = new Font("Segoe UI", 9.5F);
+        txtDescriptionView.Multiline = true;
+        txtDescriptionView.Name = "txtDescriptionView";
+        txtDescriptionView.ReadOnly = true;
+        txtDescriptionView.ScrollBars = ScrollBars.Vertical;
+        txtDescriptionView.TabStop = false;
+        //
+        // MainDashboard
+        //
         AutoScaleDimensions = new SizeF(8F, 20F);
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(908, 620);
+        ClientSize = new Size(801, 620);
         Controls.Add(rootLayout);
         Controls.Add(statusStrip1);
         Icon = (Icon)resources.GetObject("$this.Icon");
@@ -391,6 +456,8 @@ sealed partial class MainDashboard
         mainContentPanel.ResumeLayout(false);
         mainContentPanel.PerformLayout();
         sideButtonPanel.ResumeLayout(false);
+        flowLayoutPanel2.ResumeLayout(false);
+        panelClassDescription.ResumeLayout(false);
         ResumeLayout(false);
         PerformLayout();
     }
@@ -408,7 +475,7 @@ sealed partial class MainDashboard
     private System.Windows.Forms.Button btnUpdate;
     private System.Windows.Forms.Button btnRemove;
     private System.Windows.Forms.Button btnEditFeedback;
-    private System.Windows.Forms.Button btnGenerate;
+    private System.Windows.Forms.Button btnGenerateEmail;
     private System.Windows.Forms.Button btnViewMaterial;
     private System.Windows.Forms.Panel panelModeIndicator;
     private System.Windows.Forms.Label lblModeIcon;
@@ -426,4 +493,9 @@ sealed partial class MainDashboard
     private FlowLayoutPanel flowLayoutPanel1;
     private Button btnToggleFilter;
     private DateTimePicker dtpClassDate;
+    private FlowLayoutPanel flowLayoutPanel2;
+    private Button btnPrepareNextClass;
+    private System.Windows.Forms.Panel panelClassDescription;
+    private System.Windows.Forms.Label lblDescriptionTitle;
+    private System.Windows.Forms.TextBox txtDescriptionView;
 }
