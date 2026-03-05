@@ -5,7 +5,14 @@ namespace Feedback_Flow.UI.Forms;
 public partial class PrepareNextClassForm : Form
 {
     public string? SelectedMaterial { get; private set; }
-    public string ClassDescription => txtDescription.Text.Trim();
+    public string? ClassDescription
+    {
+        get
+        {
+            var text = txtDescription.Text?.Trim();
+            return string.IsNullOrWhiteSpace(text) ? null : text;
+        }
+    }
 
     public PrepareNextClassForm(string studentName, DateTime nextClassDate, ClassSession? existingSession)
     {
