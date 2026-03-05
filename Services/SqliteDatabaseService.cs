@@ -69,8 +69,12 @@ public class SqliteDatabaseService : IDatabaseService
             );");
 
         // Migration: Add ClassDescription column to existing databases
-        try { await connection.ExecuteAsync("SELECT ClassDescription FROM ClassSessions LIMIT 1"); }
-        catch { await connection.ExecuteAsync("ALTER TABLE ClassSessions ADD COLUMN ClassDescription TEXT NULL;"); }
+        var classDescriptionColumnCount = await connection.ExecuteScalarAsync<long>(
+            "SELECT COUNT(*) FROM pragma_table_info('ClassSessions') WHERE name = 'ClassDescription';");
+        if (classDescriptionColumnCount == 0)
+        {
+            await connection.ExecuteAsync("ALTER TABLE ClassSessions ADD COLUMN ClassDescription TEXT NULL;");
+        }
 
         // Unique index prevents duplicate sessions for the same student+date
         await connection.ExecuteAsync(@"
