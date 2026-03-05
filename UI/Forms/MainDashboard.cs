@@ -777,8 +777,9 @@ public sealed partial class MainDashboard : Form
     {
         var days = classDays.Split(',')
             .Select(d => d.Trim())
-            .Where(d => Enum.TryParse<DayOfWeek>(d, true, out _))
-            .Select(d => Enum.Parse<DayOfWeek>(d, true))
+            .Select(d => Enum.TryParse<DayOfWeek>(d, true, out var day) ? (DayOfWeek?)day : null)
+            .Where(d => d.HasValue)
+            .Select(d => d.Value)
             .ToHashSet();
 
         if (days.Count == 0)
