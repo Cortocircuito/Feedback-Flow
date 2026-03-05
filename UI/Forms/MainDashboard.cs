@@ -749,7 +749,10 @@ public sealed partial class MainDashboard : Form
     {
         if (!TryGetSelectedSession(out var session)) return;
 
-        var nextDate = ComputeNextClassDate(session.ClassDay, dtpClassDate.Value.Date);
+        var referenceDate = dtpClassDate.Value.Date < DateTime.Today
+            ? DateTime.Today
+            : dtpClassDate.Value.Date;
+        var nextDate = ComputeNextClassDate(session.ClassDay, referenceDate);
         var existingSession = await _studentService.GetNextClassSessionAsync(session.StudentId, nextDate);
 
         using var form = new PrepareNextClassForm(session.FullName, nextDate, existingSession);
