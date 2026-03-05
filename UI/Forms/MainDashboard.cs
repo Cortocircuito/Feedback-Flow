@@ -753,26 +753,37 @@ public sealed partial class MainDashboard : Form
             ? DateTime.Today
             : dtpClassDate.Value.Date;
         var nextDate = ComputeNextClassDate(session.ClassDay, referenceDate);
-        var existingSession = await _studentService.GetNextClassSessionAsync(session.StudentId, nextDate);
+        if (nextDate is null)
+        {
+            ShowWarning(
+                $"The next class date for {session.FullName} could not be determined. This may be due to missing or invalid class day configuration. Please review the student's class days and try again.",
+                "Unable to Determine Next Class Date");
+            return;
+        }
+        var existingSession = await _studentService.GetNextClassSessionAsync(session.StudentId, nextDate.Value);
 
-        using var form = new PrepareNextClassForm(session.FullName, nextDate, existingSession);
+        using var form = new PrepareNextClassForm(session.FullName, nextDate.Value, existingSession);
         if (form.ShowDialog() != DialogResult.OK) return;
 
         await ExecuteWithErrorHandlingAsync(async () =>
         {
             await _studentService.SaveNextClassPlanAsync(
-                session.StudentId, nextDate, form.SelectedMaterial, form.ClassDescription);
-            UpdateStatus($"Next class prepared for {session.FullName} ({nextDate:dd MMM yyyy}).");
+                session.StudentId, nextDate.Value, form.SelectedMaterial, form.ClassDescription);
+            UpdateStatus($"Next class prepared for {session.FullName} ({nextDate.Value:dd MMM yyyy}).");
         }, "Error saving next class plan");
     }
 
-    private static DateTime ComputeNextClassDate(string classDays, DateTime fromDate)
+    private static DateTime? ComputeNextClassDate(string classDays, DateTime fromDate)
     {
         var days = classDays.Split(',')
             .Select(d => d.Trim())
-            .Where(d => Enum.TryParse<DayOfWeek>(d, true, out _))
-            .Select(d => Enum.Parse<DayOfWeek>(d, true))
+            .Select(d => Enum.TryParse<DayOfWeek>(d, true, out var day) ? (DayOfWeek?)day : null)
+            .Where(d => d.HasValue)
+            .Select(d => d.Value)
             .ToHashSet();
+
+        if (days.Count == 0)
+            return null;
 
         var candidate = fromDate.AddDays(1);
         for (int i = 0; i < 7; i++, candidate = candidate.AddDays(1))
@@ -781,7 +792,8 @@ public sealed partial class MainDashboard : Form
                 return candidate;
         }
 
-        return fromDate.AddDays(7); // fallback: shouldn't happen with valid class days
+        throw new InvalidOperationException(
+            "Invariant violated: non-empty class days set, but no matching day found within the next 7 days.");
     }
 
     #endregion
