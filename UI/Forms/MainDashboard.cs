@@ -756,8 +756,8 @@ public sealed partial class MainDashboard : Form
         if (nextDate is null)
         {
             ShowWarning(
-                $"No valid class days are configured for {session.FullName}. Please update the student's class days before preparing the next class.",
-                "No Class Days Configured");
+                $"The next class date for {session.FullName} could not be determined. This may be due to missing or invalid class day configuration. Please review the student's class days and try again.",
+                "Unable to Determine Next Class Date");
             return;
         }
         var existingSession = await _studentService.GetNextClassSessionAsync(session.StudentId, nextDate.Value);
