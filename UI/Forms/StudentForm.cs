@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Feedback_Flow.Models;
+using Feedback_Flow.UI.Theme;
 
 namespace Feedback_Flow.UI.Forms;
 
@@ -24,6 +25,7 @@ public partial class StudentForm : Form
     public StudentForm()
     {
         InitializeComponent();
+        ThemeManager.Apply(this);
     }
 
     public StudentForm(Student student) : this()

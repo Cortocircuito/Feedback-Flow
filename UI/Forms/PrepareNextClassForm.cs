@@ -1,4 +1,5 @@
 using Feedback_Flow.Models;
+using Feedback_Flow.UI.Theme;
 
 namespace Feedback_Flow.UI.Forms;
 
@@ -28,6 +29,7 @@ public partial class PrepareNextClassForm : Form
         }
 
         UpdateMaterialLabel();
+        ThemeManager.Apply(this);
     }
 
     protected override void OnDpiChanged(DpiChangedEventArgs e)
@@ -67,13 +69,13 @@ public partial class PrepareNextClassForm : Form
         if (string.IsNullOrEmpty(SelectedMaterial))
         {
             lblMaterialPath.Text = "No material assigned";
-            lblMaterialPath.ForeColor = Color.Gray;
+            lblMaterialPath.ForeColor = ThemeManager.Secondary;
             btnClearMaterial.Enabled = false;
         }
         else
         {
             lblMaterialPath.Text = Path.GetFileName(SelectedMaterial);
-            lblMaterialPath.ForeColor = SystemColors.ControlText;
+            lblMaterialPath.ForeColor = ThemeManager.Foreground;
             btnClearMaterial.Enabled = true;
         }
     }
