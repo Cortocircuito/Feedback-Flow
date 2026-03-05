@@ -8,7 +8,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationIcon>fluent-color-person-edit-32.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\fluent-color-person-edit-32.ico</ApplicationIcon>
     <Version>1.1.0</Version>
     <AssemblyVersion>1.1.0.0</AssemblyVersion>
     <FileVersion>1.1.0.0</FileVersion>
@@ -25,7 +25,7 @@
   </PropertyGroup>
 	
   <ItemGroup>
-    <Content Include="fluent-color-person-edit-32.ico" />
+    <Content Include="Assets\fluent-color-person-edit-32.ico" />
   </ItemGroup>
 
   <ItemGroup>
