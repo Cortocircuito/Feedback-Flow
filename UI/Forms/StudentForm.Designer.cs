@@ -32,6 +32,93 @@ partial class StudentForm
         buttonPanel.SuspendLayout();
         SuspendLayout();
         // 
+        // lblFullName
+        // 
+        lblFullName.AutoSize = true;
+        lblFullName.Location = new Point(14, 13);
+        lblFullName.Margin = new Padding(3, 0, 3, 7);
+        lblFullName.Name = "lblFullName";
+        lblFullName.Size = new Size(79, 20);
+        lblFullName.TabIndex = 0;
+        lblFullName.Text = "Full Name:";
+        // 
+        // txtFullName
+        // 
+        txtFullName.Dock = DockStyle.Fill;
+        txtFullName.Location = new Point(14, 40);
+        txtFullName.Margin = new Padding(3, 0, 3, 20);
+        txtFullName.Name = "txtFullName";
+        txtFullName.Size = new Size(372, 27);
+        txtFullName.TabIndex = 1;
+        // 
+        // lblEmail
+        // 
+        lblEmail.AutoSize = true;
+        lblEmail.Location = new Point(14, 87);
+        lblEmail.Margin = new Padding(3, 0, 3, 7);
+        lblEmail.Name = "lblEmail";
+        lblEmail.Size = new Size(49, 20);
+        lblEmail.TabIndex = 2;
+        lblEmail.Text = "Email:";
+        // 
+        // txtEmail
+        // 
+        txtEmail.Dock = DockStyle.Fill;
+        txtEmail.Location = new Point(14, 114);
+        txtEmail.Margin = new Padding(3, 0, 3, 20);
+        txtEmail.Name = "txtEmail";
+        txtEmail.Size = new Size(372, 27);
+        txtEmail.TabIndex = 3;
+        // 
+        // btnSave
+        // 
+        btnSave.DialogResult = DialogResult.OK;
+        btnSave.Location = new Point(289, 4);
+        btnSave.Margin = new Padding(3, 4, 3, 4);
+        btnSave.Name = "btnSave";
+        btnSave.Size = new Size(86, 31);
+        btnSave.TabIndex = 1;
+        btnSave.Text = "Save";
+        btnSave.UseVisualStyleBackColor = true;
+        btnSave.Click += btnSave_Click;
+        // 
+        // btnCancel
+        // 
+        btnCancel.DialogResult = DialogResult.Cancel;
+        btnCancel.Location = new Point(197, 4);
+        btnCancel.Margin = new Padding(3, 4, 3, 4);
+        btnCancel.Name = "btnCancel";
+        btnCancel.Size = new Size(86, 31);
+        btnCancel.TabIndex = 0;
+        btnCancel.Text = "Cancel";
+        btnCancel.UseVisualStyleBackColor = true;
+        // 
+        // errorProvider
+        // 
+        errorProvider.ContainerControl = this;
+        // 
+        // lblClassDays
+        // 
+        lblClassDays.AutoSize = true;
+        lblClassDays.Location = new Point(14, 161);
+        lblClassDays.Margin = new Padding(3, 0, 3, 7);
+        lblClassDays.Name = "lblClassDays";
+        lblClassDays.Size = new Size(81, 20);
+        lblClassDays.TabIndex = 4;
+        lblClassDays.Text = "Class Days:";
+        // 
+        // checkedListBoxClassDays
+        // 
+        checkedListBoxClassDays.CheckOnClick = true;
+        checkedListBoxClassDays.Dock = DockStyle.Fill;
+        checkedListBoxClassDays.FormattingEnabled = true;
+        checkedListBoxClassDays.Items.AddRange(new object[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" });
+        checkedListBoxClassDays.Location = new Point(14, 192);
+        checkedListBoxClassDays.Margin = new Padding(3, 4, 3, 4);
+        checkedListBoxClassDays.Name = "checkedListBoxClassDays";
+        checkedListBoxClassDays.Size = new Size(372, 285);
+        checkedListBoxClassDays.TabIndex = 5;
+        // 
         // mainLayout
         // 
         mainLayout.ColumnCount = 1;
@@ -45,8 +132,9 @@ partial class StudentForm
         mainLayout.Controls.Add(buttonPanel, 0, 6);
         mainLayout.Dock = DockStyle.Fill;
         mainLayout.Location = new Point(0, 0);
+        mainLayout.Margin = new Padding(3, 4, 3, 4);
         mainLayout.Name = "mainLayout";
-        mainLayout.Padding = new Padding(10);
+        mainLayout.Padding = new Padding(11, 13, 11, 13);
         mainLayout.RowCount = 7;
         mainLayout.RowStyles.Add(new RowStyle());
         mainLayout.RowStyles.Add(new RowStyle());
@@ -55,117 +143,31 @@ partial class StudentForm
         mainLayout.RowStyles.Add(new RowStyle());
         mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
         mainLayout.RowStyles.Add(new RowStyle());
-        mainLayout.Size = new Size(350, 400);
+        mainLayout.Size = new Size(400, 533);
         mainLayout.TabIndex = 0;
-        // 
-        // lblFullName
-        // 
-        lblFullName.AutoSize = true;
-        lblFullName.Location = new Point(13, 10);
-        lblFullName.Margin = new Padding(3, 0, 3, 5);
-        lblFullName.Name = "lblFullName";
-        lblFullName.Size = new Size(64, 15);
-        lblFullName.TabIndex = 0;
-        lblFullName.Text = "Full Name:";
-        // 
-        // txtFullName
-        // 
-        txtFullName.Dock = DockStyle.Fill;
-        txtFullName.Location = new Point(13, 28);
-        txtFullName.Margin = new Padding(3, 0, 3, 15);
-        txtFullName.Name = "txtFullName";
-        txtFullName.Size = new Size(324, 23);
-        txtFullName.TabIndex = 1;
-        // 
-        // lblEmail
-        // 
-        lblEmail.AutoSize = true;
-        lblEmail.Location = new Point(13, 66);
-        lblEmail.Margin = new Padding(3, 0, 3, 5);
-        lblEmail.Name = "lblEmail";
-        lblEmail.Size = new Size(39, 15);
-        lblEmail.TabIndex = 2;
-        lblEmail.Text = "Email:";
-        // 
-        // txtEmail
-        // 
-        txtEmail.Dock = DockStyle.Fill;
-        txtEmail.Location = new Point(13, 84);
-        txtEmail.Margin = new Padding(3, 0, 3, 15);
-        txtEmail.Name = "txtEmail";
-        txtEmail.Size = new Size(324, 23);
-        txtEmail.TabIndex = 3;
-        // 
-        // lblClassDays
-        // 
-        lblClassDays.AutoSize = true;
-        lblClassDays.Location = new Point(13, 122);
-        lblClassDays.Margin = new Padding(3, 0, 3, 5);
-        lblClassDays.Name = "lblClassDays";
-        lblClassDays.Size = new Size(66, 15);
-        lblClassDays.TabIndex = 4;
-        lblClassDays.Text = "Class Days:";
-        // 
-        // checkedListBoxClassDays
-        // 
-        checkedListBoxClassDays.CheckOnClick = true;
-        checkedListBoxClassDays.Dock = DockStyle.Fill;
-        checkedListBoxClassDays.FormattingEnabled = true;
-        checkedListBoxClassDays.Items.AddRange(new object[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" });
-        checkedListBoxClassDays.Location = new Point(13, 140);
-        checkedListBoxClassDays.Name = "checkedListBoxClassDays";
-        checkedListBoxClassDays.Size = new Size(324, 196);
-        checkedListBoxClassDays.TabIndex = 5;
         // 
         // buttonPanel
         // 
         buttonPanel.AutoSize = true;
-        buttonPanel.Controls.Add(btnCancel);
         buttonPanel.Controls.Add(btnSave);
+        buttonPanel.Controls.Add(btnCancel);
         buttonPanel.Dock = DockStyle.Fill;
         buttonPanel.FlowDirection = FlowDirection.RightToLeft;
-        buttonPanel.Location = new Point(13, 342);
+        buttonPanel.Location = new Point(11, 481);
         buttonPanel.Margin = new Padding(0);
         buttonPanel.Name = "buttonPanel";
-        buttonPanel.Size = new Size(324, 48);
+        buttonPanel.Size = new Size(378, 39);
         buttonPanel.TabIndex = 6;
-        // 
-        // btnSave
-        // 
-        btnSave.DialogResult = DialogResult.OK;
-        btnSave.Location = new Point(246, 3);
-        btnSave.Name = "btnSave";
-        btnSave.Size = new Size(75, 23);
-        btnSave.TabIndex = 0;
-        btnSave.Text = "Save";
-        btnSave.UseVisualStyleBackColor = true;
-        btnSave.Click += btnSave_Click;
-        // 
-        // btnCancel
-        // 
-        btnCancel.DialogResult = DialogResult.Cancel;
-        btnCancel.Location = new Point(165, 3);
-        btnCancel.Name = "btnCancel";
-        btnCancel.Size = new Size(75, 23);
-        btnCancel.TabIndex = 1;
-        btnCancel.Text = "Cancel";
-        btnCancel.UseVisualStyleBackColor = true;
-        // 
-        // errorProvider
-        // 
-        errorProvider.ContainerControl = this;
         // 
         // StudentForm
         // 
         AcceptButton = btnSave;
-        AutoScaleDimensions = new SizeF(7F, 15F);
+        AutoScaleDimensions = new SizeF(8F, 20F);
         AutoScaleMode = AutoScaleMode.Font;
         CancelButton = btnCancel;
-        ClientSize = new Size(350, 400);
+        ClientSize = new Size(400, 533);
         Controls.Add(mainLayout);
-        FormBorderStyle = FormBorderStyle.FixedDialog;
-        MaximizeBox = false;
-        MinimizeBox = false;
+        Margin = new Padding(3, 4, 3, 4);
         Name = "StudentForm";
         StartPosition = FormStartPosition.CenterParent;
         Text = "Student Details";

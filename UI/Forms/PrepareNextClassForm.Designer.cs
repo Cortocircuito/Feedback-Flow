@@ -231,9 +231,6 @@ partial class PrepareNextClassForm
         CancelButton = btnCancel;
         ClientSize = new Size(520, 400);
         Controls.Add(mainLayout);
-        FormBorderStyle = FormBorderStyle.Sizable;
-        MaximizeBox = false;
-        MinimizeBox = false;
         MinimumSize = new Size(480, 360);
         Name = "PrepareNextClassForm";
         StartPosition = FormStartPosition.CenterParent;
