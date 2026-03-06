@@ -115,8 +115,7 @@ public sealed partial class MainDashboard : Form
             DisplayStyle = ToolStripItemDisplayStyle.Text,
             Font = new Font("Segoe UI Emoji", 9.5f),
             AutoSize = true,
-            Margin = new Padding(0, 0, 8, 0),
-            Alignment = ToolStripItemAlignment.Right
+            Margin = new Padding(0, 0, 8, 0)
         };
         _themeToggleButton.Click += ThemeToggle_Click;
         // Insert before the version label (last item) so layout is:
