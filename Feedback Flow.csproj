@@ -29,6 +29,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Feedback Flow.Tests\**" />
+    <EmbeddedResource Remove="Feedback Flow.Tests\**" />
+    <None Remove="Feedback Flow.Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="PDFsharp" Version="6.2.4" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
     <PackageReference Include="MimeKit" Version="4.15.1" />
