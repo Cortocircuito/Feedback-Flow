@@ -30,6 +30,7 @@ public sealed partial class MainDashboard : Form
 
     // Theme toggle (status-strip button)
     private ToolStripButton _themeToggleButton;
+    private ToolStripStatusLabel _versionLabel;
 
     // Layout State
     private bool _searchLayoutActive = false;
@@ -94,17 +95,17 @@ public sealed partial class MainDashboard : Form
         }
 
         // Create version label
-        var versionLabel = new ToolStripStatusLabel
+        _versionLabel = new ToolStripStatusLabel
         {
             Text = $"v{displayVersion}",
-            ForeColor = Color.Gray,
+            ForeColor = ThemeManager.Secondary,
             Font = new Font("Segoe UI", 9f),
             Margin = new Padding(0, 0, 10, 0),
             ToolTipText = tooltipText
         };
 
         statusStrip1.Items.Add(springLabel);
-        statusStrip1.Items.Add(versionLabel);
+        statusStrip1.Items.Add(_versionLabel);
     }
 
     private void InitializeThemeToggle()
@@ -167,8 +168,10 @@ public sealed partial class MainDashboard : Form
         bool isDark = ThemeManager.IsDarkMode;
         _themeToggleButton.Text        = isDark ? "☀️ Light" : "🌙 Dark";
         _themeToggleButton.ToolTipText = isDark ? "Switch to Light Mode" : "Switch to Dark Mode";
-        _themeToggleButton.BackColor   = ThemeManager.Background;
+        _themeToggleButton.BackColor   = ThemeManager.StatusBarBackground;
         _themeToggleButton.ForeColor   = ThemeManager.Foreground;
+        if (_versionLabel != null)
+            _versionLabel.ForeColor = ThemeManager.Secondary;
     }
 
     #region Initialization
@@ -991,14 +994,14 @@ public sealed partial class MainDashboard : Form
                 }
                 else
                 {
-                    lblStatus.ForeColor = SystemColors.ControlText;
+                    lblStatus.ForeColor = ThemeManager.Foreground;
                     UpdateStatus(
                         $"Found {_allStudentsList.Count} of {_allStudentsCache.Count} students");
                 }
             }
             else
             {
-                lblStatus.ForeColor = SystemColors.ControlText;
+                lblStatus.ForeColor = ThemeManager.Foreground;
                 UpdateStatus(
                     $"Viewing all students ({_allStudentsList.Count} total) - Day-specific columns hidden");
             }

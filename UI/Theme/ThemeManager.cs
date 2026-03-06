@@ -13,14 +13,14 @@ internal static class ThemeManager
     public static event EventHandler ThemeChanged = delegate { };
 
     // ── Light palette ────────────────────────────────────────────────────────
-    private static readonly Color LightBackground  = Color.FromArgb(240, 240, 240);
-    private static readonly Color LightSurface     = Color.White;
-    private static readonly Color LightForeground  = Color.FromArgb(33,  33,  33);
-    private static readonly Color LightSecondary   = Color.FromArgb(117, 117, 117);
+    private static readonly Color LightBackground = Color.FromArgb(235, 240, 245);
+    private static readonly Color LightSurface = Color.FromArgb(250, 251, 253);
+    private static readonly Color LightForeground = Color.FromArgb(22, 38, 55);
+    private static readonly Color LightSecondary = Color.FromArgb(85, 100, 120);
 
     // ── Dark palette ─────────────────────────────────────────────────────────
-    private static readonly Color DarkBackground   = Color.FromArgb(30,  30,  30);
-    private static readonly Color DarkSurface      = Color.FromArgb(45,  45,  48);
+    private static readonly Color DarkBackground   = Color.FromArgb(32,  32,  38);
+    private static readonly Color DarkSurface      = Color.FromArgb(42,  42,  48);
     private static readonly Color DarkForeground   = Color.FromArgb(240, 240, 240);
     private static readonly Color DarkSecondary    = Color.FromArgb(180, 180, 180);
 
@@ -33,8 +33,8 @@ internal static class ThemeManager
     // ── Semantic colours for the mode-indicator banner ───────────────────────
     public static (Color Back, Color Fore) AllStudentsColors =>
         IsDarkMode
-            ? (Color.FromArgb(13,  43,  84), Color.FromArgb(100, 181, 246))
-            : (Color.FromArgb(227, 242, 253), Color.FromArgb(21,  101, 192));
+            ? (Color.FromArgb(13, 43, 84), Color.FromArgb(100, 181, 246))
+            : (Color.FromArgb(227, 242, 253), Color.FromArgb(21, 101, 192));
 
     public static (Color Back, Color Fore) TodayColors =>
         IsDarkMode
@@ -54,7 +54,21 @@ internal static class ThemeManager
 
     // Flat/borderless button background (e.g. the inline clear-search "✕" button)
     public static Color FlatButtonBackground =>
-        IsDarkMode ? Color.FromArgb(60, 60, 60) : Color.White;
+        IsDarkMode ? Color.FromArgb(60, 60, 60) : Color.FromArgb(250, 251, 253);
+
+    // Standard (non-Flat) button background
+    public static Color ButtonBackground =>
+        IsDarkMode ? Color.FromArgb(50, 58, 78) : Color.FromArgb(242, 245, 248);
+
+    public static Color DisabledButtonBackground =>
+        IsDarkMode ? Color.FromArgb(28, 32, 42) : Color.FromArgb(218, 225, 233);
+
+    public static Color DisabledForeground =>
+        IsDarkMode ? Color.FromArgb(80, 82, 90) : Color.FromArgb(118, 130, 145);
+
+    // Status bar background — distinct from form background for visual separation
+    public static Color StatusBarBackground =>
+        IsDarkMode ? Color.FromArgb(22, 22, 28) : Color.FromArgb(205, 215, 225);
 
     // ── API ──────────────────────────────────────────────────────────────────
     public static void SetDarkMode(bool isDark)
@@ -85,13 +99,18 @@ internal static class ThemeManager
                 break;
 
             case StatusStrip ss:
-                ss.BackColor = Background;
+                ss.BackColor = StatusBarBackground;
                 ss.ForeColor = Foreground;
+                ss.SizingGrip = false;
+                ss.Renderer = IsDarkMode
+                    ? new DarkStatusStripRenderer()
+                    : new LightStatusStripRenderer();
                 foreach (ToolStripItem item in ss.Items)
                 {
-                    item.BackColor = Background;
+                    item.BackColor = StatusBarBackground;
                     item.ForeColor = Secondary;
                 }
+
                 break;
 
             case TextBox tb:
@@ -114,10 +133,31 @@ internal static class ThemeManager
                 lbl.BackColor = Color.Transparent;
                 break;
 
-            // Flat buttons (e.g. the inline "✕" clear-search button)
-            case Button btn when btn.FlatStyle == FlatStyle.Flat:
-                btn.BackColor = FlatButtonBackground;
-                btn.ForeColor = Foreground;
+            case Button btn:
+                if (IsOriginallyFlatButton(btn))
+                {
+                    btn.BackColor = FlatButtonBackground;
+                    btn.ForeColor = Foreground;
+                }
+                else
+                {
+                    btn.UseVisualStyleBackColor = false;
+                    if (IsDarkMode)
+                    {
+                        btn.FlatStyle = FlatStyle.Flat;
+                        btn.FlatAppearance.BorderColor = Color.FromArgb(65, 75, 98);
+                        btn.FlatAppearance.BorderSize = 1;
+                    }
+                    else
+                    {
+                        btn.FlatStyle = FlatStyle.Standard;
+                    }
+
+                    ApplyButtonColors(btn);
+                    btn.EnabledChanged -= OnButtonEnabledChanged;
+                    btn.EnabledChanged += OnButtonEnabledChanged;
+                }
+
                 break;
 
             // Generic containers
@@ -128,6 +168,83 @@ internal static class ThemeManager
                 c.BackColor = Background;
                 c.ForeColor = Foreground;
                 break;
+        }
+    }
+
+    private static void ApplyButtonColors(Button btn)
+    {
+        btn.BackColor = btn.Enabled ? ButtonBackground : DisabledButtonBackground;
+        btn.ForeColor = btn.Enabled ? Foreground       : DisabledForeground;
+    }
+
+    private static bool IsOriginallyFlatButton(Button btn) =>
+        btn.FlatAppearance.BorderSize == 0;
+
+    private static void OnButtonEnabledChanged(object? sender, EventArgs e)
+    {
+        if (sender is Button btn && !IsOriginallyFlatButton(btn))
+            ApplyButtonColors(btn);
+    }
+
+    private sealed class LightStatusStripRenderer : ToolStripProfessionalRenderer
+    {
+        public LightStatusStripRenderer()
+            : base(new LightColorTable())
+        {
+        }
+
+        private sealed class LightColorTable : ProfessionalColorTable
+        {
+            // Hover background — StatusBarBackground (205,215,225) + ~13 pts lighter
+            public override Color ButtonSelectedHighlight => Color.FromArgb(218, 227, 236);
+            public override Color ButtonSelectedHighlightBorder => Color.FromArgb(185, 200, 215);
+            public override Color ButtonSelectedGradientBegin => Color.FromArgb(218, 227, 236);
+            public override Color ButtonSelectedGradientMiddle => Color.FromArgb(218, 227, 236);
+
+            public override Color ButtonSelectedGradientEnd => Color.FromArgb(218, 227, 236);
+
+            // Pressed background — StatusBarBackground itself
+            public override Color ButtonPressedHighlight => Color.FromArgb(205, 215, 225);
+            public override Color ButtonPressedHighlightBorder => Color.FromArgb(165, 185, 205);
+            public override Color ButtonPressedGradientBegin => Color.FromArgb(205, 215, 225);
+            public override Color ButtonPressedGradientMiddle => Color.FromArgb(205, 215, 225);
+
+            public override Color ButtonPressedGradientEnd => Color.FromArgb(205, 215, 225);
+
+            // Status strip bar itself
+            public override Color StatusStripGradientBegin => Color.FromArgb(205, 215, 225);
+            public override Color StatusStripGradientEnd => Color.FromArgb(205, 215, 225);
+        }
+    }
+
+    private sealed class DarkStatusStripRenderer : ToolStripProfessionalRenderer
+    {
+        public DarkStatusStripRenderer()
+            : base(new DarkColorTable())
+        {
+        }
+
+        private sealed class DarkColorTable : ProfessionalColorTable
+        {
+            // Hover background — slightly lighter than StatusBarBackground
+            public override Color ButtonSelectedHighlight => Color.FromArgb(55, 65, 88);
+            public override Color ButtonSelectedHighlightBorder => Color.FromArgb(65, 75, 98);
+            public override Color ButtonSelectedGradientBegin => Color.FromArgb(55, 65, 88);
+            public override Color ButtonSelectedGradientMiddle => Color.FromArgb(55, 65, 88);
+
+            public override Color ButtonSelectedGradientEnd => Color.FromArgb(55, 65, 88);
+
+            // Pressed background
+            public override Color ButtonPressedHighlight => Color.FromArgb(42, 52, 72);
+            public override Color ButtonPressedHighlightBorder => Color.FromArgb(65, 75, 98);
+            public override Color ButtonPressedGradientBegin => Color.FromArgb(42, 52, 72);
+            public override Color ButtonPressedGradientMiddle => Color.FromArgb(42, 52, 72);
+
+            public override Color ButtonPressedGradientEnd => Color.FromArgb(42, 52, 72);
+
+            // Status strip bar itself
+            public override Color StatusStripGradientBegin => Color.FromArgb(22, 22, 28);
+            public override Color StatusStripGradientEnd => Color.FromArgb(22, 22, 28);
         }
     }
 
@@ -143,13 +260,13 @@ internal static class ThemeManager
         dgv.DefaultCellStyle.SelectionForeColor = Color.White;
 
         dgv.AlternatingRowsDefaultCellStyle.BackColor =
-            IsDarkMode ? Color.FromArgb(50, 50, 55) : Color.FromArgb(245, 245, 250);
+            IsDarkMode ? Color.FromArgb(50, 50, 55) : Color.FromArgb(242, 245, 249);
 
         dgv.ColumnHeadersDefaultCellStyle.BackColor =
-            IsDarkMode ? Color.FromArgb(40, 40, 40) : Color.FromArgb(230, 230, 230);
+            IsDarkMode ? Color.FromArgb(40, 40, 40) : Color.FromArgb(212, 222, 232);
         dgv.ColumnHeadersDefaultCellStyle.ForeColor = Foreground;
 
         dgv.GridColor =
-            IsDarkMode ? Color.FromArgb(70, 70, 70) : Color.FromArgb(210, 210, 210);
+            IsDarkMode ? Color.FromArgb(70, 70, 70) : Color.FromArgb(200, 210, 220);
     }
 }
