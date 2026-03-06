@@ -78,7 +78,7 @@ public sealed partial class MainDashboard : Form
         var displayVersion = rawVersion;
         var tooltipText = $"Build: {rawVersion}";
 
-        // Tries to split "x.x.x+abc123..."
+        // Tries to split "1.2.0+abc123..."
         if (!string.IsNullOrEmpty(rawVersion) && rawVersion.Contains('+'))
         {
             var parts = rawVersion.Split('+');

@@ -20,12 +20,12 @@
 
 **Feedback Flow** is a desktop application developed in C# WinForms (.NET 10) designed to streamline the teaching workflow by automating the distribution of personalized feedback to students. It combines student management, attendance tracking, material assignment, and automated email generation into a single, intuitive interface.
 
-## 📣 Recent Updates (v1.1.0)
+## 📣 Recent Updates (v1.2.0)
 
-- **🔄 Session-Based Attendance**: Completely refactored attendance tracking to handle multiple daily sessions reliably.
-- **🌑 Landing Page (Web)**: Added a professional web landing page with Dark Mode support for easy downloads.
-- **🖥️ High DPI Support**: Optimized interface scaling for all monitor resolutions (100% - 200%).
-- **📄 PDF Library Migration**: Switched to PDFSharp for reliable, open-source student report generation.
+- **🌑 Centralized Dark Mode**: Full Dark Mode system for the desktop app, automatically saving your preference and integrating natively with Windows 10/11 title bars.
+- **📅 Prepare Next Class**: You can now plan ahead by assigning learning materials and writing a class description for a student's upcoming session.
+- **♿ Accessibility**: Improved tab navigation and refined UI across the dashboard.
+- **🔄 Session-Based Attendance**: Robust attendance tracking built to handle multiple daily sessions reliably.
 
 ## 🚀 Quick Start
 

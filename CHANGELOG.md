@@ -6,6 +6,19 @@ versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [1.2.0] - 2026-03-06
+
+### Added
+- **Centralized Dark Mode & UI Modernization**: Brought a full Dark Mode toggle to the desktop app (`ThemeManager`).
+- **Prepare Next Class**: Added the ability to assign materials and draft descriptions for upcoming sessions via `PrepareNextClassForm`.
+- **Dynamic Theming**: Form title bars now match the app's theme natively on Windows 10/11 (DWM APIs).
+- **User Preferences**: Added local JSON persistence for the user's Dark Mode preference.
+
+### Changed
+- **Asset Cleanup**: Moved application icon and screenshots to a dedicated `Assets/` directory.
+- **Improved Dialog Layouts**: Refactored `PrepareNextClassForm` and enriched button/DataGridView themes.
+- **Tab Navigation**: Adjusted `TabIndex` property values across the Main Dashboard to improve keyboard navigation accessibility.
+
 ## [1.1.0] - 2026-02-28
 
 ### Added
