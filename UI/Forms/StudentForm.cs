@@ -26,6 +26,7 @@ public partial class StudentForm : Form
     {
         InitializeComponent();
         ThemeManager.Apply(this);
+        ThemeManager.ApplyTitleBar(this);
     }
 
     public StudentForm(Student student) : this()

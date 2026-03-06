@@ -160,6 +160,7 @@ public sealed partial class MainDashboard : Form
             _btnClearSearch.BackColor = ThemeManager.FlatButtonBackground;
 
         UpdateThemeToggleButton();
+        ThemeManager.ApplyTitleBar(this);
     }
 
     private void UpdateThemeToggleButton()

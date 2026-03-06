@@ -30,6 +30,7 @@ public partial class PrepareNextClassForm : Form
 
         UpdateMaterialLabel();
         ThemeManager.Apply(this);
+        ThemeManager.ApplyTitleBar(this);
     }
 
     protected override void OnDpiChanged(DpiChangedEventArgs e)

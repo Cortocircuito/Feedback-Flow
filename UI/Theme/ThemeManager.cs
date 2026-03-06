@@ -248,6 +248,37 @@ internal static class ThemeManager
         }
     }
 
+    [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(
+        IntPtr hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
+
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    private const int DWMWA_CAPTION_COLOR           = 35;
+
+    /// <summary>
+    /// Applies the current theme to the Win32 title bar of <paramref name="form"/>.
+    /// Uses DWMWA_USE_IMMERSIVE_DARK_MODE (Win10+) and DWMWA_CAPTION_COLOR (Win11+).
+    /// Silently ignored on older Windows versions.
+    /// </summary>
+    public static void ApplyTitleBar(Form form)
+    {
+        if (!form.IsHandleCreated)
+        {
+            form.HandleCreated += (s, e) => ApplyTitleBar(form);
+            return;
+        }
+
+        int dark = IsDarkMode ? 1 : 0;
+        DwmSetWindowAttribute(form.Handle, DWMWA_USE_IMMERSIVE_DARK_MODE,
+            ref dark, sizeof(int));
+
+        // COLORREF = 0x00BBGGRR
+        Color c = Background;
+        int colorRef = c.R | (c.G << 8) | (c.B << 16);
+        DwmSetWindowAttribute(form.Handle, DWMWA_CAPTION_COLOR,
+            ref colorRef, sizeof(int));
+    }
+
     private static void ApplyToGrid(DataGridView dgv)
     {
         dgv.BackgroundColor = Surface;
