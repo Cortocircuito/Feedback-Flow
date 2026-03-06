@@ -231,7 +231,7 @@ partial class PrepareNextClassForm
         CancelButton = btnCancel;
         ClientSize = new Size(520, 400);
         Controls.Add(mainLayout);
-        FormBorderStyle = FormBorderStyle.FixedDialog;
+        FormBorderStyle = FormBorderStyle.Sizable;
         MaximizeBox = false;
         MinimizeBox = false;
         MinimumSize = new Size(480, 360);
