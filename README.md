@@ -55,7 +55,6 @@ Feedback Flow is perfect for:
 - **Class Day Assignment**: Assign students to specific weekdays (Monday-Friday) with multi-day support
 - **Smart Filtering**: Dashboard automatically displays only students assigned to the current day
 - **Instant Search**: Real-time filtering by name in "View All" mode
-- **High DPI Ready**: Scales perfectly on high-resolution displays
 - **View All Mode**: Toggle to view all students across all days for planning and administration
 - **Column Sorting**: Alphabetic sorting for "Student Name" and "Learning Material" columns
 
@@ -66,7 +65,8 @@ Feedback Flow is perfect for:
   - 📅 **Green panel**: Current day view (active teaching mode)
   - 👥 **Blue panel**: All students view (planning/admin mode)
 
-### 📚 Learning Materials
+### 📚 Learning Materials & Planning
+- **Prepare Next Class**: Plan ahead by assigning learning materials and writing a class description for a student's upcoming session
 - **Material Assignment**: Assign optional learning materials (PDF, Word, PowerPoint, LibreOffice)
 - **Flexible Workflow**: Send feedback emails with or without materials
 - **Smart Attachments**: Materials automatically attached when available
@@ -89,9 +89,14 @@ Feedback Flow is perfect for:
 - **Data Integrity**: Enhanced validation and referential integrity with database constraints
 - **Schema Versioning**: Automatic database migrations with idempotent update logic
 
+### 🎨 UI & Customization
+- **Centralized Dark Mode**: Full Dark Mode system for the desktop app, automatically saving your preference and integrating natively with Windows 10/11 title bars
+- **Accessibility**: Improved tab navigation and refined UI across the dashboard
+- **High DPI Ready**: Scales perfectly on high-resolution displays
+
 ## 🖼️ Screenshots
 
-![Application Screenshot](Assets/app-screenshot.png)
+![Application Screenshot](Assets/app-screenshot-light.png)
 
 ## 💾 Data Storage
 
