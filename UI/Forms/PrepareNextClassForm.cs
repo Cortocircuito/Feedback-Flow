@@ -28,9 +28,9 @@ public partial class PrepareNextClassForm : Form
             txtDescription.Text = existingSession.ClassDescription ?? string.Empty;
         }
 
-        UpdateMaterialLabel();
         ThemeManager.Apply(this);
         ThemeManager.ApplyTitleBar(this);
+        UpdateMaterialLabel();
     }
 
     protected override void OnDpiChanged(DpiChangedEventArgs e)
