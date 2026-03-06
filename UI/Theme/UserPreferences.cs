@@ -31,7 +31,7 @@ internal sealed class UserPreferences
                     ?? new UserPreferences();
             }
         }
-        catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException or SecurityException)
         {
             // Intentionally ignored: corrupt, missing, or unreadable file → fall back to defaults.
         }
