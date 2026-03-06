@@ -287,8 +287,9 @@ internal static class ThemeManager
         dgv.DefaultCellStyle.BackColor = Surface;
         dgv.DefaultCellStyle.ForeColor = Foreground;
         dgv.DefaultCellStyle.SelectionBackColor =
-            IsDarkMode ? Color.FromArgb(0, 80, 160) : Color.FromArgb(0, 120, 215);
-        dgv.DefaultCellStyle.SelectionForeColor = Color.White;
+            IsDarkMode ? Color.FromArgb(62, 68, 85) : Color.FromArgb(190, 205, 220);
+        dgv.DefaultCellStyle.SelectionForeColor =
+            IsDarkMode ? DarkForeground : LightForeground;
 
         dgv.AlternatingRowsDefaultCellStyle.BackColor =
             IsDarkMode ? Color.FromArgb(50, 50, 55) : Color.FromArgb(242, 245, 249);
@@ -296,6 +297,10 @@ internal static class ThemeManager
         dgv.ColumnHeadersDefaultCellStyle.BackColor =
             IsDarkMode ? Color.FromArgb(40, 40, 40) : Color.FromArgb(212, 222, 232);
         dgv.ColumnHeadersDefaultCellStyle.ForeColor = Foreground;
+        dgv.ColumnHeadersDefaultCellStyle.SelectionBackColor =
+            IsDarkMode ? Color.FromArgb(62, 68, 85) : Color.FromArgb(190, 205, 220);
+        dgv.ColumnHeadersDefaultCellStyle.SelectionForeColor =
+            IsDarkMode ? DarkForeground : LightForeground;
 
         dgv.GridColor =
             IsDarkMode ? Color.FromArgb(70, 70, 70) : Color.FromArgb(200, 210, 220);
