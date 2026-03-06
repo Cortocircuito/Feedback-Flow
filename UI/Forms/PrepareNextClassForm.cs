@@ -1,4 +1,5 @@
 using Feedback_Flow.Models;
+using Feedback_Flow.UI.Theme;
 
 namespace Feedback_Flow.UI.Forms;
 
@@ -27,6 +28,8 @@ public partial class PrepareNextClassForm : Form
             txtDescription.Text = existingSession.ClassDescription ?? string.Empty;
         }
 
+        ThemeManager.Apply(this);
+        ThemeManager.ApplyTitleBar(this);
         UpdateMaterialLabel();
     }
 
@@ -67,13 +70,13 @@ public partial class PrepareNextClassForm : Form
         if (string.IsNullOrEmpty(SelectedMaterial))
         {
             lblMaterialPath.Text = "No material assigned";
-            lblMaterialPath.ForeColor = Color.Gray;
+            lblMaterialPath.ForeColor = ThemeManager.Secondary;
             btnClearMaterial.Enabled = false;
         }
         else
         {
             lblMaterialPath.Text = Path.GetFileName(SelectedMaterial);
-            lblMaterialPath.ForeColor = SystemColors.ControlText;
+            lblMaterialPath.ForeColor = ThemeManager.Foreground;
             btnClearMaterial.Enabled = true;
         }
     }

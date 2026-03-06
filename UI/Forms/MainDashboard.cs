@@ -2,6 +2,7 @@ using System.ComponentModel;
 using Feedback_Flow.Helpers;
 using Feedback_Flow.Models;
 using Feedback_Flow.Services.Interfaces;
+using Feedback_Flow.UI.Theme;
 
 namespace Feedback_Flow.UI.Forms;
 
@@ -27,6 +28,10 @@ public sealed partial class MainDashboard : Form
     private Label? _lblSearchIcon;
     private List<Student> _allStudentsCache = new();
 
+    // Theme toggle (status-strip button)
+    private ToolStripButton _themeToggleButton;
+    private ToolStripStatusLabel _versionLabel;
+
     // Layout State
     private bool _searchLayoutActive = false;
 
@@ -49,6 +54,12 @@ public sealed partial class MainDashboard : Form
         InitializeDataGrid();
         InitializeSearchPanel();
         InitializeVersionLabel();
+        InitializeThemeToggle();
+
+        // Apply the persisted theme preference before the form is shown
+        var prefs = UserPreferences.Load();
+        ThemeManager.SetDarkMode(prefs.DarkMode);
+        ApplyCurrentTheme();
     }
 
     private void InitializeVersionLabel()
@@ -84,17 +95,83 @@ public sealed partial class MainDashboard : Form
         }
 
         // Create version label
-        var versionLabel = new ToolStripStatusLabel
+        _versionLabel = new ToolStripStatusLabel
         {
             Text = $"v{displayVersion}",
-            ForeColor = Color.Gray,
+            ForeColor = ThemeManager.Secondary,
             Font = new Font("Segoe UI", 9f),
             Margin = new Padding(0, 0, 10, 0),
             ToolTipText = tooltipText
         };
 
         statusStrip1.Items.Add(springLabel);
-        statusStrip1.Items.Add(versionLabel);
+        statusStrip1.Items.Add(_versionLabel);
+    }
+
+    private void InitializeThemeToggle()
+    {
+        _themeToggleButton = new ToolStripButton
+        {
+            DisplayStyle = ToolStripItemDisplayStyle.Text,
+            Font = new Font("Segoe UI Emoji", 9.5f),
+            AutoSize = true,
+            Margin = new Padding(0, 0, 8, 0)
+        };
+        _themeToggleButton.Click += ThemeToggle_Click;
+        // Insert before the version label (last item) so layout is:
+        //   [status] [spring] [🌙 Dark] [v1.x]
+        statusStrip1.Items.Insert(statusStrip1.Items.Count - 1, _themeToggleButton);
+    }
+
+    private void ThemeToggle_Click(object sender, EventArgs e)
+    {
+        bool newDark = !ThemeManager.IsDarkMode;
+        ThemeManager.SetDarkMode(newDark);
+        ApplyCurrentTheme();
+        new UserPreferences { DarkMode = newDark }.Save();
+    }
+
+    /// <summary>
+    /// Applies the current theme to all controls, then restores the semantic
+    /// colours that the generic pass overwrote (mode indicator, description panel).
+    /// </summary>
+    private void ApplyCurrentTheme()
+    {
+        ThemeManager.Apply(this);
+
+        // Restore semantic colours for the mode-indicator banner
+        if (_showAllStudents)
+            UpdateModeIndicator(true);
+        else
+            UpdateDayModeIndicator(dtpClassDate.Value.Date);
+
+        // Restore description-panel colours
+        var (descBack, descFore) = ThemeManager.DescriptionColors;
+        panelClassDescription.BackColor = descBack;
+        lblDescriptionTitle.ForeColor   = descFore;
+        txtDescriptionView.BackColor    = descBack;
+        txtDescriptionView.ForeColor    = descFore;
+
+        // Restore inline search-panel colours
+        if (_panelSearch != null)
+            _panelSearch.BackColor = ThemeManager.Background;
+        if (_btnClearSearch != null)
+            _btnClearSearch.BackColor = ThemeManager.FlatButtonBackground;
+
+        UpdateThemeToggleButton();
+        ThemeManager.ApplyTitleBar(this);
+    }
+
+    private void UpdateThemeToggleButton()
+    {
+        if (_themeToggleButton == null) return;
+        bool isDark = ThemeManager.IsDarkMode;
+        _themeToggleButton.Text        = isDark ? "☀️ Light" : "🌙 Dark";
+        _themeToggleButton.ToolTipText = isDark ? "Switch to Light Mode" : "Switch to Dark Mode";
+        _themeToggleButton.BackColor   = ThemeManager.StatusBarBackground;
+        _themeToggleButton.ForeColor   = ThemeManager.Foreground;
+        if (_versionLabel != null)
+            _versionLabel.ForeColor = ThemeManager.Secondary;
     }
 
     #region Initialization
@@ -448,12 +525,13 @@ public sealed partial class MainDashboard : Form
     {
         if (showingAll)
         {
-            panelModeIndicator.BackColor = Color.FromArgb(227, 242, 253); // Light Blue
-            lblModeIcon.Text = "👥";
-            lblModeTitle.Text = "Viewing ALL students (all days)";
-            lblModeTitle.ForeColor = Color.FromArgb(21, 101, 192); // Dark Blue
-            lblModeDescription.Text = "Day-specific actions are disabled";
-            lblModeDescription.ForeColor = Color.FromArgb(21, 101, 192);
+            var (back, fore) = ThemeManager.AllStudentsColors;
+            panelModeIndicator.BackColor  = back;
+            lblModeIcon.Text              = "👥";
+            lblModeTitle.Text             = "Viewing ALL students (all days)";
+            lblModeTitle.ForeColor        = fore;
+            lblModeDescription.Text       = "Day-specific actions are disabled";
+            lblModeDescription.ForeColor  = fore;
         }
         else
         {
@@ -495,17 +573,19 @@ public sealed partial class MainDashboard : Form
 
         if (isToday)
         {
-            panelModeIndicator.BackColor = Color.FromArgb(232, 245, 233); // Light Green
-            lblModeTitle.ForeColor = Color.FromArgb(46, 125, 50); // Dark Green
-            lblModeDescription.Text = "Ready to manage today's class";
-            lblModeDescription.ForeColor = Color.FromArgb(46, 125, 50);
+            var (back, fore) = ThemeManager.TodayColors;
+            panelModeIndicator.BackColor  = back;
+            lblModeTitle.ForeColor        = fore;
+            lblModeDescription.Text       = "Ready to manage today's class";
+            lblModeDescription.ForeColor  = fore;
         }
         else
         {
-            panelModeIndicator.BackColor = Color.FromArgb(255, 253, 231); // Amber / light yellow
-            lblModeTitle.ForeColor = Color.FromArgb(245, 124, 0); // Orange-amber
-            lblModeDescription.Text = "Viewing a previous class session — read-only history";
-            lblModeDescription.ForeColor = Color.FromArgb(245, 124, 0);
+            var (back, fore) = ThemeManager.HistoricalColors;
+            panelModeIndicator.BackColor  = back;
+            lblModeTitle.ForeColor        = fore;
+            lblModeDescription.Text       = "Viewing a previous class session — read-only history";
+            lblModeDescription.ForeColor  = fore;
         }
     }
 
@@ -914,14 +994,14 @@ public sealed partial class MainDashboard : Form
                 }
                 else
                 {
-                    lblStatus.ForeColor = SystemColors.ControlText;
+                    lblStatus.ForeColor = ThemeManager.Foreground;
                     UpdateStatus(
                         $"Found {_allStudentsList.Count} of {_allStudentsCache.Count} students");
                 }
             }
             else
             {
-                lblStatus.ForeColor = SystemColors.ControlText;
+                lblStatus.ForeColor = ThemeManager.Foreground;
                 UpdateStatus(
                     $"Viewing all students ({_allStudentsList.Count} total) - Day-specific columns hidden");
             }
