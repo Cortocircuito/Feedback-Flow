@@ -7,5 +7,6 @@ public interface IEmailService
     /// <summary>
     /// Opens a new email draft with the recipient, subject, and attachments pre-filled.
     /// </summary>
-    void DraftEmail(StudentSessionView session, string studentPdfPath);
+    /// <param name="feedbackReportPath">Absolute path to the generated feedback report (PDF) to attach.</param>
+    void DraftEmail(StudentSessionView session, string feedbackReportPath);
 }

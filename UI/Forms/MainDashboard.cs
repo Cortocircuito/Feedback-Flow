@@ -931,9 +931,9 @@ public sealed partial class MainDashboard : Form
         string studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, student);
         string content = _fileService.GetStudentNoteContent(studentFolder) ??
                          "No specific notes found for this student.";
-        string studentPdfPath = _pdfService.GenerateStudentPdf(session, content, studentFolder);
+        string feedbackReportPath = _pdfService.GenerateStudentPdf(session, content, studentFolder);
 
-        _emailService.DraftEmail(session, studentPdfPath);
+        _emailService.DraftEmail(session, feedbackReportPath);
     }
 
     #endregion

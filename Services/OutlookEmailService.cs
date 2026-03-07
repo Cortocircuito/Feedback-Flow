@@ -8,13 +8,13 @@ namespace Feedback_Flow.Services;
 
 public class OutlookEmailService : IEmailService
 {
-    public void DraftEmail(StudentSessionView session, string studentPdfPath)
+    public void DraftEmail(StudentSessionView session, string feedbackReportPath)
     {
         if (session == null) throw new ArgumentNullException(nameof(session));
-        if (string.IsNullOrWhiteSpace(studentPdfPath))
-            throw new ArgumentNullException(nameof(studentPdfPath));
-        if (!File.Exists(studentPdfPath))
-            throw new FileNotFoundException("Student PDF not found", studentPdfPath);
+        if (string.IsNullOrWhiteSpace(feedbackReportPath))
+            throw new ArgumentNullException(nameof(feedbackReportPath));
+        if (!File.Exists(feedbackReportPath))
+            throw new FileNotFoundException("Feedback report file not found", feedbackReportPath);
 
         string learningMaterialPath = session.AssignedMaterial ?? string.Empty;
 
@@ -37,7 +37,7 @@ public class OutlookEmailService : IEmailService
             if (!string.IsNullOrWhiteSpace(learningMaterialPath) && File.Exists(learningMaterialPath))
                 builder.Attachments.Add(learningMaterialPath);
 
-            builder.Attachments.Add(studentPdfPath);
+            builder.Attachments.Add(feedbackReportPath);
             message.Body = builder.ToMessageBody();
 
             string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);

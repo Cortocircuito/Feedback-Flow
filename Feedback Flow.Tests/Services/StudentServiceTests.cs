@@ -159,9 +159,9 @@ public class StudentServiceTests
     [Fact]
     public async Task UpdateSessionMaterialAsync_DelegatesToDatabase()
     {
-        await _sut.UpdateSessionMaterialAsync(3, "/path/to/material.pdf");
+        await _sut.UpdateSessionMaterialAsync(3, "/path/to/material.docx");
 
-        await _db.Received(1).UpdateSessionMaterialAsync(3, "/path/to/material.pdf");
+        await _db.Received(1).UpdateSessionMaterialAsync(3, "/path/to/material.docx");
     }
 
     // -------------------------------------------------------------------------
@@ -174,9 +174,9 @@ public class StudentServiceTests
         var date = new DateTime(2024, 3, 15);
         _db.EnsureSessionForStudentAsync(1, date).Returns(10);
 
-        await _sut.SaveNextClassPlanAsync(1, date, "material.pdf", "description");
+        await _sut.SaveNextClassPlanAsync(1, date, "material.pptx", "description");
 
         await _db.Received(1).EnsureSessionForStudentAsync(1, date);
-        await _db.Received(1).UpdateSessionPlanAsync(10, "material.pdf", "description");
+        await _db.Received(1).UpdateSessionPlanAsync(10, "material.pptx", "description");
     }
 }
