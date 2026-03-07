@@ -143,11 +143,20 @@ versioning follows [Semantic Versioning](https://semver.org/).
 
 | Column | Type | Description |
 |---|---|---|
-| `Id` | `INTEGER PRIMARY KEY` | Auto-increment unique identifier |
+| `Id` | `INTEGER PRIMARY KEY AUTOINCREMENT` | Auto-increment unique identifier |
 | `FullName` | `TEXT NOT NULL` | Student's full name |
 | `Email` | `TEXT NOT NULL UNIQUE` | Student's email address |
-| `ClassDay` | `TEXT` | Comma-separated class days (e.g. `"Monday,Wednesday"`) |
-| `AssignedMaterial` | `TEXT` | Absolute path to the assigned learning material file |
-| `AttendedClass` | `INTEGER` | Daily attendance flag (`0` = absent, `1` = present) |
-| `CreatedAt` | `TEXT` | ISO 8601 creation timestamp |
-| `UpdatedAt` | `TEXT` | ISO 8601 last-modified timestamp |
+| `ClassDay` | `TEXT NOT NULL DEFAULT ''` | Comma-separated class days (e.g. `"Monday,Wednesday"`) |
+| `CreatedAt` | `TEXT NOT NULL` | ISO 8601 creation timestamp |
+
+**Table**: `ClassSessions`
+
+| Column | Type | Description |
+|---|---|---|
+| `Id` | `INTEGER PRIMARY KEY AUTOINCREMENT` | Auto-increment session identifier |
+| `StudentId` | `INTEGER NOT NULL` | Foreign key referencing `Students.Id` |
+| `ClassDate` | `TEXT NOT NULL` | Date of the class session (YYYY-MM-DD) |
+| `Attended` | `INTEGER NOT NULL DEFAULT 0` | Attendance flag (`0` = absent, `1` = present) |
+| `AssignedMaterial` | `TEXT NULL` | Absolute path to assigned learning material file |
+| `FeedbackNotePath` | `TEXT NULL` | Path to the student's feedback notes |
+| `ClassDescription` | `TEXT NULL` | Description of the class session |

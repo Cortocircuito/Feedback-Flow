@@ -166,7 +166,7 @@ On first launch, the application will:
 - ✅ **Repository Pattern**: Abstracted data access through service interfaces
 
 ### Project Structure
-```
+```text
 Feedback Flow/
 ├── Services/
 │   ├── Interfaces/           # Service contracts
@@ -177,10 +177,15 @@ Feedback Flow/
 │   ├── NoteService.cs        # Feedback note management
 │   ├── PdfGenerationService.cs  # PDF conversion
 │   └── OutlookEmailService.cs   # Email draft generation
+├── UI/
+│   ├── Forms/                # WinForms UI components
+│   │   ├── MainDashboard.cs  # Main application window
+│   │   ├── PrepareNextClassForm.cs # Next class planner dialog
+│   │   └── StudentForm.cs    # Student add/edit dialog
+│   └── Theme/                # Dark Mode and styling logic
 ├── Models/                   # Data models
 ├── Helpers/                  # Utility classes
-├── MainDashboard.cs          # Main application window
-├── StudentForm.cs            # Student add/edit dialog
+├── Assets/                   # Icons and screenshots
 └── Program.cs                # Application entry point
 ```
 
