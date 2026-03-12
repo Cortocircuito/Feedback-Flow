@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Feedback_Flow.Models;
 using Feedback_Flow.Services.Interfaces;
+using Avalonia.Controls;
 
 namespace FeedbackFlow.Avalonia.ViewModels;
 
@@ -21,6 +23,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private List<Student> _allStudentsCache = new();
     private List<StudentSessionView> _allSessions = new();
     private string _dailyFolderPath = string.Empty;
+    private Window? _mainWindow;
 
     [ObservableProperty]
     private ObservableCollection<StudentSessionView> _sessions = new();
@@ -35,7 +38,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private Student? _selectedStudent;
 
     [ObservableProperty]
-    private DateTime _selectedDate = DateTime.Today;
+    private DateTimeOffset _selectedDate = DateTimeOffset.Now;
 
     [ObservableProperty]
     private bool _showAllStudents;
@@ -92,13 +95,19 @@ public partial class MainWindowViewModel : ViewModelBase
         InitializeAsync();
     }
 
+    public void SetMainWindow(Window window)
+    {
+        _mainWindow = window;
+    }
+
     private async void InitializeAsync()
     {
         try
         {
             _dailyFolderPath = _fileService.InitializeDailyFolder(DateTime.Today);
             
-            VersionText = $"v{GetType().Assembly.GetName().Version?.ToString(3) ?? "1.0.0"}";
+            var version = GetType().Assembly.GetName().Version;
+            VersionText = $"v{version?.ToString(3) ?? "1.0.0"}";
             
             await LoadDataAsync();
             UpdateModeDisplay();
@@ -120,14 +129,14 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         else
         {
-            var selectedDate = SelectedDate;
+            var selectedDate = SelectedDate.DateTime.Date;
             _allSessions = await _studentService.GetSessionViewsAsync(selectedDate);
             Sessions = new ObservableCollection<StudentSessionView>(_allSessions);
             UpdateDescriptionPanel();
         }
     }
 
-    partial void OnSelectedDateChanged(DateTime value)
+    partial void OnSelectedDateChanged(DateTimeOffset value)
     {
         if (!ShowAllStudents)
         {
@@ -176,7 +185,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void UpdateModeDisplay()
     {
-        var isToday = SelectedDate.Date == DateTime.Today;
+        var isToday = SelectedDate.DateTime.Date == DateTime.Today;
         
         if (ShowAllStudents)
         {
@@ -185,8 +194,8 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         else
         {
-            var dayName = _studentService.GetDayOfWeek(SelectedDate);
-            var dateLabel = isToday ? dayName : $"{dayName} ({SelectedDate:dd MMM yyyy})";
+            var dayName = _studentService.GetDayOfWeek(SelectedDate.DateTime.Date);
+            var dateLabel = isToday ? dayName : $"{dayName} ({SelectedDate.DateTime.Date:dd MMM yyyy})";
             ModeTitle = $"Showing students for: {dateLabel}";
             ModeDescription = isToday ? "Ready to manage today's class" : "Viewing a previous class session";
         }
@@ -194,7 +203,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void UpdateButtonStates()
     {
-        var isToday = SelectedDate.Date == DateTime.Today;
+        var isToday = SelectedDate.DateTime.Date == DateTime.Today;
         
         if (ShowAllStudents)
         {
@@ -231,70 +240,139 @@ public partial class MainWindowViewModel : ViewModelBase
     private void UpdateStatus(string message) => StatusMessage = message;
 
     [RelayCommand]
-    private async Task ToggleFilter()
+    private Task ToggleFilter()
     {
         ShowAllStudents = !ShowAllStudents;
         SearchText = string.Empty;
+        return Task.CompletedTask;
     }
 
     [RelayCommand]
     private async Task AddStudent()
     {
-        UpdateStatus("Add student dialog not yet implemented");
+        if (_mainWindow == null) return;
+
+        var dialog = new Views.StudentDialog();
+        var result = await dialog.ShowDialog<bool>(_mainWindow);
+        
+        if (result)
+        {
+            var newStudent = new Student
+            {
+                FullName = dialog.StudentFullName,
+                Email = dialog.StudentEmail,
+                ClassDay = dialog.ClassDays
+            };
+
+            if (IsEmailDuplicate(newStudent.Email))
+            {
+                UpdateStatus("Student with this email already exists.");
+                return;
+            }
+
+            await _studentService.AddStudentAsync(newStudent);
+            await LoadDataAsync();
+            UpdateStatus($"Added {newStudent.FullName}");
+        }
     }
 
     [RelayCommand]
     private async Task UpdateStudent()
     {
-        if (SelectedStudent == null)
+        if (_mainWindow == null || SelectedStudent == null) return;
+
+        var dialog = new Views.StudentDialog(SelectedStudent);
+        var result = await dialog.ShowDialog<bool>(_mainWindow);
+        
+        if (result)
         {
-            UpdateStatus("Please select a student first.");
-            return;
+            var updatedStudent = new Student
+            {
+                FullName = dialog.StudentFullName,
+                Email = dialog.StudentEmail,
+                ClassDay = dialog.ClassDays
+            };
+
+            if (IsEmailChanged(SelectedStudent, updatedStudent) && IsEmailDuplicate(updatedStudent.Email))
+            {
+                UpdateStatus("Another student with this email already exists.");
+                return;
+            }
+
+            await _studentService.UpdateStudentAsync(SelectedStudent, updatedStudent);
+            await LoadDataAsync();
+            UpdateStatus($"Updated {updatedStudent.FullName}");
         }
-        UpdateStatus("Update student dialog not yet implemented");
     }
 
     [RelayCommand]
     private async Task RemoveStudent()
     {
-        if (SelectedStudent == null)
-        {
-            UpdateStatus("Please select a student first.");
-            return;
-        }
-        UpdateStatus("Remove student not yet implemented");
+        if (SelectedStudent == null) return;
+
+        await _studentService.DeleteStudentAsync(SelectedStudent);
+        await LoadDataAsync();
+        UpdateStatus($"Removed {SelectedStudent.FullName}");
     }
 
     [RelayCommand]
     private async Task ToggleAttendance(StudentSessionView session)
     {
-        try
-        {
-            await _studentService.MarkAttendanceAsync(session.SessionId, session.Attended);
-            UpdateStatus($"Marked {session.FullName}: {(session.Attended ? "Present" : "Absent")}");
-        }
-        catch (Exception ex)
-        {
-            UpdateStatus($"Error updating attendance: {ex.Message}");
-        }
+        await _studentService.MarkAttendanceAsync(session.SessionId, session.Attended);
+        UpdateStatus($"Marked {session.FullName}: {(session.Attended ? "Present" : "Absent")}");
     }
 
     [RelayCommand]
     private async Task AssignMaterial()
     {
-        UpdateStatus("Assign material not yet implemented");
+        if (!CanAssignMaterial || SelectedSession == null) return;
+        UpdateStatus("Use file picker to select material (feature coming soon)");
     }
 
     [RelayCommand]
     private async Task UnassignMaterial()
     {
-        UpdateStatus("Unassign material not yet implemented");
+        if (!CanAssignMaterial || SelectedSession == null) return;
+
+        if (string.IsNullOrWhiteSpace(SelectedSession.AssignedMaterial))
+        {
+            UpdateStatus($"{SelectedSession.FullName} has no material assigned.");
+            return;
+        }
+
+        await _studentService.UpdateSessionMaterialAsync(SelectedSession.SessionId, null);
+        SelectedSession.AssignedMaterial = null;
+        UpdateStatus($"Unassigned material from {SelectedSession.FullName}");
     }
 
     [RelayCommand]
     private async Task ViewMaterial()
     {
-        UpdateStatus("View material not yet implemented");
+        if (SelectedSession == null || string.IsNullOrWhiteSpace(SelectedSession.AssignedMaterial))
+        {
+            UpdateStatus("No material assigned.");
+            return;
+        }
+
+        if (!File.Exists(SelectedSession.AssignedMaterial))
+        {
+            UpdateStatus($"File not found: {SelectedSession.AssignedMaterial}");
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = SelectedSession.AssignedMaterial,
+                UseShellExecute = true
+            });
+            UpdateStatus($"Opened material for {SelectedSession.FullName}");
+        }
+        catch (Exception ex)
+        {
+            UpdateStatus($"Error opening file: {ex.Message}");
+        }
     }
 
     [RelayCommand]
@@ -312,7 +390,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 ClassDay = SelectedSession.ClassDay
             };
             var studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, student);
-            await _noteService.OpenOrCreateNotesAsync(studentFolder, SelectedSession.FullName, SelectedDate);
+            await _noteService.OpenOrCreateNotesAsync(studentFolder, SelectedSession.FullName, SelectedDate.DateTime.Date);
         }
         catch (DirectoryNotFoundException)
         {
@@ -323,7 +401,31 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task PrepareNextClass()
     {
-        UpdateStatus("Prepare next class dialog not yet implemented");
+        if (SelectedSession == null || _mainWindow == null) return;
+
+        var referenceDate = SelectedDate.DateTime.Date < DateTime.Today ? DateTime.Today : SelectedDate.DateTime.Date;
+        var nextDate = ComputeNextClassDate(SelectedSession.ClassDay, referenceDate);
+        
+        if (nextDate == null)
+        {
+            UpdateStatus($"The next class date for {SelectedSession.FullName} could not be determined.");
+            return;
+        }
+
+        var existingSession = await _studentService.GetNextClassSessionAsync(SelectedSession.StudentId, nextDate.Value);
+
+        var dialog = new Views.PrepareClassDialog(SelectedSession.FullName, nextDate.Value, existingSession);
+        var result = await dialog.ShowDialog<bool>(_mainWindow);
+
+        if (result)
+        {
+            await _studentService.SaveNextClassPlanAsync(
+                SelectedSession.StudentId, 
+                nextDate.Value, 
+                dialog.SelectedMaterial, 
+                dialog.ClassDescription);
+            UpdateStatus($"Next class prepared for {SelectedSession.FullName} ({nextDate.Value:dd MMM yyyy}).");
+        }
     }
 
     [RelayCommand]

@@ -33,10 +33,11 @@ public partial class App : Application
             ConfigureServices(services);
             Services = services.BuildServiceProvider();
             
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = Services.GetRequiredService<MainWindowViewModel>(),
-            };
+            var mainWindow = new MainWindow();
+            var viewModel = Services.GetRequiredService<MainWindowViewModel>();
+            viewModel.SetMainWindow(mainWindow);
+            mainWindow.DataContext = viewModel;
+            desktop.MainWindow = mainWindow;
         }
 
         base.OnFrameworkInitializationCompleted();

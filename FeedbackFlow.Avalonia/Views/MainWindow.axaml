@@ -83,6 +83,9 @@
                       BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
                       IsVisible="{Binding !ShowAllStudents}">
                 <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Binding="{Binding Attended, Mode=TwoWay}" 
+                                            Header="Attended" 
+                                            Width="70"/>
                     <DataGridTextColumn Binding="{Binding FullName}" 
                                         Header="Student" 
                                         Width="*"
@@ -90,6 +93,10 @@
                     <DataGridTextColumn Binding="{Binding ClassDay}" 
                                         Header="Class Day(s)" 
                                         Width="120"
+                                        IsReadOnly="True"/>
+                    <DataGridTextColumn Binding="{Binding AssignedMaterial}" 
+                                        Header="Learning Material" 
+                                        Width="180"
                                         IsReadOnly="True"/>
                 </DataGrid.Columns>
             </DataGrid>
@@ -191,7 +198,7 @@
                 <Button Grid.Column="0" 
                         Command="{Binding ToggleFilterCommand}"
                         Padding="16,8"
-                        Content="Toggle View"/>
+                        Content="Show All Students"/>
 
                 <!-- Date Picker (hidden in Show All mode) -->
                 <CalendarDatePicker Grid.Column="2" 
