@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
@@ -26,6 +28,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private List<StudentSessionView> _allSessions = new();
     private string _dailyFolderPath = string.Empty;
     private Window? _mainWindow;
+    private CancellationTokenSource? _statusCts;
 
     [ObservableProperty]
     private ObservableCollection<StudentSessionView> _sessions = new();
@@ -87,7 +90,18 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _canAssignMaterial;
 
+    // D1: Loading indicator
+    [ObservableProperty]
+    private bool _isLoading;
+
+    // D2: Empty state message
+    [ObservableProperty]
+    private string _emptyStateMessage = string.Empty;
+
     public bool IsDayViewMode => IsTodayMode || IsHistoryMode;
+
+    // D2: Computed empty state visibility
+    public bool IsEmptyState => !IsLoading && IsDayViewMode && Sessions.Count == 0;
 
     public IBrush ModeBannerBrush
     {
@@ -102,6 +116,12 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     public DateTime MaxSelectableDate => DateTime.Today;
+
+    // D4: Theme preference file path
+    private static string ThemeFilePath =>
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            "Feedback-Flow", ".theme");
 
     public MainWindowViewModel(
         IStudentService studentService,
@@ -133,6 +153,9 @@ public partial class MainWindowViewModel : ViewModelBase
             var version = GetType().Assembly.GetName().Version;
             VersionText = $"v{version?.ToString(3) ?? "1.0.0"}";
 
+            // D4 + E: Load saved theme or sync with system theme
+            LoadSavedTheme();
+
             await LoadDataAsync();
             UpdateModeDisplay();
             UpdateStatus($"Ready. Showing students for {_studentService.GetDayOfWeek(DateTime.Today)}.");
@@ -143,22 +166,73 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    // D4: Load persisted theme; fall back to actual system theme (E fix)
+    private void LoadSavedTheme()
+    {
+        try
+        {
+            if (File.Exists(ThemeFilePath))
+            {
+                var saved = File.ReadAllText(ThemeFilePath).Trim();
+                IsDarkMode = saved == "dark";
+                if (Avalonia.Application.Current != null)
+                    Avalonia.Application.Current.RequestedThemeVariant = IsDarkMode
+                        ? Avalonia.Styling.ThemeVariant.Dark
+                        : Avalonia.Styling.ThemeVariant.Light;
+                return;
+            }
+        }
+        catch { /* best-effort */ }
+
+        // E: Sync IsDarkMode with the actual resolved theme so first toggle does something visible
+        if (Avalonia.Application.Current != null)
+            IsDarkMode = Avalonia.Application.Current.ActualThemeVariant ==
+                         Avalonia.Styling.ThemeVariant.Dark;
+    }
+
+    // D4: Persist theme preference to disk
+    private void PersistTheme()
+    {
+        try
+        {
+            var dir = Path.GetDirectoryName(ThemeFilePath)!;
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            File.WriteAllText(ThemeFilePath, IsDarkMode ? "dark" : "light");
+        }
+        catch { /* best-effort */ }
+    }
+
     private async Task LoadDataAsync()
     {
-        if (ShowAllStudents)
+        // D1: Show loading indicator
+        IsLoading = true;
+        try
         {
-            _allStudentsCache = await _studentService.GetAllStudentsAsync();
-            AllStudents = new ObservableCollection<Student>(_allStudentsCache);
-            FilterBySearch();
+            if (ShowAllStudents)
+            {
+                _allStudentsCache = await _studentService.GetAllStudentsAsync();
+                AllStudents = new ObservableCollection<Student>(_allStudentsCache);
+                FilterBySearch();
+            }
+            else
+            {
+                var selectedDate = SelectedDate?.Date ?? DateTime.Today;
+                _allSessions = await _studentService.GetSessionViewsAsync(selectedDate);
+                Sessions = new ObservableCollection<StudentSessionView>(_allSessions);
+                OnPropertyChanged(nameof(IsEmptyState));
+                UpdateDescriptionPanel();
+            }
         }
-        else
+        finally
         {
-            var selectedDate = SelectedDate?.Date ?? DateTime.Today;
-            _allSessions = await _studentService.GetSessionViewsAsync(selectedDate);
-            Sessions = new ObservableCollection<StudentSessionView>(_allSessions);
-            UpdateDescriptionPanel();
+            IsLoading = false;
         }
     }
+
+    // D1+D2: Notify IsEmptyState when IsLoading or Sessions change
+    partial void OnIsLoadingChanged(bool value) => OnPropertyChanged(nameof(IsEmptyState));
+    partial void OnSessionsChanged(ObservableCollection<StudentSessionView> value) =>
+        OnPropertyChanged(nameof(IsEmptyState));
 
     partial void OnSelectedDateChanged(DateTime? value)
     {
@@ -174,6 +248,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(IsDayViewMode));
         OnPropertyChanged(nameof(ModeBannerBrush));
+        OnPropertyChanged(nameof(IsEmptyState));
         UpdateModeDisplay();
         _ = LoadDataAsync();
     }
@@ -182,12 +257,14 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(IsDayViewMode));
         OnPropertyChanged(nameof(ModeBannerBrush));
+        OnPropertyChanged(nameof(IsEmptyState));
     }
 
     partial void OnIsHistoryModeChanged(bool value)
     {
         OnPropertyChanged(nameof(IsDayViewMode));
         OnPropertyChanged(nameof(ModeBannerBrush));
+        OnPropertyChanged(nameof(IsEmptyState));
     }
 
     partial void OnSearchTextChanged(string value)
@@ -232,6 +309,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             ModeTitle = "All Students";
             ModeDescription = "Manage student records";
+            EmptyStateMessage = string.Empty;
         }
         else
         {
@@ -239,6 +317,8 @@ public partial class MainWindowViewModel : ViewModelBase
             var dateLabel = isToday ? dayName : $"{dayName} ({date:dd MMM yyyy})";
             ModeTitle = $"Showing students for: {dateLabel}";
             ModeDescription = isToday ? "Ready to manage today's class" : "Viewing a previous class session";
+            // D2: Context-appropriate empty state message
+            EmptyStateMessage = $"No students scheduled for {dayName}";
         }
     }
 
@@ -279,7 +359,17 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private void UpdateStatus(string message) => StatusMessage = message;
+    // D3: Auto-clear status bar after 5 seconds
+    private void UpdateStatus(string message)
+    {
+        StatusMessage = message;
+        _statusCts?.Cancel();
+        _statusCts = new CancellationTokenSource();
+        var token = _statusCts.Token;
+        _ = Task.Delay(5000, token).ContinueWith(
+            _ => Avalonia.Threading.Dispatcher.UIThread.Post(() => StatusMessage = string.Empty),
+            TaskContinuationOptions.OnlyOnRanToCompletion);
+    }
 
     [RelayCommand]
     private void NavigateToToday()
@@ -377,10 +467,15 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    // B: Confirm before removing a student
     [RelayCommand]
     private async Task RemoveStudent()
     {
-        if (SelectedStudent == null) return;
+        if (_mainWindow == null || SelectedStudent == null) return;
+
+        var dialog = new Views.ConfirmDialog(
+            $"Remove {SelectedStudent.FullName}?\n\nThis will also delete all their session history.");
+        if (!await dialog.ShowDialog<bool>(_mainWindow)) return;
 
         await _studentService.DeleteStudentAsync(SelectedStudent);
         await LoadDataAsync();
@@ -421,7 +516,7 @@ public partial class MainWindowViewModel : ViewModelBase
             var path = result[0].Path.LocalPath;
             await _studentService.UpdateSessionMaterialAsync(SelectedSession.SessionId, path);
             SelectedSession.AssignedMaterial = path;
-            UpdateStatus($"Assigned material to {SelectedSession.FullName}: {System.IO.Path.GetFileName(path)}");
+            UpdateStatus($"Assigned material to {SelectedSession.FullName}: {Path.GetFileName(path)}");
         }
     }
 
@@ -558,6 +653,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    // D4 + E: Toggle theme, persist preference
     [RelayCommand]
     private void ToggleTheme()
     {
@@ -566,6 +662,7 @@ public partial class MainWindowViewModel : ViewModelBase
             Avalonia.Application.Current.RequestedThemeVariant = IsDarkMode
                 ? Avalonia.Styling.ThemeVariant.Dark
                 : Avalonia.Styling.ThemeVariant.Light;
+        PersistTheme();
     }
 
     [RelayCommand]

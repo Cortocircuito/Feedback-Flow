@@ -1,14 +1,19 @@
 <Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:FeedbackFlow.App.ViewModels"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
-        x:Class="FeedbackFlow.App.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
-        Title="Feedback Flow"
-        Width="1100" Height="700"
-        MinWidth="900" MinHeight="600">
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+       xmlns:vm="using:FeedbackFlow.App.ViewModels"
+       xmlns:conv="using:FeedbackFlow.App.Converters"
+       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+       mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
+       x:Class="FeedbackFlow.App.Views.MainWindow"
+       x:DataType="vm:MainWindowViewModel"
+       Title="Feedback Flow"
+       Width="1100" Height="700"
+       MinWidth="900" MinHeight="600">
+
+    <Window.Resources>
+        <conv:FileNameConverter x:Key="FileNameConverter"/>
+    </Window.Resources>
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
@@ -94,7 +99,7 @@
         </Border>
 
         <!-- ═══════════ CONTENT ═══════════ -->
-        <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*,Auto,Auto">
+        <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto,*,Auto,Auto">
 
             <!-- Row 0: Mode Banner -->
             <Border Grid.Row="0"
@@ -114,8 +119,14 @@
                 </StackPanel>
             </Border>
 
-            <!-- Row 1: Top Bar (DatePicker or Search) -->
-            <Border Grid.Row="1" Padding="16,10,16,6">
+            <!-- Row 1: Loading Indicator -->
+            <ProgressBar Grid.Row="1"
+                         IsIndeterminate="True"
+                         Height="3"
+                         IsVisible="{Binding IsLoading}"/>
+
+            <!-- Row 2: Top Bar (DatePicker or Search) -->
+            <Border Grid.Row="2" Padding="16,10,16,6">
                 <Panel>
                     <!-- DatePicker for day modes -->
                     <CalendarDatePicker SelectedDate="{Binding SelectedDate}"
@@ -138,8 +149,8 @@
                 </Panel>
             </Border>
 
-            <!-- Row 2: DataGrid area -->
-            <Grid Grid.Row="2" RowDefinitions="*,Auto" Margin="16,0,16,0">
+            <!-- Row 3: DataGrid area -->
+            <Grid Grid.Row="3" RowDefinitions="*,Auto" Margin="16,0,16,0">
                 <Panel Grid.Row="0">
                     <!-- Sessions DataGrid (Today / History modes) -->
                     <DataGrid ItemsSource="{Binding Sessions}"
@@ -153,9 +164,17 @@
                               BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
                               IsVisible="{Binding IsDayViewMode}">
                         <DataGrid.Columns>
-                            <DataGridCheckBoxColumn Binding="{Binding Attended, Mode=TwoWay}"
-                                                    Header="Attended"
-                                                    Width="70"/>
+                            <!-- A: Template column so checkbox fires ToggleAttendanceCommand -->
+                            <DataGridTemplateColumn Header="Attended" Width="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:CompileBindings="False">
+                                        <CheckBox IsChecked="{Binding Attended, Mode=TwoWay}"
+                                                  Command="{Binding $parent[Window].DataContext.ToggleAttendanceCommand}"
+                                                  CommandParameter="{Binding}"
+                                                  HorizontalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Binding="{Binding FullName}"
                                                 Header="Student"
                                                 Width="*"
@@ -164,12 +183,27 @@
                                                 Header="Class Day(s)"
                                                 Width="120"
                                                 IsReadOnly="True"/>
-                            <DataGridTextColumn Binding="{Binding AssignedMaterial}"
-                                                Header="Learning Material"
-                                                Width="180"
-                                                IsReadOnly="True"/>
+                            <!-- C: Show filename only; tooltip shows full path -->
+                            <DataGridTemplateColumn Header="Learning Material" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:CompileBindings="False">
+                                        <TextBlock Text="{Binding AssignedMaterial, Converter={StaticResource FileNameConverter}}"
+                                                   ToolTip.Tip="{Binding AssignedMaterial}"
+                                                   VerticalAlignment="Center"
+                                                   Padding="12,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
+
+                    <!-- D2: Empty state message overlay -->
+                    <TextBlock IsVisible="{Binding IsEmptyState}"
+                               Text="{Binding EmptyStateMessage}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Opacity="0.5"
+                               FontSize="14"/>
 
                     <!-- All Students DataGrid -->
                     <DataGrid ItemsSource="{Binding AllStudents}"
@@ -216,8 +250,8 @@
                 </Border>
             </Grid>
 
-            <!-- Row 3: Action Toolbar -->
-            <Border Grid.Row="3"
+            <!-- Row 4: Action Toolbar -->
+            <Border Grid.Row="4"
                     Padding="12,8"
                     Background="{DynamicResource SystemControlBackgroundAltMediumHighBrush}">
                 <Panel>
@@ -270,8 +304,8 @@
                 </Panel>
             </Border>
 
-            <!-- Row 4: Status Bar -->
-            <Border Grid.Row="4"
+            <!-- Row 5: Status Bar -->
+            <Border Grid.Row="5"
                     Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
                     Padding="12,4">
                 <TextBlock Text="{Binding StatusMessage}"
