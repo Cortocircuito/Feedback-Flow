@@ -10,7 +10,7 @@ using Feedback_Flow.Models;
 using Feedback_Flow.Services.Interfaces;
 using Avalonia.Controls;
 
-namespace FeedbackFlow.Avalonia.ViewModels;
+namespace FeedbackFlow.App.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {

@@ -6,13 +6,13 @@ using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
-using FeedbackFlow.Avalonia.ViewModels;
-using FeedbackFlow.Avalonia.Views;
+using FeedbackFlow.App.ViewModels;
+using FeedbackFlow.App.Views;
 using Feedback_Flow.Services;
 using Feedback_Flow.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace FeedbackFlow.Avalonia;
+namespace FeedbackFlow.App;
 
 public partial class App : Application
 {

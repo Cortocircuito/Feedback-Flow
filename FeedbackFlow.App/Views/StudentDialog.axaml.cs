@@ -4,7 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Feedback_Flow.Models;
 
-namespace FeedbackFlow.Avalonia.Views;
+namespace FeedbackFlow.App.Views;
 
 public partial class StudentDialog : Window
 {

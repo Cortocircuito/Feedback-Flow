@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace FeedbackFlow.Avalonia.ViewModels;
+namespace FeedbackFlow.App.ViewModels;
 
 public abstract class ViewModelBase : ObservableObject
 {

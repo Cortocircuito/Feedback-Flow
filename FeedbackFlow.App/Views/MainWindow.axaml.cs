@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace FeedbackFlow.Avalonia.Views;
+namespace FeedbackFlow.App.Views;
 
 public partial class MainWindow : Window
 {

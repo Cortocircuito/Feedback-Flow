@@ -1,7 +1,7 @@
 ﻿using Avalonia;
 using System;
 
-namespace FeedbackFlow.Avalonia;
+namespace FeedbackFlow.App;
 
 sealed class Program
 {

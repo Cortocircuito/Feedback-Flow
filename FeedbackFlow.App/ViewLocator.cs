@@ -2,9 +2,9 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using FeedbackFlow.Avalonia.ViewModels;
+using FeedbackFlow.App.ViewModels;
 
-namespace FeedbackFlow.Avalonia;
+namespace FeedbackFlow.App;
 
 /// <summary>
 /// Given a view model, returns the corresponding view if possible.

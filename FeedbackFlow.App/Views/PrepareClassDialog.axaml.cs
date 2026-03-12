@@ -4,7 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Feedback_Flow.Models;
 
-namespace FeedbackFlow.Avalonia.Views;
+namespace FeedbackFlow.App.Views;
 
 public partial class PrepareClassDialog : Window
 {
