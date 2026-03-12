@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Feedback_Flow.Models;
@@ -38,10 +40,16 @@ public partial class MainWindowViewModel : ViewModelBase
     private Student? _selectedStudent;
 
     [ObservableProperty]
-    private DateTimeOffset _selectedDate = DateTimeOffset.Now;
+    private DateTime? _selectedDate = DateTime.Today;
 
     [ObservableProperty]
     private bool _showAllStudents;
+
+    [ObservableProperty]
+    private bool _isTodayMode = true;
+
+    [ObservableProperty]
+    private bool _isHistoryMode;
 
     [ObservableProperty]
     private string _searchText = string.Empty;
@@ -79,6 +87,22 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private bool _canAssignMaterial;
 
+    public bool IsDayViewMode => IsTodayMode || IsHistoryMode;
+
+    public IBrush ModeBannerBrush
+    {
+        get
+        {
+            if (ShowAllStudents) return new SolidColorBrush(Color.Parse("#1565C0"));
+            var date = SelectedDate?.Date ?? DateTime.Today;
+            return date == DateTime.Today
+                ? new SolidColorBrush(Color.Parse("#2E7D32"))
+                : new SolidColorBrush(Color.Parse("#E65100"));
+        }
+    }
+
+    public DateTime MaxSelectableDate => DateTime.Today;
+
     public MainWindowViewModel(
         IStudentService studentService,
         IFileSystemService fileService,
@@ -105,10 +129,10 @@ public partial class MainWindowViewModel : ViewModelBase
         try
         {
             _dailyFolderPath = _fileService.InitializeDailyFolder(DateTime.Today);
-            
+
             var version = GetType().Assembly.GetName().Version;
             VersionText = $"v{version?.ToString(3) ?? "1.0.0"}";
-            
+
             await LoadDataAsync();
             UpdateModeDisplay();
             UpdateStatus($"Ready. Showing students for {_studentService.GetDayOfWeek(DateTime.Today)}.");
@@ -129,25 +153,41 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         else
         {
-            var selectedDate = SelectedDate.DateTime.Date;
+            var selectedDate = SelectedDate?.Date ?? DateTime.Today;
             _allSessions = await _studentService.GetSessionViewsAsync(selectedDate);
             Sessions = new ObservableCollection<StudentSessionView>(_allSessions);
             UpdateDescriptionPanel();
         }
     }
 
-    partial void OnSelectedDateChanged(DateTimeOffset value)
+    partial void OnSelectedDateChanged(DateTime? value)
     {
+        OnPropertyChanged(nameof(ModeBannerBrush));
         if (!ShowAllStudents)
         {
+            UpdateModeDisplay();
             _ = LoadDataAsync();
         }
     }
 
     partial void OnShowAllStudentsChanged(bool value)
     {
+        OnPropertyChanged(nameof(IsDayViewMode));
+        OnPropertyChanged(nameof(ModeBannerBrush));
         UpdateModeDisplay();
         _ = LoadDataAsync();
+    }
+
+    partial void OnIsTodayModeChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsDayViewMode));
+        OnPropertyChanged(nameof(ModeBannerBrush));
+    }
+
+    partial void OnIsHistoryModeChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsDayViewMode));
+        OnPropertyChanged(nameof(ModeBannerBrush));
     }
 
     partial void OnSearchTextChanged(string value)
@@ -177,25 +217,26 @@ public partial class MainWindowViewModel : ViewModelBase
                 .Where(s => s.FullName.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
                 .ToList();
             AllStudents = new ObservableCollection<Student>(filtered);
-            UpdateStatus(filtered.Count == 0 
-                ? $"No students found matching '{SearchText}'" 
+            UpdateStatus(filtered.Count == 0
+                ? $"No students found matching '{SearchText}'"
                 : $"Found {filtered.Count} of {_allStudentsCache.Count} students");
         }
     }
 
     private void UpdateModeDisplay()
     {
-        var isToday = SelectedDate.DateTime.Date == DateTime.Today;
-        
+        var date = SelectedDate?.Date ?? DateTime.Today;
+        var isToday = date == DateTime.Today;
+
         if (ShowAllStudents)
         {
-            ModeTitle = "Viewing ALL students (all days)";
-            ModeDescription = "Day-specific actions are disabled";
+            ModeTitle = "All Students";
+            ModeDescription = "Manage student records";
         }
         else
         {
-            var dayName = _studentService.GetDayOfWeek(SelectedDate.DateTime.Date);
-            var dateLabel = isToday ? dayName : $"{dayName} ({SelectedDate.DateTime.Date:dd MMM yyyy})";
+            var dayName = _studentService.GetDayOfWeek(date);
+            var dateLabel = isToday ? dayName : $"{dayName} ({date:dd MMM yyyy})";
             ModeTitle = $"Showing students for: {dateLabel}";
             ModeDescription = isToday ? "Ready to manage today's class" : "Viewing a previous class session";
         }
@@ -203,8 +244,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void UpdateButtonStates()
     {
-        var isToday = SelectedDate.DateTime.Date == DateTime.Today;
-        
+        var date = SelectedDate?.Date ?? DateTime.Today;
+        var isToday = date == DateTime.Today;
+
         if (ShowAllStudents)
         {
             CanEditAttendance = false;
@@ -233,11 +275,41 @@ public partial class MainWindowViewModel : ViewModelBase
         if (hasDescription)
         {
             DescriptionTitle = $"Class description — {SelectedSession.FullName}:";
-            DescriptionText = SelectedSession.ClassDescription;
+            DescriptionText = SelectedSession.ClassDescription!;
         }
     }
 
     private void UpdateStatus(string message) => StatusMessage = message;
+
+    [RelayCommand]
+    private void NavigateToToday()
+    {
+        IsTodayMode = true;
+        IsHistoryMode = false;
+        ShowAllStudents = false;
+        SelectedDate = DateTime.Today;
+        SearchText = string.Empty;
+    }
+
+    [RelayCommand]
+    private void NavigateToHistory()
+    {
+        IsTodayMode = false;
+        IsHistoryMode = true;
+        ShowAllStudents = false;
+        SearchText = string.Empty;
+        // OnShowAllStudentsChanged only fires if value changed; explicitly reload for same-mode transitions
+        UpdateModeDisplay();
+        _ = LoadDataAsync();
+    }
+
+    [RelayCommand]
+    private void NavigateToAllStudents()
+    {
+        IsTodayMode = false;
+        IsHistoryMode = false;
+        ShowAllStudents = true; // OnShowAllStudentsChanged handles reload
+    }
 
     [RelayCommand]
     private Task ToggleFilter()
@@ -254,7 +326,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var dialog = new Views.StudentDialog();
         var result = await dialog.ShowDialog<bool>(_mainWindow);
-        
+
         if (result)
         {
             var newStudent = new Student
@@ -283,7 +355,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         var dialog = new Views.StudentDialog(SelectedStudent);
         var result = await dialog.ShowDialog<bool>(_mainWindow);
-        
+
         if (result)
         {
             var updatedStudent = new Student
@@ -325,8 +397,32 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task AssignMaterial()
     {
-        if (!CanAssignMaterial || SelectedSession == null) return;
-        UpdateStatus("Use file picker to select material (feature coming soon)");
+        if (!CanAssignMaterial || SelectedSession == null || _mainWindow == null) return;
+
+        var options = new FilePickerOpenOptions
+        {
+            Title = "Select Learning Material",
+            AllowMultiple = false,
+            FileTypeFilter = new[]
+            {
+                new FilePickerFileType("All Supported Files")
+                {
+                    Patterns = new[] { "*.pdf", "*.docx", "*.doc", "*.odt", "*.pptx", "*.ppt", "*.odp" }
+                },
+                new FilePickerFileType("PDF Files") { Patterns = new[] { "*.pdf" } },
+                new FilePickerFileType("Word Documents") { Patterns = new[] { "*.docx", "*.doc" } },
+                new FilePickerFileType("PowerPoint") { Patterns = new[] { "*.pptx", "*.ppt" } }
+            }
+        };
+
+        var result = await _mainWindow.StorageProvider.OpenFilePickerAsync(options);
+        if (result.Count > 0)
+        {
+            var path = result[0].Path.LocalPath;
+            await _studentService.UpdateSessionMaterialAsync(SelectedSession.SessionId, path);
+            SelectedSession.AssignedMaterial = path;
+            UpdateStatus($"Assigned material to {SelectedSession.FullName}: {System.IO.Path.GetFileName(path)}");
+        }
     }
 
     [RelayCommand]
@@ -390,7 +486,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 ClassDay = SelectedSession.ClassDay
             };
             var studentFolder = _fileService.CreateStudentFolder(_dailyFolderPath, student);
-            await _noteService.OpenOrCreateNotesAsync(studentFolder, SelectedSession.FullName, SelectedDate.DateTime.Date);
+            var date = SelectedDate?.Date ?? DateTime.Today;
+            await _noteService.OpenOrCreateNotesAsync(studentFolder, SelectedSession.FullName, date);
         }
         catch (DirectoryNotFoundException)
         {
@@ -403,9 +500,10 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (SelectedSession == null || _mainWindow == null) return;
 
-        var referenceDate = SelectedDate.DateTime.Date < DateTime.Today ? DateTime.Today : SelectedDate.DateTime.Date;
+        var date = SelectedDate?.Date ?? DateTime.Today;
+        var referenceDate = date < DateTime.Today ? DateTime.Today : date;
         var nextDate = ComputeNextClassDate(SelectedSession.ClassDay, referenceDate);
-        
+
         if (nextDate == null)
         {
             UpdateStatus($"The next class date for {SelectedSession.FullName} could not be determined.");
@@ -420,9 +518,9 @@ public partial class MainWindowViewModel : ViewModelBase
         if (result)
         {
             await _studentService.SaveNextClassPlanAsync(
-                SelectedSession.StudentId, 
-                nextDate.Value, 
-                dialog.SelectedMaterial, 
+                SelectedSession.StudentId,
+                nextDate.Value,
+                dialog.SelectedMaterial,
                 dialog.ClassDescription);
             UpdateStatus($"Next class prepared for {SelectedSession.FullName} ({nextDate.Value:dd MMM yyyy}).");
         }
