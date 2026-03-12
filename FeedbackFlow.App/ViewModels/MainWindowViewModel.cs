@@ -562,6 +562,10 @@ public partial class MainWindowViewModel : ViewModelBase
     private void ToggleTheme()
     {
         IsDarkMode = !IsDarkMode;
+        if (Avalonia.Application.Current != null)
+            Avalonia.Application.Current.RequestedThemeVariant = IsDarkMode
+                ? Avalonia.Styling.ThemeVariant.Dark
+                : Avalonia.Styling.ThemeVariant.Light;
     }
 
     [RelayCommand]
