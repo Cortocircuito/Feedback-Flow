@@ -1,0 +1,317 @@
+<Window xmlns="https://github.com/avaloniaui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+       xmlns:vm="using:FeedbackFlow.App.ViewModels"
+       xmlns:conv="using:FeedbackFlow.App.Converters"
+       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+       mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
+       x:Class="FeedbackFlow.App.Views.MainWindow"
+       x:DataType="vm:MainWindowViewModel"
+       Title="Feedback Flow"
+       Width="1100" Height="700"
+       MinWidth="900" MinHeight="600">
+
+    <Window.Resources>
+        <conv:FileNameConverter x:Key="FileNameConverter"/>
+    </Window.Resources>
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Window.Styles>
+        <!-- Sidebar nav buttons -->
+        <Style Selector="Button.navItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="Margin" Value="4,2"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="Button.navItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#33FFFFFF"/>
+        </Style>
+        <Style Selector="Button.navItem.active /template/ ContentPresenter">
+            <Setter Property="Background" Value="#55FFFFFF"/>
+        </Style>
+        <!-- General button defaults -->
+        <Style Selector="Button">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="4"/>
+        </Style>
+        <Style Selector="Button.action">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="4,0"/>
+        </Style>
+    </Window.Styles>
+
+    <!-- Root: Sidebar (180px) + Content area -->
+    <Grid ColumnDefinitions="180,*">
+
+        <!-- ═══════════ SIDEBAR ═══════════ -->
+        <Border Grid.Column="0"
+                Background="{DynamicResource SystemControlBackgroundAccentBrush}">
+            <Grid RowDefinitions="Auto,*,Auto,Auto">
+
+                <!-- App name -->
+                <TextBlock Grid.Row="0"
+                           Text="Feedback Flow"
+                           FontSize="16"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           Padding="16,20,16,16"
+                           TextWrapping="Wrap"/>
+
+                <!-- Nav items -->
+                <StackPanel Grid.Row="1" Margin="8,0">
+                    <Button Content="Today"
+                            Classes="navItem"
+                            Classes.active="{Binding IsTodayMode}"
+                            Command="{Binding NavigateToTodayCommand}"/>
+                    <Button Content="History"
+                            Classes="navItem"
+                            Classes.active="{Binding IsHistoryMode}"
+                            Command="{Binding NavigateToHistoryCommand}"/>
+                    <Button Content="All Students"
+                            Classes="navItem"
+                            Classes.active="{Binding ShowAllStudents}"
+                            Command="{Binding NavigateToAllStudentsCommand}"/>
+                </StackPanel>
+
+                <!-- Theme toggle -->
+                <Button Grid.Row="2"
+                        Classes="navItem"
+                        Content="Toggle Theme"
+                        Command="{Binding ToggleThemeCommand}"
+                        Margin="8,0"/>
+
+                <!-- Version -->
+                <TextBlock Grid.Row="3"
+                           Text="{Binding VersionText}"
+                           Foreground="White"
+                           Opacity="0.6"
+                           FontSize="11"
+                           Padding="16,8,16,16"/>
+            </Grid>
+        </Border>
+
+        <!-- ═══════════ CONTENT ═══════════ -->
+        <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto,*,Auto,Auto">
+
+            <!-- Row 0: Mode Banner -->
+            <Border Grid.Row="0"
+                    Background="{Binding ModeBannerBrush}"
+                    Padding="16,10">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Text="{Binding ModeTitle}"
+                               FontSize="15"
+                               FontWeight="SemiBold"
+                               Foreground="White"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding ModeDescription}"
+                               FontSize="12"
+                               Foreground="White"
+                               Opacity="0.85"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Row 1: Loading Indicator -->
+            <ProgressBar Grid.Row="1"
+                         IsIndeterminate="True"
+                         Height="3"
+                         IsVisible="{Binding IsLoading}"/>
+
+            <!-- Row 2: Top Bar (DatePicker or Search) -->
+            <Border Grid.Row="2" Padding="16,10,16,6">
+                <Panel>
+                    <!-- DatePicker for day modes -->
+                    <CalendarDatePicker SelectedDate="{Binding SelectedDate}"
+                                        DisplayDateEnd="{Binding MaxSelectableDate}"
+                                        IsVisible="{Binding IsDayViewMode}"
+                                        HorizontalAlignment="Left"/>
+                    <!-- Search for All Students mode -->
+                    <Grid ColumnDefinitions="*,Auto"
+                          IsVisible="{Binding ShowAllStudents}">
+                        <TextBox Grid.Column="0"
+                                 Watermark="Search students by name..."
+                                 Text="{Binding SearchText}"
+                                 MaxWidth="400"
+                                 HorizontalAlignment="Left"/>
+                        <Button Grid.Column="1"
+                                Content="Clear"
+                                Command="{Binding ClearSearchCommand}"
+                                Margin="8,0,0,0"/>
+                    </Grid>
+                </Panel>
+            </Border>
+
+            <!-- Row 3: DataGrid area -->
+            <Grid Grid.Row="3" RowDefinitions="*,Auto" Margin="16,0,16,0">
+                <Panel Grid.Row="0">
+                    <!-- Sessions DataGrid (Today / History modes) -->
+                    <DataGrid ItemsSource="{Binding Sessions}"
+                              SelectedItem="{Binding SelectedSession}"
+                              AutoGenerateColumns="False"
+                              CanUserReorderColumns="True"
+                              CanUserResizeColumns="True"
+                              CanUserSortColumns="True"
+                              GridLinesVisibility="Horizontal"
+                              BorderThickness="1"
+                              BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                              IsVisible="{Binding IsDayViewMode}">
+                        <DataGrid.Columns>
+                            <!-- A: Template column so checkbox fires ToggleAttendanceCommand -->
+                            <DataGridTemplateColumn Header="Attended" Width="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:CompileBindings="False">
+                                        <CheckBox IsChecked="{Binding Attended, Mode=TwoWay}"
+                                                  Command="{Binding $parent[Window].DataContext.ToggleAttendanceCommand}"
+                                                  CommandParameter="{Binding}"
+                                                  HorizontalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Binding="{Binding FullName}"
+                                                Header="Student"
+                                                Width="*"
+                                                IsReadOnly="True"/>
+                            <DataGridTextColumn Binding="{Binding ClassDay}"
+                                                Header="Class Day(s)"
+                                                Width="120"
+                                                IsReadOnly="True"/>
+                            <!-- C: Show filename only; tooltip shows full path -->
+                            <DataGridTemplateColumn Header="Learning Material" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:CompileBindings="False">
+                                        <TextBlock Text="{Binding AssignedMaterial, Converter={StaticResource FileNameConverter}}"
+                                                   ToolTip.Tip="{Binding AssignedMaterial}"
+                                                   VerticalAlignment="Center"
+                                                   Padding="12,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- D2: Empty state message overlay -->
+                    <TextBlock IsVisible="{Binding IsEmptyState}"
+                               Text="{Binding EmptyStateMessage}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Opacity="0.5"
+                               FontSize="14"/>
+
+                    <!-- All Students DataGrid -->
+                    <DataGrid ItemsSource="{Binding AllStudents}"
+                              SelectedItem="{Binding SelectedStudent}"
+                              AutoGenerateColumns="False"
+                              CanUserReorderColumns="True"
+                              CanUserResizeColumns="True"
+                              CanUserSortColumns="True"
+                              GridLinesVisibility="Horizontal"
+                              BorderThickness="1"
+                              BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                              IsVisible="{Binding ShowAllStudents}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Binding="{Binding FullName}"
+                                                Header="Student"
+                                                Width="*"
+                                                IsReadOnly="True"/>
+                            <DataGridTextColumn Binding="{Binding Email}"
+                                                Header="Email"
+                                                Width="*"
+                                                IsReadOnly="True"/>
+                            <DataGridTextColumn Binding="{Binding ClassDay}"
+                                                Header="Class Day(s)"
+                                                Width="120"
+                                                IsReadOnly="True"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Panel>
+
+                <!-- Description Panel -->
+                <Border Grid.Row="1"
+                        Margin="0,10,0,0"
+                        Padding="12"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                        IsVisible="{Binding IsDescriptionPanelVisible}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding DescriptionTitle}"
+                                   FontWeight="SemiBold"
+                                   Margin="0,0,0,8"/>
+                        <TextBlock Text="{Binding DescriptionText}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Row 4: Action Toolbar -->
+            <Border Grid.Row="4"
+                    Padding="12,8"
+                    Background="{DynamicResource SystemControlBackgroundAltMediumHighBrush}">
+                <Panel>
+                    <!-- Day mode toolbar (Today / History) -->
+                    <StackPanel Orientation="Horizontal"
+                                IsVisible="{Binding IsDayViewMode}">
+                        <Button Content="Assign Material"
+                                Classes="action"
+                                Command="{Binding AssignMaterialCommand}"
+                                IsEnabled="{Binding CanAssignMaterial}"/>
+                        <Button Content="Unassign Material"
+                                Classes="action"
+                                Command="{Binding UnassignMaterialCommand}"
+                                IsEnabled="{Binding CanAssignMaterial}"/>
+                        <Button Content="View Material"
+                                Classes="action"
+                                Command="{Binding ViewMaterialCommand}"
+                                IsEnabled="{Binding CanAssignMaterial}"/>
+                        <Rectangle Width="1"
+                                   Fill="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                                   Margin="8,4"/>
+                        <Button Content="Edit Feedback"
+                                Classes="action"
+                                Command="{Binding EditFeedbackCommand}"
+                                IsEnabled="{Binding CanEditFeedback}"/>
+                        <Button Content="Generate Email"
+                                Classes="action"
+                                Command="{Binding GenerateEmailCommand}"/>
+                        <Button Content="Prepare Next Class"
+                                Classes="action"
+                                Command="{Binding PrepareNextClassCommand}"/>
+                    </StackPanel>
+
+                    <!-- All Students toolbar -->
+                    <StackPanel Orientation="Horizontal"
+                                IsVisible="{Binding ShowAllStudents}">
+                        <Button Content="Add Student"
+                                Classes="action"
+                                Command="{Binding AddStudentCommand}"/>
+                        <Rectangle Width="1"
+                                   Fill="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                                   Margin="8,4"/>
+                        <Button Content="Edit Student"
+                                Classes="action"
+                                Command="{Binding UpdateStudentCommand}"/>
+                        <Button Content="Remove Student"
+                                Classes="action"
+                                Command="{Binding RemoveStudentCommand}"/>
+                    </StackPanel>
+                </Panel>
+            </Border>
+
+            <!-- Row 5: Status Bar -->
+            <Border Grid.Row="5"
+                    Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                    Padding="12,4">
+                <TextBlock Text="{Binding StatusMessage}"
+                           VerticalAlignment="Center"/>
+            </Border>
+
+        </Grid>
+    </Grid>
+</Window>

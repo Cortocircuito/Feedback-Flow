@@ -1,0 +1,74 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="350"
+        x:Class="FeedbackFlow.App.Views.StudentDialog"
+        Title="Student"
+        Width="400" Height="350"
+        CanResize="False"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        <Style Selector="CheckBox">
+            <Setter Property="Margin" Value="0,4"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+        
+        <!-- Form Fields -->
+        <StackPanel Grid.Row="0" Spacing="8">
+            <StackPanel>
+                <TextBlock Text="Full Name" FontWeight="SemiBold"/>
+                <TextBox x:Name="TxtFullName" 
+                         Watermark="Enter full name"
+                         Margin="0,4,0,0"/>
+            </StackPanel>
+            
+            <StackPanel>
+                <TextBlock Text="Email" FontWeight="SemiBold"/>
+                <TextBox x:Name="TxtEmail" 
+                         Watermark="Enter email address"
+                         Margin="0,4,0,0"/>
+            </StackPanel>
+            
+            <StackPanel>
+                <TextBlock Text="Class Days" FontWeight="SemiBold" Margin="0,8,0,4"/>
+                <WrapPanel>
+                    <CheckBox x:Name="ChkMonday" Content="Monday" Margin="0,0,16,0"/>
+                    <CheckBox x:Name="ChkTuesday" Content="Tuesday" Margin="0,0,16,0"/>
+                    <CheckBox x:Name="ChkWednesday" Content="Wednesday" Margin="0,0,16,0"/>
+                    <CheckBox x:Name="ChkThursday" Content="Thursday" Margin="0,0,16,0"/>
+                    <CheckBox x:Name="ChkFriday" Content="Friday" Margin="0,0,16,0"/>
+                    <CheckBox x:Name="ChkSaturday" Content="Saturday" Margin="0,0,16,0"/>
+                    <CheckBox x:Name="ChkSunday" Content="Sunday"/>
+                </WrapPanel>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Error Message -->
+        <TextBlock Grid.Row="1" 
+                   x:Name="TxtError" 
+                   Foreground="Red" 
+                   Margin="0,12,0,0"
+                   TextWrapping="Wrap"/>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right" 
+                    Spacing="8"
+                    Margin="0,20,0,0">
+            <Button Content="Cancel" 
+                    Click="BtnCancel_Click"
+                    MinWidth="80"/>
+            <Button Content="Save" 
+                    Click="BtnSave_Click"
+                    MinWidth="80"/>
+        </StackPanel>
+    </Grid>
+</Window>

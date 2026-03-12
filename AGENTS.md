@@ -263,3 +263,231 @@ Feedback Flow/
 ```bash
 dotnet test --filter "FullyQualifiedName~StudentServiceTests.GetDayOfWeek_Monday_ReturnsMondayString"
 ```
+
+---
+
+## Migration: WinForms to Avalonia
+
+This section documents the migration from WinForms to Avalonia for cross-platform support (Windows, macOS, Linux).
+
+### Migration Overview
+
+| Aspect | Value |
+|--------|-------|
+| Target Framework | .NET 8 LTS |
+| MVVM Framework | Community Toolkit MVVM |
+| Theming | Native FluentTheme (built-in dark/light) |
+| Timeline | ~6-8 weeks |
+| Approach | Full rewrite (not incremental) |
+
+### Prerequisites
+
+- **.NET 8 SDK** (or .NET 9)
+- **Avalonia templates**: `dotnet new install Avalonia.Templates`
+- **IDE**: Rider (recommended) or Visual Studio with Avalonia extension
+- **Platform**: Development on Linux supported (Ubuntu 24.04 tested)
+
+### Phase 1: Preparation (Week 1)
+
+#### 1.1 Upgrade .NET Version
+- [ ] Upgrade from .NET 10 to .NET 8 LTS (or .NET 9)
+- [ ] Update all NuGet packages to latest cross-platform compatible versions
+- [ ] Verify build: `dotnet build`
+
+#### 1.2 Extract Business Logic
+Create a class library `FeedbackFlow.Core`:
+```
+FeedbackFlow.slnx
+├── FeedbackFlow.Core/          # Business logic (Services + Models)
+├── FeedbackFlow/               # Existing WinForms (to be replaced)
+└── FeedbackFlow.Tests/        # Existing tests
+```
+
+- [ ] Move `Services/` to Core library
+- [ ] Move `Models/` to Core library
+- [ ] Keep only UI code in WinForms project
+- [ ] Verify tests still pass
+
+#### 1.3 Verify Dependencies
+All existing packages are cross-platform compatible:
+- `Microsoft.Data.Sqlite` ✅
+- `Dapper` ✅
+- `PDFsharp` ✅
+- `MimeKit` ✅
+- `Microsoft.Extensions.DependencyInjection` ✅
+
+### Phase 2: Avalonia Project Setup (Week 1-2)
+
+#### 2.1 Create New Solution Structure
+```bash
+# Create Avalonia MVVM project
+dotnet new avalonia.mvvm -o FeedbackFlow.Avalonia -n FeedbackFlow.Avalonia
+```
+
+```
+FeedbackFlow.slnx
+├── FeedbackFlow.Core/              # Business logic (from Phase 1)
+├── FeedbackFlow.Avalonia/         # New Avalonia UI
+└── FeedbackFlow.Tests/            # Existing tests
+```
+
+#### 2.2 Configure Project
+- [ ] Add reference to FeedbackFlow.Core
+- [ ] Target platforms: Windows, macOS, Linux (Desktop)
+- [ ] Set .NET 8+ in csproj
+- [ ] Install Community Toolkit MVVM (if not included)
+
+#### 2.3 Test Empty Shell
+- [ ] Run on Ubuntu: `dotnet run`
+- [ ] Verify window appears
+- [ ] Commit baseline
+
+### Phase 3: UI Migration (Weeks 2-4)
+
+#### 3.1 Control Mapping
+
+| WinForms Control | Avalonia Control |
+|-----------------|------------------|
+| `Form` | `Window` / `UserControl` |
+| `DataGridView` | `DataGrid` |
+| `Button` | `Button` |
+| `TextBox` | `TextBox` |
+| `Label` | `TextBlock` |
+| `DateTimePicker` | `CalendarDatePicker` |
+| `Panel` | `Border` / `Panel` |
+| `CheckBox` | `CheckBox` |
+| `ComboBox` | `ComboBox` |
+| `ToolStrip` | `NativeMenuBar` |
+| `StatusStrip` | Custom status bar |
+
+#### 3.2 Migrate Forms (in order)
+
+**MainDashboard → MainWindow** (most complex)
+- [ ] DataGrid with attendance tracking
+- [ ] Date picker (CalendarDatePicker)
+- [ ] Search panel
+- [ ] Theme toggle button
+- [ ] Mode indicator panels
+- [ ] All button commands
+
+**StudentForm → StudentDialog**
+- [ ] Student name field
+- [ ] Email field
+- [ ] Class day selection
+- [ ] Save/Cancel buttons
+
+**PrepareNextClassForm → PrepareClassDialog**
+- [ ] Material assignment
+- [ ] Description text area
+- [ ] Date display
+
+#### 3.3 Convert Code-Behind to MVVM
+
+**Before (WinForms):**
+```csharp
+private void btnAdd_Click(object sender, EventArgs e)
+{
+    var student = new Student { FullName = txtName.Text };
+    _service.AddStudent(student);
+}
+```
+
+**After (Avalonia MVVM):**
+```csharp
+// ViewModel
+[RelayCommand]
+private async Task AddStudent()
+{
+    var student = new Student { FullName = Name };
+    await StudentService.AddStudentAsync(student);
+}
+
+// View (XAML)
+<Button Command="{Binding AddStudentCommand}">Add Student</Button>
+```
+
+### Phase 4: Theming (Week 3)
+
+#### 4.1 Use Native FluentTheme
+Avalonia includes built-in theming - no need to port ThemeManager!
+
+```xml
+<!-- App.axaml -->
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+</Application>
+```
+
+#### 4.2 Dark/Light Mode Toggle
+```csharp
+// Simple theme toggle (2 lines!)
+public void ToggleTheme()
+{
+    Application.Current!.RequestedThemeVariant =
+        Application.Current.RequestedThemeVariant == ThemeVariant.Dark
+            ? ThemeVariant.Light
+            : ThemeVariant.Dark;
+}
+```
+
+Options:
+- `ThemeVariant.Default` - Follow system preference
+- `ThemeVariant.Light` - Force light mode
+- `ThemeVariant.Dark` - Force dark mode
+
+#### 4.3 Persist User Preference
+- [ ] Store preference in settings (same as current UserPreferences)
+- [ ] Apply on startup
+- [ ] Toggle button in UI
+
+#### 4.4 Optional: FluentAvalonia
+For more WinUI-like controls, consider adding `FluentAvalonia` package.
+
+### Phase 5: Testing & Build (Week 4)
+
+#### 5.1 Platform Testing
+- [ ] Test on Linux (Ubuntu 24.04 - development machine)
+- [ ] Test on Windows
+- [ ] Test on macOS
+
+#### 5.2 Build Commands
+```bash
+# Windows
+dotnet publish -c Release -r win-x64 --self-contained true
+
+# macOS
+dotnet publish -c Release -r osx-x64 --self-contained true
+dotnet publish -c Release -r osx-arm64 --self-contained true
+
+# Linux
+dotnet publish -c Release -r linux-x64 --self-contained true
+```
+
+#### 5.3 Final Verification
+- [ ] All features work on all platforms
+- [ ] Dark/light mode works
+- [ ] Database operations work
+- [ ] PDF generation works
+- [ ] Email draft generation works
+
+### Key Differences: WinForms → Avalonia
+
+| WinForms | Avalonia |
+|----------|----------|
+| Designer files (.Designer.cs) | XAML files (.axaml) |
+| Code-behind events | Commands (ICommand) |
+| `this.Controls.Add()` | XAML `<Panel>` with bindings |
+| `DataGridView` | `DataGrid` |
+| `MessageBox.Show()` | `DialogService` |
+| Custom ThemeManager | Built-in FluentTheme |
+
+### Migration Status
+
+- [ ] Phase 1: Preparation
+- [ ] Phase 2: Avalonia Setup
+- [ ] Phase 3: UI Migration
+- [ ] Phase 4: Theming
+- [ ] Phase 5: Testing & Build

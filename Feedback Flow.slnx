@@ -1,4 +1,6 @@
 <Solution>
   <Project Path="Feedback Flow.csproj" />
   <Project Path="Feedback Flow.Tests\Feedback Flow.Tests.csproj" />
+  <Project Path="FeedbackFlow.App/FeedbackFlow.App.csproj" />
+  <Project Path="FeedbackFlow.Core/FeedbackFlow.Core.csproj" />
 </Solution>
