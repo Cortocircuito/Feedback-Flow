@@ -3,18 +3,239 @@
         xmlns:vm="using:FeedbackFlow.Avalonia.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
         x:Class="FeedbackFlow.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
-        Title="FeedbackFlow.Avalonia">
+        Title="Feedback Flow"
+        Width="1000" Height="700"
+        MinWidth="800" MinHeight="600">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Window.Styles>
+        <Style Selector="Button">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="4"/>
+        </Style>
+        <Style Selector="Button.action">
+            <Setter Property="MinWidth" Value="140"/>
+        </Style>
+        <Style Selector="TextBlock.modeTitle">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="TextBlock.modeDescription">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Opacity" Value="0.8"/>
+        </Style>
+    </Window.Styles>
 
+    <Grid RowDefinitions="Auto,*,Auto,Auto">
+        
+        <!-- Mode Indicator Panel -->
+        <Border Grid.Row="0" 
+                Padding="16,12" 
+                Background="{DynamicResource SystemControlBackgroundAccentBrush}"
+                x:Name="ModeIndicator">
+            <Grid RowDefinitions="Auto,Auto,Auto">
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding ModeTitle}" 
+                               Classes="modeTitle" 
+                               Foreground="White"/>
+                </StackPanel>
+                <TextBlock Grid.Row="1" 
+                           Text="{Binding ModeDescription}" 
+                           Classes="modeDescription" 
+                           Foreground="White"
+                           Margin="0,4,0,0"/>
+                
+                <!-- Search Panel (visible in Show All mode) -->
+                <Panel Grid.Row="2" Margin="0,12,0,0" IsVisible="{Binding ShowAllStudents}">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBox Grid.Column="1" 
+                                 Watermark="Type student name to search..."
+                                 Text="{Binding SearchText}"
+                                 MinWidth="300"/>
+                        <Button Grid.Column="2" 
+                                Content="Clear" 
+                                Command="{Binding ClearSearchCommand}"
+                                Margin="8,0,0,0"/>
+                    </Grid>
+                </Panel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Row="1" RowDefinitions="*,Auto" Margin="16">
+            
+            <!-- DataGrid for Sessions (Day mode) -->
+            <DataGrid Grid.Row="0"
+                      ItemsSource="{Binding Sessions}"
+                      SelectedItem="{Binding SelectedSession}"
+                      AutoGenerateColumns="False"
+                      CanUserReorderColumns="True"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      GridLinesVisibility="Horizontal"
+                      BorderThickness="1"
+                      BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                      IsVisible="{Binding !ShowAllStudents}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Binding="{Binding FullName}" 
+                                        Header="Student" 
+                                        Width="*"
+                                        IsReadOnly="True"/>
+                    <DataGridTextColumn Binding="{Binding ClassDay}" 
+                                        Header="Class Day(s)" 
+                                        Width="120"
+                                        IsReadOnly="True"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- DataGrid for All Students -->
+            <DataGrid Grid.Row="0"
+                      ItemsSource="{Binding AllStudents}"
+                      SelectedItem="{Binding SelectedStudent}"
+                      AutoGenerateColumns="False"
+                      CanUserReorderColumns="True"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      GridLinesVisibility="Horizontal"
+                      BorderThickness="1"
+                      BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                      IsVisible="{Binding ShowAllStudents}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Binding="{Binding FullName}" 
+                                        Header="Student" 
+                                        Width="*"
+                                        IsReadOnly="True"/>
+                    <DataGridTextColumn Binding="{Binding Email}" 
+                                        Header="Email" 
+                                        Width="*"
+                                        IsReadOnly="True"/>
+                    <DataGridTextColumn Binding="{Binding ClassDay}" 
+                                        Header="Class Day(s)" 
+                                        Width="120"
+                                        IsReadOnly="True"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Description Panel -->
+            <Border Grid.Row="1" 
+                    Margin="0,12,0,0"
+                    Padding="12"
+                    BorderThickness="1"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                    IsVisible="{Binding IsDescriptionPanelVisible}">
+                <StackPanel>
+                    <TextBlock Text="{Binding DescriptionTitle}" 
+                               FontWeight="SemiBold" 
+                               Margin="0,0,0,8"/>
+                    <TextBlock Text="{Binding DescriptionText}" 
+                               TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Action Buttons Panel -->
+        <Border Grid.Row="2" 
+                Padding="16,12" 
+                Background="{DynamicResource SystemControlBackgroundAltMediumHighBrush}">
+            <Grid ColumnDefinitions="*,*">
+                <!-- Day Actions -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button Content="Assign Material" 
+                            Classes="action"
+                            Command="{Binding AssignMaterialCommand}"
+                            IsEnabled="{Binding CanAssignMaterial}"/>
+                    <Button Content="Unassign Material" 
+                            Classes="action"
+                            Command="{Binding UnassignMaterialCommand}"
+                            IsEnabled="{Binding CanAssignMaterial}"/>
+                    <Button Content="View Material" 
+                            Classes="action"
+                            Command="{Binding ViewMaterialCommand}"
+                            IsEnabled="{Binding CanAssignMaterial}"/>
+                    <Button Content="Edit Feedback" 
+                            Classes="action"
+                            Command="{Binding EditFeedbackCommand}"
+                            IsEnabled="{Binding CanEditFeedback}"/>
+                </StackPanel>
+                
+                <!-- Identity Actions -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Add Student" 
+                            Classes="action"
+                            Command="{Binding AddStudentCommand}"
+                            IsEnabled="{Binding ShowAllStudents}"/>
+                    <Button Content="Update Student" 
+                            Classes="action"
+                            Command="{Binding UpdateStudentCommand}"
+                            IsEnabled="{Binding ShowAllStudents}"/>
+                    <Button Content="Remove Student" 
+                            Classes="action"
+                            Command="{Binding RemoveStudentCommand}"
+                            IsEnabled="{Binding ShowAllStudents}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Bottom Action Bar -->
+        <Border Grid.Row="3" 
+                Padding="16,12" 
+                Background="{DynamicResource SystemControlBackgroundAltMediumHighBrush}">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                <!-- Toggle Filter -->
+                <Button Grid.Column="0" 
+                        Command="{Binding ToggleFilterCommand}"
+                        Padding="16,8"
+                        Content="Toggle View"/>
+
+                <!-- Date Picker (hidden in Show All mode) -->
+                <CalendarDatePicker Grid.Column="2" 
+                                    SelectedDate="{Binding SelectedDate}"
+                                    IsVisible="{Binding !ShowAllStudents}"
+                                    Margin="0,0,12,0"/>
+
+                <!-- Generate Email -->
+                <Button Grid.Column="3" 
+                        Content="Generate Email" 
+                        Classes="action"
+                        Command="{Binding GenerateEmailCommand}"
+                        IsEnabled="{Binding !ShowAllStudents}"
+                        Margin="0,0,12,0"/>
+
+                <!-- Prepare Next Class -->
+                <Button Grid.Column="4" 
+                        Content="Prepare Next Class" 
+                        Classes="action"
+                        Command="{Binding PrepareNextClassCommand}"
+                        IsEnabled="{Binding !ShowAllStudents}"/>
+            </Grid>
+        </Border>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="3" 
+                Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                Padding="8,4"
+                VerticalAlignment="Bottom">
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <TextBlock Grid.Column="0" 
+                           Text="{Binding StatusMessage}" 
+                           VerticalAlignment="Center"/>
+                <Button Grid.Column="1" 
+                        Command="{Binding ToggleThemeCommand}"
+                        Padding="8,2"
+                        Margin="0,0,8,0"
+                        Content="Theme"/>
+                <TextBlock Grid.Column="2" 
+                           Text="{Binding VersionText}" 
+                           Opacity="0.6"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+    </Grid>
 </Window>
