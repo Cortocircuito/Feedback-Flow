@@ -25,16 +25,14 @@
     <Compile Remove="FeedbackFlow.App\**" />
     <EmbeddedResource Remove="Feedback Flow.Tests\**" />
     <EmbeddedResource Remove="FeedbackFlow.App\**" />
+    <EmbeddedResource Remove="FeedbackFlow.Core\**" />
     <None Remove="Feedback Flow.Tests\**" />
     <None Remove="FeedbackFlow.App\**" />
+    <None Remove="FeedbackFlow.Core\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="PDFsharp" Version="6.2.4" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
-    <PackageReference Include="MimeKit" Version="4.3.0" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
-    <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
   </ItemGroup>
 
