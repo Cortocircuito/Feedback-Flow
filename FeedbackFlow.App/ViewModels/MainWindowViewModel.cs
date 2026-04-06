@@ -10,8 +10,8 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Feedback_Flow.Models;
-using Feedback_Flow.Services.Interfaces;
+using FeedbackFlow.Core.Models;
+using FeedbackFlow.Core.Services.Interfaces;
 using Avalonia.Controls;
 
 namespace FeedbackFlow.App.ViewModels;

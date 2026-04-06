@@ -1,7 +1,6 @@
-using Feedback_Flow.Models;
-using Feedback_Flow.Services;
-using Feedback_Flow.Services.Interfaces;
 using Feedback_Flow.UI.Forms;
+using FeedbackFlow.Core.Services;
+using FeedbackFlow.Core.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Feedback_Flow;

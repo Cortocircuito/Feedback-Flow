@@ -1,4 +1,4 @@
-namespace Feedback_Flow.Models;
+namespace FeedbackFlow.Core.Models;
 
 /// <summary>
 /// Flat DTO that combines Student identity with a single ClassSession's data.

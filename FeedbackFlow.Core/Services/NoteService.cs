@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using Feedback_Flow.Services.Interfaces;
+using FeedbackFlow.Core.Services.Interfaces;
 
-namespace Feedback_Flow.Services;
+namespace FeedbackFlow.Core.Services;
 
 public class NoteService : INoteService
 {

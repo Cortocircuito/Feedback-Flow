@@ -2,7 +2,7 @@ using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using Feedback_Flow.Models;
+using FeedbackFlow.Core.Models;
 
 namespace FeedbackFlow.App.Views;
 

@@ -1,4 +1,4 @@
-namespace Feedback_Flow.Services.Interfaces;
+namespace FeedbackFlow.Core.Services.Interfaces;
 
 public interface IMigrationService
 {

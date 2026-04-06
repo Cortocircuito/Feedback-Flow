@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace Feedback_Flow.Helpers;
+namespace FeedbackFlow.Core.Helpers;
 
 /// <summary>
 /// A BindingList that supports automatic sorting by a specified property.

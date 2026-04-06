@@ -1,12 +1,12 @@
-using Feedback_Flow.Helpers;
-using Feedback_Flow.Models;
-using Feedback_Flow.Services.Interfaces;
+using FeedbackFlow.Core.Helpers;
+using FeedbackFlow.Core.Models;
+using FeedbackFlow.Core.Services.Interfaces;
 using PdfSharp.Drawing;
 using PdfSharp.Drawing.Layout;
 using PdfSharp.Fonts;
 using PdfSharp.Pdf;
 
-namespace Feedback_Flow.Services;
+namespace FeedbackFlow.Core.Services;
 
 public class PdfGenerationService : IPdfService
 {

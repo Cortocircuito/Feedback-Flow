@@ -1,4 +1,4 @@
-using Feedback_Flow.Models;
+using FeedbackFlow.Core.Models;
 using FluentAssertions;
 using Xunit;
 

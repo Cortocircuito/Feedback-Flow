@@ -1,6 +1,6 @@
 using PdfSharp.Fonts;
 
-namespace Feedback_Flow.Helpers;
+namespace FeedbackFlow.Core.Helpers;
 
 /// <summary>
 /// Custom IFontResolver for PDFSharp on .NET Core+.

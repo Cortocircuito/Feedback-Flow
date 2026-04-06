@@ -1,10 +1,9 @@
-using System.Data;
 using Dapper;
-using Feedback_Flow.Models;
-using Feedback_Flow.Services.Interfaces;
+using FeedbackFlow.Core.Services.Interfaces;
+using FeedbackFlow.Core.Models;
 using Microsoft.Data.Sqlite;
 
-namespace Feedback_Flow.Services;
+namespace FeedbackFlow.Core.Services;
 
 public class SqliteDatabaseService : IDatabaseService
 {

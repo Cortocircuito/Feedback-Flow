@@ -1,6 +1,6 @@
-using Feedback_Flow.Models;
+using FeedbackFlow.Core.Models;
 
-namespace Feedback_Flow.Services.Interfaces;
+namespace FeedbackFlow.Core.Services.Interfaces;
 
 public interface IStudentService
 {

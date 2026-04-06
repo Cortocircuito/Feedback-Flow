@@ -1,7 +1,7 @@
-using Feedback_Flow.Models;
-using Feedback_Flow.Services.Interfaces;
+using FeedbackFlow.Core.Models;
+using FeedbackFlow.Core.Services.Interfaces;
 
-namespace Feedback_Flow.Services;
+namespace FeedbackFlow.Core.Services;
 
 public class FileSystemService : IFileSystemService
 {

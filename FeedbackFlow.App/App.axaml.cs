@@ -8,8 +8,8 @@ using System.Linq;
 using Avalonia.Markup.Xaml;
 using FeedbackFlow.App.ViewModels;
 using FeedbackFlow.App.Views;
-using Feedback_Flow.Services;
-using Feedback_Flow.Services.Interfaces;
+using FeedbackFlow.Core.Services;
+using FeedbackFlow.Core.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FeedbackFlow.App;

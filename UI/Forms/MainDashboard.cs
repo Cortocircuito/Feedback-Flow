@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using Feedback_Flow.Helpers;
-using Feedback_Flow.Models;
-using Feedback_Flow.Services.Interfaces;
+using FeedbackFlow.Core.Helpers;
+using FeedbackFlow.Core.Models;
+using FeedbackFlow.Core.Services.Interfaces;
 using Feedback_Flow.UI.Theme;
 
 namespace Feedback_Flow.UI.Forms;

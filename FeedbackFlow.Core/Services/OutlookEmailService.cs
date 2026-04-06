@@ -1,10 +1,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using Feedback_Flow.Models;
-using Feedback_Flow.Services.Interfaces;
+using FeedbackFlow.Core.Models;
+using FeedbackFlow.Core.Services.Interfaces;
 using MimeKit;
 
-namespace Feedback_Flow.Services;
+namespace FeedbackFlow.Core.Services;
 
 public class OutlookEmailService : IEmailService
 {

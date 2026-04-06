@@ -1,4 +1,4 @@
-namespace Feedback_Flow.Models;
+namespace FeedbackFlow.Core.Models;
 
 /// <summary>
 /// Holds the outcome of a batch email-generation run.

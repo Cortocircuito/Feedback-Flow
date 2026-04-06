@@ -1,4 +1,4 @@
-namespace Feedback_Flow.Models;
+namespace FeedbackFlow.Core.Models;
 
 /// <summary>
 /// Represents a single class session record for a student on a specific date.
