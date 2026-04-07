@@ -20,12 +20,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Docs\**" />
     <Compile Remove="Feedback Flow.Tests\**" />
     <Compile Remove="FeedbackFlow.Core\**" />
     <Compile Remove="FeedbackFlow.App\**" />
+    <EmbeddedResource Remove="Docs\**" />
     <EmbeddedResource Remove="Feedback Flow.Tests\**" />
     <EmbeddedResource Remove="FeedbackFlow.App\**" />
     <EmbeddedResource Remove="FeedbackFlow.Core\**" />
+    <None Remove="Docs\**" />
     <None Remove="Feedback Flow.Tests\**" />
     <None Remove="FeedbackFlow.App\**" />
     <None Remove="FeedbackFlow.Core\**" />
@@ -37,17 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="FeedbackFlow.Core\FeedbackFlow.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Docs\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Docs\THIRD-PARTY-LICENSES.md">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
+    <ProjectReference Include="..\FeedbackFlow.Core\FeedbackFlow.Core.csproj" />
   </ItemGroup>
 
 </Project>
