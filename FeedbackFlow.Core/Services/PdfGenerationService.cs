@@ -1,0 +1,128 @@
+using FeedbackFlow.Core.Helpers;
+using FeedbackFlow.Core.Models;
+using FeedbackFlow.Core.Services.Interfaces;
+using PdfSharp.Drawing;
+using PdfSharp.Drawing.Layout;
+using PdfSharp.Fonts;
+using PdfSharp.Pdf;
+
+namespace FeedbackFlow.Core.Services;
+
+public class PdfGenerationService : IPdfService
+{
+    static PdfGenerationService()
+    {
+        // PDFSharp on .NET Core cannot resolve system fonts automatically.
+        // Must register a custom font resolver before any XFont is created.
+        GlobalFontSettings.FontResolver ??= new WindowsFontResolver();
+    }
+
+    public string GenerateStudentPdf(StudentSessionView session, string content, string outputFolder)
+    {
+        if (session == null) throw new ArgumentNullException(nameof(session));
+        if (string.IsNullOrWhiteSpace(outputFolder))
+            throw new ArgumentException("Output folder cannot be empty", nameof(outputFolder));
+
+        if (!Directory.Exists(outputFolder))
+            Directory.CreateDirectory(outputFolder);
+
+        var cleanName = session.GetFolderName();
+        var fileName = $"{cleanName}_Feedback.pdf";
+        var outputPath = Path.Combine(outputFolder, fileName);
+
+        try
+        {
+            var document = new PdfDocument();
+            document.Info.Title = $"Feedback Report - {session.FullName}";
+            document.Info.Author = "Feedback Flow";
+
+            var page = document.AddPage();
+            var gfx = XGraphics.FromPdfPage(page);
+
+            var primaryColor = XColor.FromArgb(0, 102, 204);
+            var greyColor = XColor.FromArgb(128, 128, 128);
+            var lightGreyBg = XColor.FromArgb(242, 242, 242);
+
+            var titleFont = new XFont("Arial", 22, XFontStyleEx.Bold);
+            var dateFont = new XFont("Arial", 11, XFontStyleEx.Regular);
+            var sectionFont = new XFont("Arial", 13, XFontStyleEx.Bold);
+            var labelFont = new XFont("Arial", 10, XFontStyleEx.Bold);
+            var valueFont = new XFont("Arial", 10, XFontStyleEx.Regular);
+            var bodyFont = new XFont("Arial", 11, XFontStyleEx.Regular);
+            var footerFont = new XFont("Arial", 8, XFontStyleEx.Italic);
+
+            double margin = 50;
+            double y = margin;
+            double pageWidth = page.Width.Point;
+            double contentWidth = pageWidth - 2 * margin;
+
+            // 1. Header — Title (left) and Date (right)
+            gfx.DrawString("Feedback Report", titleFont, new XSolidBrush(primaryColor),
+                new XRect(margin, y, contentWidth, 30), XStringFormats.TopLeft);
+
+            gfx.DrawString(DateTime.Now.ToString("MMMM dd, yyyy"), dateFont, new XSolidBrush(greyColor),
+                new XRect(margin, y + 6, contentWidth, 20), XStringFormats.TopRight);
+
+            y += 45;
+
+            // 2. Student Information section
+            gfx.DrawString("Student Information", sectionFont, new XSolidBrush(primaryColor),
+                new XRect(margin, y, contentWidth, 20), XStringFormats.TopLeft);
+
+            y += 28;
+
+            double labelColWidth = contentWidth * 0.25;
+            double valueColWidth = contentWidth * 0.75;
+            double rowHeight = 22;
+
+            void DrawInfoRow(string label, string value)
+            {
+                // Label cell with light grey background
+                gfx.DrawRectangle(new XSolidBrush(lightGreyBg), margin, y, labelColWidth, rowHeight);
+                gfx.DrawString(label, labelFont, XBrushes.Black,
+                    new XRect(margin + 6, y + 4, labelColWidth - 12, rowHeight), XStringFormats.TopLeft);
+
+                // Value cell
+                gfx.DrawString(value ?? "-", valueFont, XBrushes.Black,
+                    new XRect(margin + labelColWidth + 6, y + 4, valueColWidth - 12, rowHeight), XStringFormats.TopLeft);
+
+                y += rowHeight;
+            }
+
+            DrawInfoRow("Name:", session.FullName);
+            DrawInfoRow("Class Days:", session.ClassDay);
+            DrawInfoRow("Material:", Path.GetFileName(session.AssignedMaterial ?? string.Empty));
+
+            y += 15;
+
+            // Separator line
+            var pen = new XPen(XColors.Black, 1);
+            gfx.DrawLine(pen, margin, y, margin + contentWidth, y);
+
+            y += 20;
+
+            // 3. Feedback Notes section
+            gfx.DrawString("Feedback Notes", sectionFont, new XSolidBrush(primaryColor),
+                new XRect(margin, y, contentWidth, 20), XStringFormats.TopLeft);
+
+            y += 25;
+
+            // Draw multi-line feedback content using XTextFormatter
+            var feedbackText = content ?? "No specific notes provided.";
+            var tf = new XTextFormatter(gfx);
+            var textRect = new XRect(margin, y, contentWidth, page.Height.Point - y - 60);
+            tf.DrawString(feedbackText, bodyFont, XBrushes.Black, textRect, XStringFormats.TopLeft);
+
+            // 4. Footer — centered at the bottom
+            gfx.DrawString("Generated by Feedback Flow System", footerFont, new XSolidBrush(greyColor),
+                new XRect(margin, page.Height.Point - 40, contentWidth, 20), XStringFormats.TopCenter);
+
+            document.Save(outputPath);
+            return outputPath;
+        }
+        catch (Exception ex)
+        {
+            throw new IOException($"Error generating PDF for {session.FullName}: {ex.Message}", ex);
+        }
+    }
+}

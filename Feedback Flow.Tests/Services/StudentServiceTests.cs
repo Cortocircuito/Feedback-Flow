@@ -1,6 +1,6 @@
-using Feedback_Flow.Models;
-using Feedback_Flow.Services;
-using Feedback_Flow.Services.Interfaces;
+using FeedbackFlow.Core.Models;
+using FeedbackFlow.Core.Services;
+using FeedbackFlow.Core.Services.Interfaces;
 using FluentAssertions;
 using NSubstitute;
 using Xunit;

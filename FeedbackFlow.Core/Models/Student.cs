@@ -1,0 +1,30 @@
+namespace FeedbackFlow.Core.Models;
+
+public class Student
+{
+    public int Id { get; set; }
+    public string FullName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string ClassDay { get; set; } = string.Empty;
+    public string CreatedAt { get; set; } = string.Empty;
+
+    public List<string> GetClassDays() 
+    {
+        return string.IsNullOrWhiteSpace(ClassDay) 
+            ? new List<string>() 
+            : ClassDay.Split(',').Select(d => d.Trim()).ToList();
+    }
+    
+    public bool HasClassOnDay(string dayName)
+    {
+        return GetClassDays().Contains(dayName, StringComparer.OrdinalIgnoreCase);
+    }
+
+    // Helper to get sanitize name for folders (e.g. "Jane Doe" -> "Jane-Doe")
+    // Implementation rule: Replace spaces with hyphens.
+    public string GetFolderName()
+    {
+        if (string.IsNullOrWhiteSpace(FullName)) return "Unknown-Student";
+        return FullName.Trim().Replace(" ", "-");
+    }
+}

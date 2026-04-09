@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+    <RootNamespace>Feedback_Flow</RootNamespace>
+    <Nullable>disable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>Assets\fluent-color-person-edit-32.ico</ApplicationIcon>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\fluent-color-person-edit-32.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Docs\**" />
+    <Compile Remove="Feedback Flow.Tests\**" />
+    <Compile Remove="FeedbackFlow.Core\**" />
+    <Compile Remove="FeedbackFlow.App\**" />
+    <EmbeddedResource Remove="Docs\**" />
+    <EmbeddedResource Remove="Feedback Flow.Tests\**" />
+    <EmbeddedResource Remove="FeedbackFlow.App\**" />
+    <EmbeddedResource Remove="FeedbackFlow.Core\**" />
+    <None Remove="Docs\**" />
+    <None Remove="Feedback Flow.Tests\**" />
+    <None Remove="FeedbackFlow.App\**" />
+    <None Remove="FeedbackFlow.Core\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FeedbackFlow.Core\FeedbackFlow.Core.csproj" />
+  </ItemGroup>
+
+</Project>

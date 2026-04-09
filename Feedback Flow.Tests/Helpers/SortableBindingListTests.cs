@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using Feedback_Flow.Helpers;
+using FeedbackFlow.Core.Helpers;
 using FluentAssertions;
 using Xunit;
 
